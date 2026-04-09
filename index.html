@@ -11,7 +11,7 @@
   --bg:#eef1f7; --surface:#f4f6fb; --surface2:#ffffff;
   --border:#d4daea; --border2:#c2cad9;
   --accent:#2f6be0; --accent2:#6c47d4;
-  --success:#15905f; --warning:#c96d00; --danger:#c0392b; --info:#0284c7;
+  --success:#15905f; --warning:#c96d00; --danger:#c0392b;
   --text:#1a2540; --text2:#2d3f5e; --muted:#5a6e8c; --muted2:#8da0bc;
   --radius:10px;
   --shadow:0 2px 8px rgba(30,50,100,.09),0 6px 20px rgba(30,50,100,.06);
@@ -20,7 +20,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;min-height:100vh;}
 
-/* LOADING SCREEN */
+/* ── LOADING ── */
 #loading-screen{
   position:fixed;inset:0;background:var(--surface2);z-index:999;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
@@ -30,19 +30,57 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* SYNC INDICATOR */
+/* ── LOGIN SCREEN ── */
+#login-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:900;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .4s;
+}
+#login-screen.fade{opacity:0;pointer-events:none;}
+.login-box{
+  background:var(--surface2);border:1px solid var(--border);border-radius:16px;
+  padding:36px 32px;width:380px;max-width:95vw;
+  box-shadow:0 8px 40px rgba(30,50,100,.12);
+  display:flex;flex-direction:column;gap:0;
+}
+.login-logo{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.5px;margin-bottom:6px;}
+.login-logo span{color:var(--accent);}
+.login-sub{font-size:12.5px;color:var(--muted);margin-bottom:28px;}
+.login-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.2px;display:block;margin-bottom:4px;}
+.login-input{
+  background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;
+  color:var(--text);font-family:inherit;font-size:13.5px;padding:9px 12px;
+  width:100%;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:14px;
+}
+.login-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,107,224,.1);}
+.login-btn{
+  background:var(--accent);color:#fff;border:none;border-radius:8px;
+  font-family:inherit;font-size:13.5px;font-weight:600;padding:10px;
+  width:100%;cursor:pointer;transition:background .15s;margin-top:4px;
+}
+.login-btn:hover{background:#235dcc;}
+.login-btn:disabled{background:var(--muted2);cursor:not-allowed;}
+.login-error{
+  background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);
+  border-radius:8px;padding:9px 12px;font-size:12px;color:var(--danger);
+  margin-bottom:14px;display:none;
+}
+.login-error.show{display:block;}
+.login-forgot{font-size:11.5px;color:var(--accent);cursor:pointer;text-align:center;margin-top:14px;text-decoration:underline;}
+.login-forgot:hover{color:#235dcc;}
+
+/* ── SYNC ── */
 #sync-status{
   position:fixed;bottom:14px;right:14px;z-index:150;
   display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;
-  font-size:11px;font-weight:600;transition:all .3s;
-  background:var(--surface2);border:1px solid var(--border);box-shadow:var(--shadow-sm);
+  font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);box-shadow:var(--shadow-sm);
 }
 #sync-dot{width:7px;height:7px;border-radius:50%;background:var(--success);}
 #sync-dot.syncing{background:var(--warning);animation:pulse .8s infinite;}
 #sync-dot.error{background:var(--danger);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* HEADER */
+/* ── HEADER ── */
 header{
   background:var(--surface2);border-bottom:1px solid var(--border);
   padding:0 22px;display:flex;align-items:center;gap:24px;height:52px;
@@ -51,43 +89,30 @@ header{
 .logo{font-weight:700;font-size:16px;letter-spacing:-.5px;color:var(--text);white-space:nowrap;}
 .logo span{color:var(--accent);}
 nav{display:flex;gap:3px;flex:1;}
-nav button{
-  background:none;border:none;color:var(--muted);padding:5px 12px;
-  border-radius:7px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:500;
-  transition:all .15s;white-space:nowrap;
-}
+nav button{background:none;border:none;color:var(--muted);padding:5px 12px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:500;transition:all .15s;white-space:nowrap;}
 nav button.active{background:var(--accent);color:#fff;}
 nav button:not(.active):hover{background:var(--bg);color:var(--text);}
-.notif-btn{
-  position:relative;background:none;border:none;cursor:pointer;
-  width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;
-  font-size:17px;color:var(--muted);transition:background .15s;
-}
-.notif-btn:hover{background:var(--bg);}
-.notif-badge{
-  position:absolute;top:3px;right:3px;background:var(--danger);color:#fff;
-  font-size:9px;font-weight:700;width:15px;height:15px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;border:2px solid var(--surface2);
-}
 
-/* LAYOUT */
+/* user chip */
+.user-chip{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 6px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:11.5px;font-weight:500;color:var(--text2);}
+.user-chip .avatar-sm{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logout-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:2px 4px;border-radius:4px;font-family:inherit;}
+.logout-btn:hover{color:var(--danger);}
+
+.notif-btn{position:relative;background:none;border:none;cursor:pointer;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--muted);transition:background .15s;}
+.notif-btn:hover{background:var(--bg);}
+.notif-badge{position:absolute;top:3px;right:3px;background:var(--danger);color:#fff;font-size:9px;font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface2);}
+
+/* ── LAYOUT ── */
 .app{display:flex;height:calc(100vh - 52px);overflow:hidden;}
-.sidebar{
-  width:285px;min-width:285px;background:var(--surface2);
-  border-right:1px solid var(--border);overflow-y:auto;
-  padding:14px 13px;display:flex;flex-direction:column;gap:12px;
-}
+.sidebar{width:285px;min-width:285px;background:var(--surface2);border-right:1px solid var(--border);overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:12px;}
 .main{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:18px;}
 
 .section-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
 .page-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px;}
 .card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:13px;box-shadow:var(--shadow-sm);}
 
-input,select,textarea{
-  background:var(--surface);border:1.5px solid var(--border2);border-radius:6px;
-  color:var(--text);font-family:inherit;font-size:13px;padding:6px 10px;
-  width:100%;outline:none;transition:border-color .15s,box-shadow .15s;
-}
+input,select,textarea{background:var(--surface);border:1.5px solid var(--border2);border-radius:6px;color:var(--text);font-family:inherit;font-size:13px;padding:6px 10px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;}
 input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,107,224,.1);}
 select option{background:var(--surface2);}
 label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:600;letter-spacing:.2px;}
@@ -185,21 +210,42 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
 </head>
 <body>
 
-<!-- LOADING -->
+<!-- ── LOADING ── -->
 <div id="loading-screen">
   <div class="spinner"></div>
   <div style="font-size:14px;font-weight:600;color:var(--text)">Enge<span style="color:var(--accent)">Flow</span></div>
-  <div style="font-size:12px;color:var(--muted)" id="loading-msg">Conectando ao banco de dados...</div>
+  <div style="font-size:12px;color:var(--muted)" id="loading-msg">Verificando autenticação...</div>
 </div>
 
-<!-- SYNC INDICATOR -->
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen" class="hidden">
+  <div class="login-box">
+    <div class="login-logo">Enge<span>Flow</span></div>
+    <div class="login-sub">Gestão de Projetos de Engenharia · Acesso restrito à equipe</div>
+
+    <div class="login-error" id="login-error"></div>
+
+    <label class="login-label">E-mail corporativo</label>
+    <input class="login-input" type="email" id="login-email" placeholder="voce@empresa.com.br" autocomplete="email">
+
+    <label class="login-label">Senha</label>
+    <input class="login-input" type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')doLogin()">
+
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+
+    <div class="login-forgot" onclick="doResetPassword()">Esqueci minha senha</div>
+  </div>
+</div>
+
+<!-- ── SYNC ── -->
 <div id="sync-status">
   <div id="sync-dot"></div>
   <span id="sync-label">Sincronizado</span>
 </div>
 
-<!-- HEADER -->
-<header>
+<!-- ── HEADER ── -->
+<header id="main-header" class="hidden">
   <div class="logo">Enge<span>Flow</span></div>
   <nav>
     <button class="active" onclick="showView('dashboard')">Dashboard</button>
@@ -210,16 +256,21 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
   <button class="notif-btn" onclick="toggleNotifPanel()" id="notif-toggle-btn">
     🔔<span class="notif-badge hidden" id="notif-count">0</span>
   </button>
+  <div class="user-chip">
+    <div class="avatar-sm" id="user-initials">?</div>
+    <span id="user-email-display" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button class="logout-btn" onclick="doLogout()" title="Sair">⎋ Sair</button>
+  </div>
 </header>
 
-<!-- NOTIFICATION PANEL -->
+<!-- ── NOTIFICATION PANEL ── -->
 <div class="notif-panel hidden" id="notif-panel">
   <div class="notif-header">Notificações <button class="btn btn-xs btn-ghost" onclick="closeNotifPanel()">Fechar</button></div>
   <div class="notif-list" id="notif-list"></div>
 </div>
 
-<div class="app">
-  <!-- SIDEBAR -->
+<!-- ── APP ── -->
+<div class="app hidden" id="main-app">
   <aside class="sidebar">
     <div>
       <div class="section-title">Recursos
@@ -272,7 +323,6 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
     </div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
@@ -362,30 +412,27 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════ -->
-<!-- Firebase SDK (compat - works in plain HTML)   -->
-<!-- ══════════════════════════════════════════════ -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <script>
 // ════════════════════════════════════════════════
-//  FIREBASE CONFIG
+//  FIREBASE
 // ════════════════════════════════════════════════
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey:            "AIzaSyBPv_Usi00DaZR2cIlNQjk8DQey2MbWtDQ",
   authDomain:        "engeflow-44f15.firebaseapp.com",
   databaseURL:       "https://engeflow-44f15-default-rtdb.firebaseio.com",
   projectId:         "engeflow-44f15",
   storageBucket:     "engeflow-44f15.firebasestorage.app",
   messagingSenderId: "82161507864",
-  appId:             "1:82161507864:web:73b99ed9035e66ec7f2d6d",
-  measurementId:     "G-YJWYQHE78F"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const ROOT = 'engeflow';  // root key in Realtime DB
+  appId:             "1:82161507864:web:73b99ed9035e66ec7f2d6d"
+});
+const auth = firebase.auth();
+const db   = firebase.database();
+const ROOT = 'engeflow';
 
 // ════════════════════════════════════════════════
 //  CONSTANTS
@@ -393,72 +440,126 @@ const ROOT = 'engeflow';  // root key in Realtime DB
 const COLORS=['#2f6be0','#6c47d4','#15905f','#c96d00','#c0392b','#0284c7','#7c3aed','#0d9488'];
 const PRI={1:{label:'🔴 Alta',cls:'p1'},2:{label:'🟡 Média',cls:'p2'},3:{label:'🔵 Baixa',cls:'p3'}};
 
-// ════════════════════════════════════════════════
-//  STATE  (kept in memory; Firebase is the source of truth)
-// ════════════════════════════════════════════════
-let state = { resources:[], activities:[], nextRid:1, nextAid:1 };
-let _priContext = null;
-let _devAid = null;
-let _appReady = false;
+let state={resources:[],activities:[],nextRid:1,nextAid:1};
+let _priContext=null, _devAid=null, _appReady=false, _dbListener=null;
 
 // ════════════════════════════════════════════════
-//  SYNC HELPERS
+//  AUTH
 // ════════════════════════════════════════════════
-function setSyncing(msg='Sincronizando...'){
-  document.getElementById('sync-dot').className='syncing';
-  document.getElementById('sync-label').textContent=msg;
-}
-function setSynced(){
-  document.getElementById('sync-dot').className='';
-  document.getElementById('sync-label').textContent='Sincronizado';
-}
-function setSyncError(){
-  document.getElementById('sync-dot').className='error';
-  document.getElementById('sync-label').textContent='Erro de conexão';
+auth.onAuthStateChanged(user=>{
+  if(user){
+    showApp(user);
+  } else {
+    hideApp();
+  }
+});
+
+function showApp(user){
+  // update UI
+  document.getElementById('user-email-display').textContent = user.email;
+  document.getElementById('user-initials').textContent = user.email.slice(0,2).toUpperCase();
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('main-header').classList.remove('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  hideLoading();
+  document.getElementById('a-date').value = todayStr();
+  startListening();
 }
 
-// Write full state to Firebase
+function hideApp(){
+  // stop db listener if active
+  if(_dbListener){ db.ref(ROOT).off('value',_dbListener); _dbListener=null; _appReady=false; }
+  document.getElementById('main-header').classList.add('hidden');
+  document.getElementById('main-app').classList.add('hidden');
+  hideLoading();
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+async function doLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pwd   = document.getElementById('login-pwd').value;
+  const btn   = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+
+  errEl.classList.remove('show');
+  if(!email||!pwd){ showLoginError('Preencha e-mail e senha.'); return; }
+
+  btn.disabled=true; btn.textContent='Entrando...';
+  try {
+    await auth.signInWithEmailAndPassword(email, pwd);
+    // onAuthStateChanged handles the rest
+  } catch(e){
+    btn.disabled=false; btn.textContent='Entrar';
+    const msgs={
+      'auth/user-not-found':    'E-mail não cadastrado. Solicite acesso ao administrador.',
+      'auth/wrong-password':    'Senha incorreta.',
+      'auth/invalid-email':     'E-mail inválido.',
+      'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
+      'auth/invalid-credential':'E-mail ou senha incorretos.',
+    };
+    showLoginError(msgs[e.code] || `Erro: ${e.message}`);
+  }
+}
+
+async function doLogout(){
+  if(!confirm('Deseja sair do EngeFlow?')) return;
+  await auth.signOut();
+}
+
+async function doResetPassword(){
+  const email = document.getElementById('login-email').value.trim();
+  if(!email){ showLoginError('Digite seu e-mail acima para redefinir a senha.'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showLoginError('✅ E-mail de redefinição enviado! Verifique sua caixa de entrada.', true);
+  } catch(e){
+    showLoginError('Não foi possível enviar o e-mail. Verifique o endereço digitado.');
+  }
+}
+
+function showLoginError(msg, success=false){
+  const el=document.getElementById('login-error');
+  el.textContent=msg;
+  el.style.background=success?'rgba(21,144,95,.08)':'rgba(192,57,43,.08)';
+  el.style.borderColor=success?'rgba(21,144,95,.25)':'rgba(192,57,43,.25)';
+  el.style.color=success?'var(--success)':'var(--danger)';
+  el.classList.add('show');
+}
+
+// ════════════════════════════════════════════════
+//  SYNC
+// ════════════════════════════════════════════════
+function setSyncing(){ document.getElementById('sync-dot').className='syncing'; document.getElementById('sync-label').textContent='Salvando...'; }
+function setSynced(){  document.getElementById('sync-dot').className='';        document.getElementById('sync-label').textContent='Sincronizado'; }
+function setSyncError(){ document.getElementById('sync-dot').className='error'; document.getElementById('sync-label').textContent='Erro de conexão'; }
+
 function pushState(){
   setSyncing();
   db.ref(ROOT).set({
-    resources: state.resources,
+    resources:  state.resources,
     activities: state.activities,
-    nextRid: state.nextRid,
-    nextAid: state.nextAid
-  }).then(setSynced).catch(e=>{setSyncError();console.error(e);});
+    nextRid:    state.nextRid,
+    nextAid:    state.nextAid
+  }).then(setSynced).catch(e=>{ setSyncError(); console.error(e); });
 }
 
-// ════════════════════════════════════════════════
-//  REAL-TIME LISTENER  (single source of truth)
-// ════════════════════════════════════════════════
 function startListening(){
-  db.ref(ROOT).on('value', snapshot=>{
-    const data = snapshot.val();
+  _dbListener = db.ref(ROOT).on('value', snapshot=>{
+    const data=snapshot.val();
     if(data){
       state.resources  = data.resources  || [];
       state.activities = data.activities || [];
-      state.nextRid    = data.nextRid    || (state.resources.length  + 1);
-      state.nextAid    = data.nextAid    || (state.activities.length + 1);
+      state.nextRid    = data.nextRid    || state.resources.length  + 1;
+      state.nextAid    = data.nextAid    || state.activities.length + 1;
     } else {
-      // First run: seed demo data
-      seedDemo();
-      return;
+      seedDemo(); return;
     }
-
-    if(!_appReady){
-      _appReady = true;
-      hideLoading();
-    }
+    if(!_appReady){ _appReady=true; }
     renderAll();
-  }, err=>{
-    setSyncError();
-    document.getElementById('loading-msg').textContent='Erro ao conectar. Verifique as regras do Firebase.';
-    console.error(err);
-  });
+  }, err=>{ setSyncError(); console.error(err); });
 
-  // Connection state
   db.ref('.info/connected').on('value', snap=>{
-    if(!snap.val()) setSyncError(); else if(_appReady) setSynced();
+    if(_appReady){ if(!snap.val()) setSyncError(); else setSynced(); }
   });
 }
 
@@ -470,16 +571,15 @@ function hideLoading(){
 
 function seedDemo(){
   const t=todayStr();
-  const names=['Ana Beatriz','Carlos Eduardo','Marcos Silva'];
-  names.forEach((n,i)=>state.resources.push({id:state.nextRid++,name:n,hours:8,color:COLORS[i]}));
-  const seed=[
+  ['Ana Beatriz','Carlos Eduardo','Marcos Silva'].forEach((n,i)=>
+    state.resources.push({id:state.nextRid++,name:n,hours:8,color:COLORS[i]}));
+  [
     {name:'Verificação de desenho estrutural',hours:8, date:t,rid:1,type:'Verificação de desenho',priority:1,pred:null},
     {name:'Reunião de alinhamento técnico',   hours:2, date:t,rid:1,type:'Reunião',              priority:2,pred:null},
     {name:'Modelagem da estrutura metálica',  hours:16,date:t,rid:2,type:'Modelagem estrutural',  priority:1,pred:null},
     {name:'Memória de cálculo – Fundações',   hours:12,date:t,rid:3,type:'Memória de cálculo',    priority:1,pred:null},
     {name:'Revisão geral do projeto',         hours:6, date:t,rid:1,type:'Revisão de projeto',    priority:3,pred:1},
-  ];
-  seed.forEach(a=>state.activities.push({
+  ].forEach(a=>state.activities.push({
     id:state.nextAid++,name:a.name,estimatedHours:a.hours,startDate:a.date,
     resourceId:a.rid,type:a.type,priority:a.priority,predecessorId:a.pred,done:false,deviations:[],progress:0
   }));
@@ -489,69 +589,52 @@ function seedDemo(){
 // ════════════════════════════════════════════════
 //  DATE UTILS
 // ════════════════════════════════════════════════
-function todayStr(){return new Date().toISOString().split('T')[0];}
-
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
 function fmtDate(s){
-  if(!s)return'';
+  if(!s) return '';
   return new Date(s+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
-
 function addWorkHours(startStr,totalHours,hoursPerDay){
-  if(!startStr||!hoursPerDay||totalHours<=0)return startStr;
+  if(!startStr||!hoursPerDay||totalHours<=0) return startStr;
   let d=new Date(startStr+'T00:00:00'), rem=totalHours;
   while(rem>hoursPerDay){
     d.setDate(d.getDate()+1);
-    while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
+    while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
     rem-=hoursPerDay;
   }
   return d.toISOString().split('T')[0];
 }
-
 function nextWorkDay(dateStr){
   const d=new Date(dateStr+'T00:00:00');
   d.setDate(d.getDate()+1);
-  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
+  while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
   return d.toISOString().split('T')[0];
 }
-
-function initials(n){return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');}
+function initials(n){ return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join(''); }
 
 // ════════════════════════════════════════════════
-//  SCHEDULING ENGINE
+//  SCHEDULING
 // ════════════════════════════════════════════════
 function computeSchedule(){
-  const sched={};
-  const byRes={};
-  state.activities.forEach(a=>{
-    if(!byRes[a.resourceId])byRes[a.resourceId]=[];
-    byRes[a.resourceId].push(a);
-  });
+  const sched={}, byRes={};
+  state.activities.forEach(a=>{ if(!byRes[a.resourceId]) byRes[a.resourceId]=[]; byRes[a.resourceId].push(a); });
   Object.values(byRes).forEach(arr=>arr.sort((a,b)=>a.priority!==b.priority?a.priority-b.priority:a.id-b.id));
-
   for(let pass=0;pass<25;pass++){
     let changed=false;
     state.activities.forEach(act=>{
-      const res=state.resources.find(r=>r.id===act.resourceId);
-      if(!res)return;
+      const res=state.resources.find(r=>r.id===act.resourceId); if(!res) return;
       let earliest=act.startDate;
-      if(act.predecessorId){
-        const ps=sched[act.predecessorId];
-        if(ps){const after=nextWorkDay(ps.end);if(after>earliest)earliest=after;}
-      }
+      if(act.predecessorId){ const ps=sched[act.predecessorId]; if(ps){ const a=nextWorkDay(ps.end); if(a>earliest) earliest=a; } }
       const queue=(byRes[act.resourceId]||[]).filter(x=>!x.done);
       const myIdx=queue.indexOf(act);
-      for(let i=0;i<myIdx;i++){
-        const ps=sched[queue[i].id];
-        if(ps&&ps.end>=earliest){const after=nextWorkDay(ps.end);if(after>earliest)earliest=after;}
-      }
+      for(let i=0;i<myIdx;i++){ const ps=sched[queue[i].id]; if(ps&&ps.end>=earliest){ const a=nextWorkDay(ps.end); if(a>earliest) earliest=a; } }
       const totalH=act.estimatedHours+act.deviations.reduce((s,d)=>s+d.hours,0);
       const end=addWorkHours(earliest,totalH,res.hours);
       const prev=sched[act.id];
-      if(!prev||prev.start!==earliest||prev.end!==end){sched[act.id]={start:earliest,end};changed=true;}
+      if(!prev||prev.start!==earliest||prev.end!==end){ sched[act.id]={start:earliest,end}; changed=true; }
     });
-    if(!changed)break;
+    if(!changed) break;
   }
-
   state.activities.filter(a=>a.done).forEach(act=>{
     const res=state.resources.find(r=>r.id===act.resourceId);
     const totalH=act.estimatedHours+act.deviations.reduce((s,d)=>s+d.hours,0);
@@ -562,18 +645,14 @@ function computeSchedule(){
 
 function detectOverlaps(sched){
   const out=[],seen=new Set(),byRes={};
-  state.activities.filter(a=>!a.done).forEach(a=>{
-    if(!byRes[a.resourceId])byRes[a.resourceId]=[];
-    byRes[a.resourceId].push(a);
-  });
+  state.activities.filter(a=>!a.done).forEach(a=>{ if(!byRes[a.resourceId]) byRes[a.resourceId]=[]; byRes[a.resourceId].push(a); });
   Object.entries(byRes).forEach(([rid,acts])=>{
-    for(let i=0;i<acts.length;i++)for(let j=i+1;j<acts.length;j++){
-      const a=acts[i],b=acts[j],res=state.resources.find(r=>r.id==rid);
-      if(!res)continue;
+    for(let i=0;i<acts.length;i++) for(let j=i+1;j<acts.length;j++){
+      const a=acts[i],b=acts[j],res=state.resources.find(r=>r.id==rid); if(!res) continue;
       const aEnd=addWorkHours(a.startDate,a.estimatedHours,res.hours);
       if(a.startDate<=b.startDate&&b.startDate<=aEnd&&!a.predecessorId&&!b.predecessorId&&a.predecessorId!==b.id&&b.predecessorId!==a.id){
         const key=[a.id,b.id].sort().join('-');
-        if(!seen.has(key)){seen.add(key);out.push({rid:parseInt(rid),aids:[a.id,b.id]});}
+        if(!seen.has(key)){ seen.add(key); out.push({rid:parseInt(rid),aids:[a.id,b.id]}); }
       }
     }
   });
@@ -584,14 +663,14 @@ function detectOverlaps(sched){
 //  NOTIFICATIONS
 // ════════════════════════════════════════════════
 function buildNotifications(sched){
-  const t=todayStr(),notifs=[];
+  const t=todayStr(), notifs=[];
   state.activities.filter(a=>!a.done).forEach(a=>{
-    const s=sched[a.id];if(!s)return;
+    const s=sched[a.id]; if(!s) return;
     const daysLeft=Math.round((new Date(s.end+'T00:00:00')-new Date(t+'T00:00:00'))/86400000);
     const res=state.resources.find(r=>r.id===a.resourceId);
-    if(s.end<t)            notifs.push({icon:'🔴',text:`<b>${a.name}</b> está atrasada`,sub:`Prazo: ${fmtDate(s.end)} · ${res?.name||''}`,pri:0});
-    else if(daysLeft===0)  notifs.push({icon:'🟠',text:`<b>${a.name}</b> vence hoje`,sub:`Recurso: ${res?.name||''}`,pri:1});
-    else if(daysLeft<=2)   notifs.push({icon:'🟡',text:`<b>${a.name}</b> vence em ${daysLeft} dia(s)`,sub:`Prazo: ${fmtDate(s.end)} · ${res?.name||''}`,pri:2});
+    if(s.end<t)           notifs.push({icon:'🔴',text:`<b>${a.name}</b> está atrasada`,sub:`Prazo: ${fmtDate(s.end)} · ${res?.name||''}`,pri:0});
+    else if(daysLeft===0) notifs.push({icon:'🟠',text:`<b>${a.name}</b> vence hoje`,sub:`Recurso: ${res?.name||''}`,pri:1});
+    else if(daysLeft<=2)  notifs.push({icon:'🟡',text:`<b>${a.name}</b> vence em ${daysLeft} dia(s)`,sub:`Prazo: ${fmtDate(s.end)} · ${res?.name||''}`,pri:2});
   });
   detectOverlaps(sched).forEach(ov=>{
     const res=state.resources.find(r=>r.id===ov.rid);
@@ -599,23 +678,21 @@ function buildNotifications(sched){
   });
   return notifs.sort((a,b)=>a.pri-b.pri);
 }
-
 function renderNotifications(sched){
   const notifs=buildNotifications(sched);
   const badge=document.getElementById('notif-count');
   const list=document.getElementById('notif-list');
-  if(notifs.length){badge.textContent=notifs.length;badge.classList.remove('hidden');}
+  if(notifs.length){ badge.textContent=notifs.length; badge.classList.remove('hidden'); }
   else badge.classList.add('hidden');
   list.innerHTML=notifs.length
     ?notifs.map(n=>`<div class="notif-item"><span class="notif-icon">${n.icon}</span><div class="notif-text"><div>${n.text}</div><div class="notif-sub">${n.sub}</div></div></div>`).join('')
     :'<div class="notif-empty">Nenhuma notificação 🎉</div>';
 }
-
-function toggleNotifPanel(){document.getElementById('notif-panel').classList.toggle('hidden');}
-function closeNotifPanel(){document.getElementById('notif-panel').classList.add('hidden');}
+function toggleNotifPanel(){ document.getElementById('notif-panel').classList.toggle('hidden'); }
+function closeNotifPanel(){ document.getElementById('notif-panel').classList.add('hidden'); }
 document.addEventListener('click',e=>{
   const p=document.getElementById('notif-panel'),b=document.getElementById('notif-toggle-btn');
-  if(!p.classList.contains('hidden')&&!p.contains(e.target)&&!b.contains(e.target))p.classList.add('hidden');
+  if(!p.classList.contains('hidden')&&!p.contains(e.target)&&!b.contains(e.target)) p.classList.add('hidden');
 });
 
 // ════════════════════════════════════════════════
@@ -624,33 +701,26 @@ document.addEventListener('click',e=>{
 function addResource(){
   const name=document.getElementById('r-name').value.trim();
   const hours=parseFloat(document.getElementById('r-hours').value)||8;
-  if(!name)return alert('Insira o nome do recurso.');
+  if(!name) return alert('Insira o nome do recurso.');
   state.resources.push({id:state.nextRid++,name,hours,color:COLORS[state.resources.length%COLORS.length]});
   document.getElementById('r-name').value='';
   pushState();
 }
-
 function deleteResource(id){
-  if(!confirm('Excluir este recurso e suas atividades?'))return;
+  if(!confirm('Excluir este recurso e suas atividades?')) return;
   state.resources=state.resources.filter(r=>r.id!==id);
   state.activities=state.activities.filter(a=>a.resourceId!==id);
   pushState();
 }
-
 function renderResourceList(){
   const el=document.getElementById('resource-list');
-  const sR=document.getElementById('a-resource');
-  const fR=document.getElementById('filter-resource');
-  const gR=document.getElementById('gantt-filter-res');
-  const sP=document.getElementById('a-pred');
-
-  const pvR=sR.value,pvF=fR.value,pvG=gR.value,pvP=sP.value;
+  const sR=document.getElementById('a-resource'), fR=document.getElementById('filter-resource');
+  const gR=document.getElementById('gantt-filter-res'), sP=document.getElementById('a-pred');
+  const pvR=sR.value, pvF=fR.value, pvG=gR.value, pvP=sP.value;
   sR.innerHTML='<option value="">Selecionar...</option>';
   fR.innerHTML='<option value="">Todos os recursos</option>';
   gR.innerHTML='<option value="">Todos os recursos</option>';
-
-  if(!state.resources.length){el.innerHTML='<div class="empty">Nenhum recurso cadastrado.</div>';return;}
-
+  if(!state.resources.length){ el.innerHTML='<div class="empty">Nenhum recurso cadastrado.</div>'; return; }
   el.innerHTML=state.resources.map(r=>{
     const acts=state.activities.filter(a=>a.resourceId===r.id&&!a.done);
     const totalH=acts.reduce((s,a)=>s+a.estimatedHours+a.deviations.reduce((ss,d)=>ss+d.hours,0),0);
@@ -666,18 +736,14 @@ function renderResourceList(){
       <button class="btn btn-danger btn-xs" onclick="deleteResource(${r.id})">✕</button>
     </div>`;
   }).join('');
-
   state.resources.forEach(r=>{
-    const mk=v=>{const o=document.createElement('option');o.value=v;o.textContent=r.name;return o;};
-    sR.appendChild(mk(r.id));fR.appendChild(mk(r.id));gR.appendChild(mk(r.id));
+    const mk=v=>{ const o=document.createElement('option'); o.value=v; o.textContent=r.name; return o; };
+    sR.appendChild(mk(r.id)); fR.appendChild(mk(r.id)); gR.appendChild(mk(r.id));
   });
-  if(pvR)sR.value=pvR;if(pvF)fR.value=pvF;if(pvG)gR.value=pvG;
-
+  if(pvR) sR.value=pvR; if(pvF) fR.value=pvF; if(pvG) gR.value=pvG;
   sP.innerHTML='<option value="">Nenhuma</option>';
-  state.activities.forEach(a=>{
-    const o=document.createElement('option');o.value=a.id;o.textContent=`#${a.id} ${a.name.slice(0,28)}`;sP.appendChild(o);
-  });
-  if(pvP)sP.value=pvP;
+  state.activities.forEach(a=>{ const o=document.createElement('option'); o.value=a.id; o.textContent=`#${a.id} ${a.name.slice(0,28)}`; sP.appendChild(o); });
+  if(pvP) sP.value=pvP;
 }
 
 // ════════════════════════════════════════════════
@@ -691,53 +757,35 @@ function addActivity(){
   const type=document.getElementById('a-type').value;
   const priority=parseInt(document.getElementById('a-priority').value)||2;
   const predId=parseInt(document.getElementById('a-pred').value)||null;
-  if(!name)return alert('Insira a descrição.');
-  if(!date)return alert('Selecione a data de início.');
-  if(!rid)return alert('Selecione um recurso.');
+  if(!name) return alert('Insira a descrição.');
+  if(!date) return alert('Selecione a data de início.');
+  if(!rid)  return alert('Selecione um recurso.');
   const act={id:state.nextAid++,name,estimatedHours:hours,startDate:date,resourceId:rid,type,priority,predecessorId:predId,done:false,deviations:[],progress:0};
   state.activities.push(act);
   document.getElementById('a-name').value='';
   pushState();
   const sched=computeSchedule();
   const ov=detectOverlaps(sched).find(o=>o.aids.includes(act.id));
-  if(ov)openPriModal(ov);
+  if(ov) openPriModal(ov);
 }
-
-function toggleDone(id){
-  const a=state.activities.find(a=>a.id===id);
-  if(a){a.done=!a.done;pushState();}
-}
-
+function toggleDone(id){ const a=state.activities.find(a=>a.id===id); if(a){ a.done=!a.done; pushState(); } }
 function deleteActivity(id){
-  state.activities.forEach(a=>{if(a.predecessorId===id)a.predecessorId=null;});
+  state.activities.forEach(a=>{ if(a.predecessorId===id) a.predecessorId=null; });
   state.activities=state.activities.filter(a=>a.id!==id);
   pushState();
 }
-
 function setProgress(id,val){
-  const a=state.activities.find(a=>a.id===id);
-  if(a){
-    a.progress=parseInt(val);
-    // debounce push to avoid flooding db on slider drag
-    clearTimeout(a._progressTimer);
-    a._progressTimer=setTimeout(()=>pushState(),600);
-    // update UI locally immediately
-    document.querySelectorAll(`[data-prog-id="${id}"]`).forEach(el=>{
-      if(el.tagName==='DIV')el.style.width=val+'%';
-      if(el.tagName==='SPAN')el.textContent=val+'%';
-    });
-  }
+  const a=state.activities.find(a=>a.id===id); if(!a) return;
+  a.progress=parseInt(val);
+  document.querySelectorAll(`[data-prog-id="${id}"]`).forEach(el=>{ if(el.tagName==='DIV') el.style.width=val+'%'; if(el.tagName==='SPAN') el.textContent=val+'%'; });
+  clearTimeout(a._pt); a._pt=setTimeout(()=>pushState(),700);
 }
-
 function buildActivityHTML(act,sched){
   const res=state.resources.find(r=>r.id===act.resourceId);
   const color=res?.color||'#2f6be0';
-  const t=todayStr();
-  const s=sched[act.id];
-  const effStart=s?.start||act.startDate;
-  const effEnd=s?.end||act.startDate;
-  const isOverdue=!act.done&&effEnd<t;
-  const isWaiting=!act.done&&effStart>t;
+  const t=todayStr(), s=sched[act.id];
+  const effStart=s?.start||act.startDate, effEnd=s?.end||act.startDate;
+  const isOverdue=!act.done&&effEnd<t, isWaiting=!act.done&&effStart>t;
   const totalDev=act.deviations.reduce((ss,d)=>ss+d.hours,0);
   const pred=act.predecessorId?state.activities.find(a=>a.id===act.predecessorId):null;
   let sClass='',tagClass='',tagLbl='Em andamento';
@@ -767,34 +815,29 @@ function buildActivityHTML(act,sched){
       <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:3px">
         <span>Progresso</span><span data-prog-id="${act.id}">${act.progress}%</span>
       </div>
-      <input type="range" min="0" max="100" value="${act.progress}"
-        oninput="setProgress(${act.id},this.value)"
-        style="width:100%;accent-color:${color};margin-bottom:3px">
+      <input type="range" min="0" max="100" value="${act.progress}" oninput="setProgress(${act.id},this.value)" style="width:100%;accent-color:${color};margin-bottom:3px">
       <div class="progress-bar"><div class="progress-fill" data-prog-id="${act.id}" style="width:${act.progress}%;background:${color}"></div></div>
     </div>
   </div>`;
 }
-
 function renderActivityList(containerId,allMode){
   const el=document.getElementById(containerId);
-  const t=todayStr();
-  const sched=computeSchedule();
+  const t=todayStr(), sched=computeSchedule();
   const filterRid=allMode?parseInt(document.getElementById('filter-resource').value)||null:null;
   const filterStatus=allMode?document.getElementById('filter-status').value:'';
   let acts=[...state.activities];
-  if(filterRid)acts=acts.filter(a=>a.resourceId===filterRid);
-  if(!allMode)acts=acts.filter(a=>{const s=sched[a.id];return s&&s.start<=t&&!a.done;});
-  if(filterStatus==='active') acts=acts.filter(a=>!a.done&&sched[a.id]?.end>=t);
-  if(filterStatus==='done')   acts=acts.filter(a=>a.done);
-  if(filterStatus==='overdue')acts=acts.filter(a=>!a.done&&sched[a.id]?.end<t);
-  if(filterStatus==='waiting')acts=acts.filter(a=>!a.done&&sched[a.id]?.start>t);
+  if(filterRid) acts=acts.filter(a=>a.resourceId===filterRid);
+  if(!allMode)  acts=acts.filter(a=>{ const s=sched[a.id]; return s&&s.start<=t&&!a.done; });
+  if(filterStatus==='active')  acts=acts.filter(a=>!a.done&&sched[a.id]?.end>=t);
+  if(filterStatus==='done')    acts=acts.filter(a=>a.done);
+  if(filterStatus==='overdue') acts=acts.filter(a=>!a.done&&sched[a.id]?.end<t);
+  if(filterStatus==='waiting') acts=acts.filter(a=>!a.done&&sched[a.id]?.start>t);
   acts.sort((a,b)=>(sched[a.id]?.start||a.startDate).localeCompare(sched[b.id]?.start||b.startDate));
-  if(!acts.length){el.innerHTML='<div class="empty">Nenhuma atividade encontrada.</div>';return;}
+  if(!acts.length){ el.innerHTML='<div class="empty">Nenhuma atividade encontrada.</div>'; return; }
   el.innerHTML=acts.map(a=>buildActivityHTML(a,sched)).join('');
 }
-
-function renderActivities(){renderActivityList('activities-list',true);}
-function renderDashActivities(){renderActivityList('dash-activities',false);}
+function renderActivities(){ renderActivityList('activities-list',true); }
+function renderDashActivities(){ renderActivityList('dash-activities',false); }
 
 // ════════════════════════════════════════════════
 //  OVERLAP ALERTS
@@ -802,12 +845,11 @@ function renderDashActivities(){renderActivityList('dash-activities',false);}
 function renderOverlapAlerts(sched){
   const el=document.getElementById('overlap-alerts');
   const ovs=detectOverlaps(sched);
-  if(!ovs.length){el.innerHTML='';return;}
+  if(!ovs.length){ el.innerHTML=''; return; }
   el.innerHTML=ovs.map(ov=>{
     const res=state.resources.find(r=>r.id===ov.rid);
     const names=ov.aids.map(id=>state.activities.find(a=>a.id===id)?.name||'').join(' × ');
-    return `<div class="overlap-alert">
-      ⚠️ <b>Sobreposição</b> para <b>${res?.name||''}</b>: ${names}. Sequenciado por prioridade.
+    return `<div class="overlap-alert">⚠️ <b>Sobreposição</b> para <b>${res?.name||''}</b>: ${names}. Sequenciado por prioridade.
       <button class="btn btn-xs btn-warning" style="margin-left:6px" onclick='openPriModal(${JSON.stringify(ov)})'>Reordenar</button>
     </div>`;
   }).join('');
@@ -824,11 +866,11 @@ function openDevModal(aid){
   renderDevHistory(act);
   document.getElementById('dev-modal').classList.remove('hidden');
 }
-function closeDevModal(){document.getElementById('dev-modal').classList.add('hidden');}
+function closeDevModal(){ document.getElementById('dev-modal').classList.add('hidden'); }
 function addDeviation(){
   const desc=document.getElementById('dev-desc').value.trim();
   const hours=parseFloat(document.getElementById('dev-hours').value)||1;
-  if(!desc)return alert('Descreva o desvio.');
+  if(!desc) return alert('Descreva o desvio.');
   const act=state.activities.find(a=>a.id===_devAid);
   act.deviations.push({desc,hours,date:new Date().toLocaleDateString('pt-BR')});
   document.getElementById('dev-desc').value='';
@@ -837,7 +879,7 @@ function addDeviation(){
 }
 function renderDevHistory(act){
   const el=document.getElementById('dev-history');
-  if(!act.deviations.length){el.innerHTML='<div style="color:var(--muted2);font-size:11.5px;text-align:center;padding:8px">Nenhum desvio ainda</div>';return;}
+  if(!act.deviations.length){ el.innerHTML='<div style="color:var(--muted2);font-size:11.5px;text-align:center;padding:8px">Nenhum desvio ainda</div>'; return; }
   el.innerHTML=act.deviations.map(d=>`<div class="dev-item">
     <div><div style="font-size:12px;font-weight:600">${d.desc}</div><div style="font-size:10.5px;color:var(--muted)">${d.date}</div></div>
     <span style="color:var(--warning);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">+${d.hours}h</span>
@@ -850,15 +892,11 @@ function renderDevHistory(act){
 function openPriModal(ov){
   _priContext=ov;
   const res=state.resources.find(r=>r.id===ov.rid);
-  document.getElementById('pri-desc').textContent=
-    `${res?.name||'Este recurso'} tem atividades com datas sobrepostas. Defina as prioridades — Alta executa primeiro.`;
+  document.getElementById('pri-desc').textContent=`${res?.name||'Este recurso'} tem atividades sobrepostas. Alta prioridade executa primeiro.`;
   document.getElementById('pri-list').innerHTML=ov.aids.map(id=>{
-    const a=state.activities.find(x=>x.id===id);if(!a)return'';
+    const a=state.activities.find(x=>x.id===id); if(!a) return '';
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--bg);border-radius:8px;margin-bottom:7px;border:1px solid var(--border)">
-      <div style="flex:1">
-        <div style="font-weight:600;font-size:13px">${a.name}</div>
-        <div style="font-size:10.5px;color:var(--muted);margin-top:2px">${a.estimatedHours}h · Início: ${fmtDate(a.startDate)}</div>
-      </div>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${a.name}</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">${a.estimatedHours}h · ${fmtDate(a.startDate)}</div></div>
       <select id="pri-sel-${id}" style="width:115px">
         <option value="1" ${a.priority==1?'selected':''}>🔴 Alta</option>
         <option value="2" ${a.priority==2?'selected':''}>🟡 Média</option>
@@ -868,14 +906,11 @@ function openPriModal(ov){
   }).join('');
   document.getElementById('pri-modal').classList.remove('hidden');
 }
-function closePriModal(){document.getElementById('pri-modal').classList.add('hidden');_priContext=null;}
+function closePriModal(){ document.getElementById('pri-modal').classList.add('hidden'); _priContext=null; }
 function applyPriority(){
-  if(!_priContext)return;
-  _priContext.aids.forEach(id=>{
-    const sel=document.getElementById('pri-sel-'+id);
-    if(sel){const a=state.activities.find(x=>x.id===id);if(a)a.priority=parseInt(sel.value);}
-  });
-  pushState();closePriModal();
+  if(!_priContext) return;
+  _priContext.aids.forEach(id=>{ const sel=document.getElementById('pri-sel-'+id); if(sel){ const a=state.activities.find(x=>x.id===id); if(a) a.priority=parseInt(sel.value); } });
+  pushState(); closePriModal();
 }
 
 // ════════════════════════════════════════════════
@@ -883,69 +918,52 @@ function applyPriority(){
 // ════════════════════════════════════════════════
 function renderGantt(){
   const el=document.getElementById('gantt-container');
-  if(!state.activities.length){el.innerHTML='<div class="empty">Nenhuma atividade cadastrada.</div>';return;}
-  const sched=computeSchedule();
-  const t=todayStr();
+  if(!state.activities.length){ el.innerHTML='<div class="empty">Nenhuma atividade cadastrada.</div>'; return; }
+  const sched=computeSchedule(), t=todayStr();
   const filterRid=parseInt(document.getElementById('gantt-filter-res').value)||null;
   let acts=[...state.activities];
-  if(filterRid)acts=acts.filter(a=>a.resourceId===filterRid);
-  if(!acts.length){el.innerHTML='<div class="empty">Nenhuma atividade para este recurso.</div>';return;}
-
-  let minD=t,maxD=t;
-  acts.forEach(a=>{const s=sched[a.id];if(!s)return;if(s.start<minD)minD=s.start;if(s.end>maxD)maxD=s.end;});
-  const startDt=new Date(minD+'T00:00:00');startDt.setDate(startDt.getDate()-1);
-  const endDt=new Date(maxD+'T00:00:00');endDt.setDate(endDt.getDate()+2);
+  if(filterRid) acts=acts.filter(a=>a.resourceId===filterRid);
+  if(!acts.length){ el.innerHTML='<div class="empty">Nenhuma atividade para este recurso.</div>'; return; }
+  let minD=t, maxD=t;
+  acts.forEach(a=>{ const s=sched[a.id]; if(!s) return; if(s.start<minD) minD=s.start; if(s.end>maxD) maxD=s.end; });
+  const startDt=new Date(minD+'T00:00:00'); startDt.setDate(startDt.getDate()-1);
+  const endDt=new Date(maxD+'T00:00:00'); endDt.setDate(endDt.getDate()+2);
   const totalMs=endDt-startDt;
   const pl=ds=>((new Date(ds+'T00:00:00')-startDt)/totalMs*100).toFixed(3)+'%';
-  const pw=(ds,de)=>{const a=new Date(ds+'T00:00:00'),b=new Date(de+'T00:00:00');b.setDate(b.getDate()+1);return(Math.max(0,(b-a)/totalMs*100)).toFixed(3)+'%';};
-
-  const days=[];const cur=new Date(startDt);
-  while(cur<=endDt){days.push(new Date(cur));cur.setDate(cur.getDate()+1);}
+  const pw=(ds,de)=>{ const a=new Date(ds+'T00:00:00'),b=new Date(de+'T00:00:00'); b.setDate(b.getDate()+1); return(Math.max(0,(b-a)/totalMs*100)).toFixed(3)+'%'; };
+  const days=[]; const cur=new Date(startDt);
+  while(cur<=endDt){ days.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
   const step=Math.max(1,Math.floor(days.length/14));
   const hdr=days.filter((_,i)=>i%step===0).map(d=>{
     const wk=d.getDay()===0||d.getDay()===6;
     return `<span style="flex:${step};text-align:center;font-size:9.5px;color:${wk?'var(--muted2)':'var(--muted)'}">${d.getDate()}/${d.getMonth()+1}</span>`;
   }).join('');
-  const wkShades=days.filter(d=>d.getDay()===0||d.getDay()===6).map(d=>{
-    const ds=d.toISOString().split('T')[0];
-    return `<div class="gantt-weekend" style="left:${pl(ds)};width:${pw(ds,ds)}"></div>`;
-  }).join('');
+  const wkShades=days.filter(d=>d.getDay()===0||d.getDay()===6).map(d=>{ const ds=d.toISOString().split('T')[0]; return `<div class="gantt-weekend" style="left:${pl(ds)};width:${pw(ds,ds)}"></div>`; }).join('');
   const todayPl=pl(t);
-
   const groups={};
-  state.resources.forEach(r=>{if(!filterRid||r.id===filterRid)groups[r.id]={res:r,acts:[]};});
-  acts.forEach(a=>{if(groups[a.resourceId])groups[a.resourceId].acts.push(a);});
-
+  state.resources.forEach(r=>{ if(!filterRid||r.id===filterRid) groups[r.id]={res:r,acts:[]}; });
+  acts.forEach(a=>{ if(groups[a.resourceId]) groups[a.resourceId].acts.push(a); });
   const rows=Object.values(groups).filter(g=>g.acts.length).map(g=>{
-    const grpRow=`<div class="gantt-group-row">
-      <div class="gantt-group-label" style="color:${g.res.color}">${initials(g.res.name)} ${g.res.name.split(' ')[0]}</div>
-      <div class="gantt-group-line"></div>
-    </div>`;
+    const grp=`<div class="gantt-group-row"><div class="gantt-group-label" style="color:${g.res.color}">${initials(g.res.name)} ${g.res.name.split(' ')[0]}</div><div class="gantt-group-line"></div></div>`;
     const actRows=g.acts.map(act=>{
-      const s=sched[act.id];if(!s)return'';
-      const color=g.res.color;
-      const isPushed=s.start!==act.startDate;
-      const pr=PRI[act.priority||2];
+      const s=sched[act.id]; if(!s) return '';
+      const color=g.res.color, isPushed=s.start!==act.startDate, pr=PRI[act.priority||2];
       return `<div class="gantt-row">
         <div class="gantt-label-col">
           <div class="gantt-label" title="${act.name}">${act.name.length>26?act.name.slice(0,24)+'…':act.name}</div>
-          <div class="gantt-sub">${fmtDate(s.start)} → ${fmtDate(s.end)}${isPushed?' <span style="color:var(--warning)">↷ reprog.</span>':''}</div>
+          <div class="gantt-sub">${fmtDate(s.start)} → ${fmtDate(s.end)}${isPushed?' <span style="color:var(--warning)">↷</span>':''}</div>
         </div>
         <div class="gantt-track">
           ${wkShades}
           <div class="gantt-today" style="left:${todayPl}"></div>
-          <div class="gantt-bar" style="left:${pl(s.start)};width:${pw(s.start,s.end)};background:${color}1a;border-color:${color};color:${color}"
-            title="${act.name} | ${fmtDate(s.start)} → ${fmtDate(s.end)} | ${pr.label}">
-            ${pr.label.split(' ')[0]}
-          </div>
+          <div class="gantt-bar" style="left:${pl(s.start)};width:${pw(s.start,s.end)};background:${color}1a;border-color:${color};color:${color}" title="${act.name} · ${pr.label}">${pr.label.split(' ')[0]}</div>
           ${act.deviations.map((_,i)=>`<div class="gantt-bar" style="left:calc(${pl(s.start)} + ${i*1.5}%);width:1.2%;min-width:4px;background:rgba(201,109,0,.35);border-color:var(--warning);z-index:3"></div>`).join('')}
           ${act.progress>0?`<div style="position:absolute;bottom:2px;left:${pl(s.start)};width:calc(${pw(s.start,s.end)} * ${act.progress/100});height:3px;background:${color};opacity:.5;border-radius:2px"></div>`:''}
         </div>
       </div>`;
     }).join('');
-    return grpRow+actRows;
+    return grp+actRows;
   }).join('');
-
   el.innerHTML=`<div class="gantt-header"><div class="gantt-label-col"></div><div style="flex:1;display:flex">${hdr}</div></div>${rows}`;
 }
 
@@ -954,8 +972,8 @@ function renderGantt(){
 // ════════════════════════════════════════════════
 function renderOverview(){
   const el=document.getElementById('overview-grid');
-  if(!state.resources.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso cadastrado.</div>';return;}
-  const sched=computeSchedule(),t=todayStr();
+  if(!state.resources.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso cadastrado.</div>'; return; }
+  const sched=computeSchedule(), t=todayStr();
   el.innerHTML=state.resources.map(r=>{
     const acts=state.activities.filter(a=>a.resourceId===r.id&&!a.done);
     const totalH=acts.reduce((s,a)=>s+a.estimatedHours+a.deviations.reduce((ss,d)=>ss+d.hours,0),0);
@@ -981,9 +999,8 @@ function renderOverview(){
 //  STATS
 // ════════════════════════════════════════════════
 function renderStats(sched){
-  const el=document.getElementById('stats-row'),t=todayStr();
-  const total=state.activities.length;
-  const done=state.activities.filter(a=>a.done).length;
+  const el=document.getElementById('stats-row'), t=todayStr();
+  const total=state.activities.length, done=state.activities.filter(a=>a.done).length;
   const overdue=state.activities.filter(a=>!a.done&&sched[a.id]?.end<t).length;
   const ovs=detectOverlaps(sched).length;
   const stats=[
@@ -1010,7 +1027,7 @@ function showView(name){
   const map={dashboard:'Dashboard',activities:'Atividades',gantt:'Gantt',overview:'Visão'};
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.textContent.includes(map[name]||name)));
 }
-function toggleForm(id){document.getElementById(id).classList.toggle('hidden');}
+function toggleForm(id){ document.getElementById(id).classList.toggle('hidden'); }
 
 function renderAll(){
   const sched=computeSchedule();
@@ -1023,12 +1040,6 @@ function renderAll(){
   renderNotifications(sched);
   renderOverlapAlerts(sched);
 }
-
-// ════════════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════════════
-document.getElementById('a-date').value=todayStr();
-startListening();   // Firebase listener drives everything from here
 </script>
 </body>
 </html>
