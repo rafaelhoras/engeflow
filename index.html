@@ -583,24 +583,47 @@ function setSyncing(){document.getElementById('sync-dot').className='syncing';do
 function setSynced(){document.getElementById('sync-dot').className='';document.getElementById('sync-label').textContent='Sincronizado';}
 function setSyncError(){document.getElementById('sync-dot').className='error';document.getElementById('sync-label').textContent='Erro de conexão';}
 
+function cleanForFirebase(obj){
+  // Remove undefined fields; convert null to 0 or '' recursively
+  return JSON.parse(JSON.stringify(obj, (k,v)=>{
+    if(v===undefined) return 0;
+    if(v===null) return 0;
+    return v;
+  }));
+}
+
 function pushState(){
   setSyncing();
-  db.ref(ROOT).set({
-    projects:state.projects, resources:state.resources, activities:state.activities,
-    nextPid:state.nextPid, nextRid:state.nextRid, nextAid:state.nextAid
-  }).then(setSynced).catch(e=>{setSyncError();console.error(e);});
+  const payload = {
+    projects:  cleanForFirebase(state.projects),
+    resources: cleanForFirebase(state.resources),
+    activities:cleanForFirebase(state.activities),
+    nextPid:   state.nextPid||1,
+    nextRid:   state.nextRid||1,
+    nextAid:   state.nextAid||1
+  };
+  db.ref(ROOT).set(payload)
+    .then(setSynced)
+    .catch(e=>{setSyncError();console.error('Firebase write error:',e);});
+}
+
+// Firebase stores arrays as objects {0:{...},1:{...}} — convert back to array
+function toArr(val){
+  if(!val) return [];
+  if(Array.isArray(val)) return val.filter(x=>x!=null);
+  return Object.keys(val).sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]).filter(x=>x!=null);
 }
 
 function startListening(){
   _dbListener=db.ref(ROOT).on('value',snapshot=>{
     const data=snapshot.val();
     if(data){
-      state.projects  =data.projects  ||[];
-      state.resources =data.resources ||[];
-      state.activities=data.activities||[];
-      state.nextPid   =data.nextPid   ||(state.projects.length+1);
-      state.nextRid   =data.nextRid   ||(state.resources.length+1);
-      state.nextAid   =data.nextAid   ||(state.activities.length+1);
+      state.projects  =toArr(data.projects);
+      state.resources =toArr(data.resources);
+      state.activities=toArr(data.activities);
+      state.nextPid   =data.nextPid||Math.max(0,...[0].concat(state.projects.map(p=>p.id||0)))+1;
+      state.nextRid   =data.nextRid||Math.max(0,...[0].concat(state.resources.map(r=>r.id||0)))+1;
+      state.nextAid   =data.nextAid||Math.max(0,...[0].concat(state.activities.map(a=>a.id||0)))+1;
     } else { seedDemo(); return; }
     if(!_appReady) _appReady=true;
     renderAll();
