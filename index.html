@@ -3,473 +3,429 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EngeFlow · Gestão de Projetos</title>
+<title>EngeFlow</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
-:root {
-  --bg:#eef1f7; --surface:#f4f6fb; --surface2:#ffffff;
-  --border:#d4daea; --border2:#c2cad9;
-  --accent:#2f6be0; --accent2:#6c47d4;
-  --success:#15905f; --warning:#c96d00; --danger:#c0392b; --suspended:#64748b;
-  --text:#1a2540; --text2:#2d3f5e; --muted:#5a6e8c; --muted2:#8da0bc;
-  --radius:10px;
-  --shadow:0 2px 8px rgba(30,50,100,.09),0 6px 20px rgba(30,50,100,.06);
-  --shadow-sm:0 1px 3px rgba(30,50,100,.07);
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#eef1f7;--sur:#f4f6fb;--sur2:#fff;
+  --brd:#d4daea;--brd2:#c2cad9;
+  --acc:#2f6be0;--acc2:#6c47d4;
+  --ok:#15905f;--warn:#c96d00;--err:#c0392b;--sus:#64748b;
+  --tx:#1a2540;--tx2:#2d3f5e;--mu:#5a6e8c;--mu2:#8da0bc;
+  --r:10px;
+  --sh:0 1px 3px rgba(30,50,100,.07);
+  --sh2:0 2px 8px rgba(30,50,100,.09),0 6px 20px rgba(30,50,100,.06);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;min-height:100vh;}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:13.5px;min-height:100vh;}
 
-/* STATUS COLORS */
-.sc-waiting   { background:#dbeafe; border-color:#3b82f6; color:#1d4ed8; }
-.sc-active    { background:#fef3c7; border-color:#f59e0b; color:#b45309; }
-.sc-done      { background:#d1fae5; border-color:#10b981; color:#065f46; }
-.sc-overdue   { background:#fee2e2; border-color:#ef4444; color:#991b1b; }
-.sc-suspended { background:#f1f5f9; border-color:#94a3b8; color:#475569; }
-
-/* LOADING */
-#loading-screen{position:fixed;inset:0;background:var(--surface2);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s;}
-#loading-screen.fade{opacity:0;pointer-events:none;}
-.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* SCREENS */
+#scr-load{position:fixed;inset:0;background:var(--sur2);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .4s;}
+#scr-load.hide{opacity:0;pointer-events:none;}
+#scr-login{position:fixed;inset:0;background:var(--bg);z-index:900;display:none;align-items:center;justify-content:center;}
+.spin{width:34px;height:34px;border:3px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
 
 /* LOGIN */
-#login-screen{position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;align-items:center;justify-content:center;}
-.login-box{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:36px 32px;width:380px;max-width:95vw;box-shadow:0 8px 40px rgba(30,50,100,.12);}
-.login-logo{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.5px;margin-bottom:6px;}
-.login-logo span{color:var(--accent);}
-.login-sub{font-size:12.5px;color:var(--muted);margin-bottom:28px;}
-.login-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.2px;display:block;margin-bottom:4px;}
-.login-input{background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;color:var(--text);font-family:inherit;font-size:13.5px;padding:9px 12px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:14px;box-sizing:border-box;}
-.login-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,107,224,.1);}
-.login-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:600;padding:10px;width:100%;cursor:pointer;transition:background .15s;margin-top:4px;}
-.login-btn:hover{background:#235dcc;}
-.login-btn:disabled{background:var(--muted2);cursor:not-allowed;}
-.login-error{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--danger);margin-bottom:14px;display:none;}
-.login-error.show{display:block;}
-.login-forgot{font-size:11.5px;color:var(--accent);cursor:pointer;text-align:center;margin-top:14px;text-decoration:underline;}
+.lbox{background:var(--sur2);border:1px solid var(--brd);border-radius:14px;padding:34px 30px;width:370px;max-width:94vw;box-shadow:0 8px 40px rgba(30,50,100,.12);}
+.llogo{font-size:21px;font-weight:700;margin-bottom:5px;}.llogo span{color:var(--acc);}
+.lsub{font-size:12px;color:var(--mu);margin-bottom:26px;}
+.linput{background:var(--sur);border:1.5px solid var(--brd2);border-radius:7px;color:var(--tx);font-family:inherit;font-size:13px;padding:8px 11px;width:100%;outline:none;margin-bottom:12px;transition:border-color .15s;}
+.linput:focus{border-color:var(--acc);}
+.lbtn{background:var(--acc);color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;padding:9px;width:100%;cursor:pointer;transition:background .15s;margin-top:2px;}
+.lbtn:hover{background:#235dcc;}.lbtn:disabled{background:var(--mu2);cursor:not-allowed;}
+.lerr{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);border-radius:7px;padding:8px 11px;font-size:11.5px;color:var(--err);margin-bottom:12px;display:none;}
+.lerr.on{display:block;}
+.lfgt{font-size:11px;color:var(--acc);cursor:pointer;text-align:center;margin-top:12px;text-decoration:underline;}
+llbl{font-size:10.5px;color:var(--mu);font-weight:600;display:block;margin-bottom:3px;}
 
 /* SYNC */
-#sync-status{position:fixed;bottom:14px;right:14px;z-index:150;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);box-shadow:var(--shadow-sm);}
-#sync-dot{width:7px;height:7px;border-radius:50%;background:var(--success);}
-#sync-dot.syncing{background:var(--warning);animation:pulse .8s infinite;}
-#sync-dot.error{background:var(--danger);}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+#sync{position:fixed;bottom:12px;right:12px;z-index:150;display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;font-size:10.5px;font-weight:600;background:var(--sur2);border:1px solid var(--brd);box-shadow:var(--sh);}
+#sdot{width:6px;height:6px;border-radius:50%;background:var(--ok);}
+#sdot.busy{background:var(--warn);animation:pu .8s infinite;}
+#sdot.fail{background:var(--err);}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* HEADER */
-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:0 22px;display:flex;align-items:center;gap:20px;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm);}
-.logo{font-weight:700;font-size:16px;letter-spacing:-.5px;color:var(--text);white-space:nowrap;}
-.logo span{color:var(--accent);}
-nav{display:flex;gap:3px;flex:1;}
-nav button{background:none;border:none;color:var(--muted);padding:5px 11px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;transition:all .15s;white-space:nowrap;}
-nav button.active{background:var(--accent);color:#fff;}
-nav button:not(.active):hover{background:var(--bg);color:var(--text);}
-.notif-btn{position:relative;background:none;border:none;cursor:pointer;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--muted);transition:background .15s;}
-.notif-btn:hover{background:var(--bg);}
-.notif-badge{position:absolute;top:3px;right:3px;background:var(--danger);color:#fff;font-size:9px;font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface2);}
-.user-chip{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 6px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:11.5px;font-weight:500;color:var(--text2);white-space:nowrap;}
-.user-chip .av{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.logout-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:2px 4px;border-radius:4px;font-family:inherit;}
-.logout-btn:hover{color:var(--danger);}
+header{background:var(--sur2);border-bottom:1px solid var(--brd);padding:0 20px;display:flex;align-items:center;gap:18px;height:50px;position:sticky;top:0;z-index:200;box-shadow:var(--sh);}
+.logo{font-weight:700;font-size:15px;letter-spacing:-.5px;white-space:nowrap;}.logo span{color:var(--acc);}
+nav{display:flex;gap:2px;flex:1;flex-wrap:wrap;}
+nav button{background:none;border:none;color:var(--mu);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;transition:all .15s;white-space:nowrap;}
+nav button.on{background:var(--acc);color:#fff;}
+nav button:not(.on):hover{background:var(--bg);color:var(--tx);}
+.uchip{display:flex;align-items:center;gap:6px;padding:3px 9px 3px 5px;border-radius:20px;background:var(--bg);border:1px solid var(--brd);font-size:11px;white-space:nowrap;}
+.uav{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.nbell{position:relative;background:none;border:none;cursor:pointer;width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mu);}
+.nbell:hover{background:var(--bg);}
+.nbadge{position:absolute;top:2px;right:2px;background:var(--err);color:#fff;font-size:8px;font-weight:700;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--sur2);}
+.outbtn{background:none;border:none;cursor:pointer;color:var(--mu);font-size:11px;padding:1px 3px;font-family:inherit;}
+.outbtn:hover{color:var(--err);}
 
-/* LAYOUT */
-.app{display:flex;height:calc(100vh - 52px);overflow:hidden;}
-.sidebar{width:280px;min-width:280px;background:var(--surface2);border-right:1px solid var(--border);overflow-y:auto;padding:13px 12px;display:flex;flex-direction:column;gap:11px;}
-.main{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:18px;}
+/* APP */
+.app{display:flex;height:calc(100vh - 50px);overflow:hidden;}
+.side{width:278px;min-width:278px;background:var(--sur2);border-right:1px solid var(--brd);overflow-y:auto;padding:12px 11px;display:flex;flex-direction:column;gap:10px;}
+.main{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:16px;}
 
-.section-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;}
-.page-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px;}
-.card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:13px;box-shadow:var(--shadow-sm);}
+/* CARDS */
+.card{background:var(--sur2);border:1px solid var(--brd);border-radius:var(--r);padding:12px;box-shadow:var(--sh);}
+.stitle{font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--mu);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;}
+.ptitle{font-size:14px;font-weight:700;letter-spacing:-.3px;}
 
-input,select,textarea{background:var(--surface);border:1.5px solid var(--border2);border-radius:6px;color:var(--text);font-family:inherit;font-size:13px;padding:6px 10px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;}
-input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,107,224,.1);}
-select option{background:var(--surface2);}
-label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:600;letter-spacing:.2px;}
-.form-row{margin-bottom:9px;}
-.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px;}
+/* FORMS */
+.fi{background:var(--sur);border:1.5px solid var(--brd2);border-radius:6px;color:var(--tx);font-family:inherit;font-size:12.5px;padding:6px 9px;width:100%;outline:none;transition:border-color .15s;}
+.fi:focus{border-color:var(--acc);}
+.fi option{background:var(--sur2);}
+.flbl{font-size:10.5px;color:var(--mu);display:block;margin-bottom:3px;font-weight:600;}
+.fr{margin-bottom:8px;}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;}
 
-.btn{border:none;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:500;padding:6px 13px;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-primary:hover{background:#235dcc;}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2);}
-.btn-ghost:hover{color:var(--text);background:var(--bg);}
-.btn-danger{background:transparent;color:var(--danger);border:1px solid transparent;}
-.btn-danger:hover{background:rgba(192,57,43,.08);}
-.btn-warning{background:transparent;color:var(--warning);border:1px solid transparent;}
-.btn-warning:hover{background:rgba(201,109,0,.08);}
-.btn-sm{padding:4px 10px;font-size:11.5px;}
-.btn-xs{padding:2px 7px;font-size:11px;border-radius:5px;}
+/* BUTTONS */
+.btn{border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;padding:5px 12px;transition:all .15s;display:inline-flex;align-items:center;gap:4px;}
+.bpri{background:var(--acc);color:#fff;}.bpri:hover{background:#235dcc;}
+.bgh{background:transparent;color:var(--mu);border:1px solid var(--brd2);}.bgh:hover{color:var(--tx);background:var(--bg);}
+.bdn{background:transparent;color:var(--err);border:1px solid transparent;}.bdn:hover{background:rgba(192,57,43,.08);}
+.bwn{background:transparent;color:var(--warn);border:1px solid transparent;}.bwn:hover{background:rgba(201,109,0,.08);}
+.bsm{padding:3px 9px;font-size:11px;}
+.bxs{padding:2px 6px;font-size:10.5px;border-radius:5px;}
 
-/* PROJECT CARDS IN SIDEBAR */
-.proj-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid #2f6be0;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:pointer;transition:box-shadow .15s;}
-.proj-item:hover{box-shadow:var(--shadow-sm);}
-.proj-name{font-weight:600;font-size:12.5px;}
-.proj-dates{font-size:10.5px;color:var(--muted);}
+/* ITEMS */
+.pitem{background:var(--sur);border:1px solid var(--brd);border-left:3px solid var(--acc);border-radius:7px;padding:7px 9px;margin-bottom:5px;cursor:pointer;transition:box-shadow .15s;}
+.pitem:hover{box-shadow:var(--sh);}
+.ritem{background:var(--sur);border:1px solid var(--brd);border-radius:7px;padding:7px 9px;margin-bottom:5px;display:flex;align-items:center;gap:8px;box-shadow:var(--sh);}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+.rinfo{flex:1;min-width:0;}
+.rname{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rhrs{font-size:10px;color:var(--mu);}
+.lbar{height:3px;border-radius:2px;background:var(--brd);margin-top:4px;overflow:hidden;}
+.lfill{height:100%;border-radius:2px;transition:width .4s;}
 
-/* RESOURCE ITEMS */
-.resource-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:9px;box-shadow:var(--shadow-sm);}
-.avatar{width:29px;height:29px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
-.resource-info{flex:1;min-width:0;}
-.resource-name{font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.resource-hours{font-size:10.5px;color:var(--muted);}
-.load-bar{height:3px;border-radius:2px;background:var(--border);margin-top:5px;overflow:hidden;}
-.load-fill{height:100%;border-radius:2px;transition:width .4s;}
+/* ACTIVITY */
+.aitem{background:var(--sur2);border:1px solid var(--brd);border-left:3px solid var(--acc);border-radius:7px;padding:9px 12px;margin-bottom:6px;box-shadow:var(--sh);transition:box-shadow .15s;}
+.aitem:hover{box-shadow:var(--sh2);}
+.aitem.done{border-left-color:var(--ok);opacity:.72;}
+.aitem.late{border-left-color:var(--err);background:#fff8f7;}
+.aitem.wait{border-left-color:#3b82f6;}
+.aitem.susp{border-left-color:var(--sus);background:#f8fafc;}
+.ahead{display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap;}
+.aname{font-weight:600;flex:1;min-width:90px;font-size:12.5px;}
+.ameta{font-size:10.5px;color:var(--mu);margin-top:3px;display:flex;gap:9px;flex-wrap:wrap;line-height:1.5;}
+.pbar{height:3px;border-radius:2px;background:var(--bg);overflow:hidden;margin-top:4px;}
+.pfill{height:100%;border-radius:2px;transition:width .3s;}
 
-/* ACTIVITY CARDS */
-.activity-item{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:10px 13px;margin-bottom:7px;box-shadow:var(--shadow-sm);transition:box-shadow .15s;}
-.activity-item:hover{box-shadow:var(--shadow);}
-.activity-item.done{border-left-color:var(--success);opacity:.75;}
-.activity-item.overdue{border-left-color:var(--danger);background:#fff8f7;}
-.activity-item.waiting{border-left-color:#3b82f6;}
-.activity-item.suspended{border-left-color:var(--suspended);background:#f8fafc;}
-.activity-header{display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;}
-.activity-name{font-weight:600;flex:1;min-width:100px;font-size:13px;}
-.tag{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;white-space:nowrap;background:rgba(47,107,224,.1);color:var(--accent);}
-.tag.done{background:rgba(21,144,95,.1);color:var(--success);}
-.tag.overdue{background:rgba(192,57,43,.1);color:var(--danger);}
-.tag.waiting{background:rgba(59,130,246,.1);color:#1d4ed8;}
-.tag.suspended{background:rgba(100,116,139,.1);color:var(--suspended);}
-.activity-meta{font-size:11px;color:var(--muted);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;line-height:1.5;}
-.dep-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:rgba(108,71,212,.1);color:var(--accent2);padding:2px 6px;border-radius:12px;font-weight:600;}
-.proj-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px;border-radius:12px;font-weight:600;}
-.progress-bar{height:4px;border-radius:2px;background:var(--bg);overflow:hidden;margin-top:5px;}
-.progress-fill{height:100%;border-radius:2px;transition:width .3s;}
+/* TAGS */
+.tag{font-size:9.5px;padding:1px 6px;border-radius:20px;font-weight:600;white-space:nowrap;}
+.t-ok{background:rgba(21,144,95,.1);color:var(--ok);}
+.t-err{background:rgba(192,57,43,.1);color:var(--err);}
+.t-wait{background:rgba(59,130,246,.1);color:#1d4ed8;}
+.t-sus{background:rgba(100,116,139,.1);color:var(--sus);}
+.t-act{background:rgba(47,107,224,.1);color:var(--acc);}
+.pbadge{display:inline-flex;align-items:center;gap:2px;font-size:9px;padding:1px 5px;border-radius:10px;font-weight:700;border:1px solid;}
+.p1{background:rgba(192,57,43,.1);color:var(--err);border-color:rgba(192,57,43,.2);}
+.p2{background:rgba(201,109,0,.1);color:var(--warn);border-color:rgba(201,109,0,.2);}
+.p3{background:rgba(47,107,224,.1);color:var(--acc);border-color:rgba(47,107,224,.2);}
+.dbadge{font-size:9.5px;background:rgba(108,71,212,.1);color:var(--acc2);padding:1px 5px;border-radius:10px;font-weight:600;}
+.prjbadge{font-size:9.5px;padding:1px 5px;border-radius:10px;font-weight:600;}
 
-.priority-badge{display:inline-flex;align-items:center;gap:2px;font-size:9.5px;padding:1px 6px;border-radius:10px;font-weight:700;border:1px solid;}
-.p1{background:rgba(192,57,43,.1);color:var(--danger);border-color:rgba(192,57,43,.2);}
-.p2{background:rgba(201,109,0,.1);color:var(--warning);border-color:rgba(201,109,0,.2);}
-.p3{background:rgba(47,107,224,.1);color:var(--accent);border-color:rgba(47,107,224,.2);}
+/* OVERLAP */
+.oalert{background:rgba(201,109,0,.07);border:1px solid rgba(201,109,0,.25);border-radius:7px;padding:8px 12px;margin-bottom:7px;font-size:11.5px;color:var(--warn);display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 
-.overlap-alert{background:rgba(201,109,0,.07);border:1px solid rgba(201,109,0,.25);border-radius:8px;padding:9px 13px;margin-bottom:8px;font-size:12px;color:var(--warning);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+/* GANTT */
+.ghdr{display:flex;align-items:center;border-bottom:1px solid var(--brd);padding-bottom:4px;margin-bottom:4px;}
+.grow{display:flex;align-items:center;margin-bottom:3px;min-height:28px;}
+.glcol{width:170px;min-width:170px;padding-right:8px;flex-shrink:0;}
+.glbl{font-size:11px;font-weight:500;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gsub{font-size:9px;color:var(--mu2);}
+.gtrk{flex:1;height:24px;background:var(--bg);border-radius:4px;position:relative;overflow:visible;border:1px solid var(--brd);}
+.gbar{position:absolute;height:16px;top:3px;border-radius:3px;display:flex;align-items:center;padding:0 5px;font-size:8.5px;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer;border:1.5px solid;transition:filter .15s;}
+.gbar:hover{filter:brightness(.9);z-index:10;}
+.gbase{position:absolute;height:3px;bottom:-6px;border-radius:2px;background:rgba(100,116,139,.35);}
+.gtoday{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--err);opacity:.7;z-index:8;pointer-events:none;}
+.gwk{position:absolute;top:0;bottom:0;background:rgba(90,110,140,.05);pointer-events:none;}
+.ggrp{display:flex;align-items:center;margin:8px 0 3px;}
+.ggrplbl{width:170px;min-width:170px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding-right:8px;flex-shrink:0;}
+.ggrpln{flex:1;height:1px;background:var(--brd);}
 
-/* ── GANTT ── */
-.gantt-wrap{overflow-x:auto;}
-.gantt-header-row{display:flex;align-items:center;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:4px;}
-.gantt-row{display:flex;align-items:center;margin-bottom:3px;min-height:30px;}
-.gantt-label-col{width:180px;min-width:180px;padding-right:10px;flex-shrink:0;}
-.gantt-label{font-size:11.5px;font-weight:500;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.gantt-sub{font-size:9px;color:var(--muted2);}
-.gantt-track{flex:1;height:26px;background:var(--bg);border-radius:5px;position:relative;overflow:visible;border:1px solid var(--border);}
-.gantt-bar{position:absolute;height:16px;top:4px;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer;transition:filter .15s;border:1.5px solid;}
-.gantt-bar:hover{filter:brightness(.93);z-index:10;}
-.gantt-baseline{position:absolute;height:4px;bottom:-7px;border-radius:2px;background:rgba(100,116,139,.35);border:none;z-index:2;}
-.gantt-today{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--danger);opacity:.7;z-index:8;pointer-events:none;}
-.gantt-weekend{position:absolute;top:0;bottom:0;background:rgba(90,110,140,.05);pointer-events:none;}
-.gantt-group-row{display:flex;align-items:center;margin:10px 0 4px;}
-.gantt-group-label{width:180px;min-width:180px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding-right:10px;flex-shrink:0;}
-.gantt-group-line{flex:1;height:1px;background:var(--border);}
-
-/* PROJECT GANTT LEGEND */
-.gantt-legend{display:flex;gap:14px;font-size:11px;color:var(--muted);flex-wrap:wrap;padding:4px 2px;}
-.gantt-legend-item{display:flex;align-items:center;gap:5px;}
-.gantt-legend-box{width:14px;height:10px;border-radius:3px;border:1.5px solid;}
-
-/* PROJECT HEALTH CARD */
-.health-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);display:flex;gap:20px;flex-wrap:wrap;align-items:center;}
-.health-stat{display:flex;flex-direction:column;gap:2px;}
-.health-val{font-size:18px;font-family:'JetBrains Mono',monospace;font-weight:600;}
-.health-lbl{font-size:10.5px;color:var(--muted);}
-.health-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
-.pill-ok{background:rgba(21,144,95,.1);color:var(--success);}
-.pill-warn{background:rgba(201,109,0,.1);color:var(--warning);}
-.pill-danger{background:rgba(192,57,43,.1);color:var(--danger);}
-.pill-early{background:rgba(47,107,224,.1);color:var(--accent);}
+/* HEALTH */
+.hcard{background:var(--sur2);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:8px;}
+.hpill{padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;}
+.hp-ok{background:rgba(21,144,95,.1);color:var(--ok);}
+.hp-warn{background:rgba(201,109,0,.1);color:var(--warn);}
+.hp-err{background:rgba(192,57,43,.1);color:var(--err);}
+.hp-early{background:rgba(47,107,224,.1);color:var(--acc);}
 
 /* OVERVIEW */
-.overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
-.ov-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:7px;box-shadow:var(--shadow-sm);}
-.ov-name{font-weight:700;font-size:13.5px;}
-.ov-stat{font-size:11px;color:var(--muted);}
-.ov-big{font-size:24px;font-family:'JetBrains Mono',monospace;font-weight:500;}
+.ovgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:11px;}
+.ovcard{background:var(--sur2);border:1px solid var(--brd);border-radius:var(--r);padding:13px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--sh);}
 
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(20,35,70,.3);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-.modal{background:var(--surface2);border:1px solid var(--border);border-radius:13px;padding:22px;width:460px;max-width:95vw;box-shadow:0 10px 40px rgba(20,35,70,.14);max-height:90vh;overflow-y:auto;}
-.modal h3{font-size:14.5px;margin-bottom:14px;font-weight:700;}
+.mover{position:fixed;inset:0;background:rgba(20,35,70,.28);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal{background:var(--sur2);border:1px solid var(--brd);border-radius:12px;padding:20px;width:440px;max-width:94vw;box-shadow:0 8px 36px rgba(20,35,70,.13);max-height:88vh;overflow-y:auto;}
+.modal h3{font-size:14px;margin-bottom:12px;font-weight:700;}
 
-/* NOTIFICATION PANEL */
-.notif-panel{position:fixed;top:56px;right:10px;width:330px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(20,35,70,.12);z-index:250;overflow:hidden;}
-.notif-header{padding:11px 15px;border-bottom:1px solid var(--border);font-weight:700;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;}
-.notif-list{max-height:340px;overflow-y:auto;}
-.notif-item{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--text2);}
-.notif-item:hover{background:var(--bg);}
-.notif-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
-.notif-text{flex:1;}
-.notif-sub{color:var(--muted);font-size:10.5px;margin-top:1px;}
-.notif-empty{padding:18px;text-align:center;color:var(--muted2);font-size:12px;}
+/* NOTIF */
+.npanel{position:fixed;top:54px;right:8px;width:320px;background:var(--sur2);border:1px solid var(--brd);border-radius:11px;box-shadow:0 6px 28px rgba(20,35,70,.11);z-index:250;overflow:hidden;}
+.nphdr{padding:10px 14px;border-bottom:1px solid var(--brd);font-weight:700;font-size:12px;display:flex;justify-content:space-between;align-items:center;}
+.nplist{max-height:320px;overflow-y:auto;}
+.npi{padding:8px 13px;border-bottom:1px solid var(--brd);display:flex;gap:8px;align-items:flex-start;font-size:11px;}
+.npi:hover{background:var(--bg);}
+.npsub{color:var(--mu);font-size:10px;margin-top:1px;}
 
 /* MISC */
-.empty{color:var(--muted2);font-size:12px;text-align:center;padding:20px 0;}
-.hidden{display:none !important;}
-hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
+.empty{color:var(--mu2);font-size:11.5px;text-align:center;padding:18px 0;}
+.hidden{display:none!important;}
+hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
 .view{display:none;}
-.view.active{display:flex;flex-direction:column;gap:18px;}
-.dev-item{padding:7px 10px;background:var(--bg);border-radius:6px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
-::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.view.on{display:flex;flex-direction:column;gap:16px;}
+.devi{padding:6px 9px;background:var(--bg);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
+.mono{font-family:'JetBrains Mono',monospace;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px;}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-screen">
-  <div class="spinner"></div>
-  <div style="font-size:14px;font-weight:600">Enge<span style="color:var(--accent)">Flow</span></div>
-  <div style="font-size:12px;color:var(--muted)">Verificando autenticação...</div>
+<div id="scr-load">
+  <div class="spin"></div>
+  <div style="font-weight:700">Enge<span style="color:var(--acc)">Flow</span></div>
+  <div style="font-size:11.5px;color:var(--mu)">Verificando autenticação...</div>
 </div>
 
-<!-- LOGIN -->
-<div id="login-screen" style="display:none">
-  <div class="login-box">
-    <div class="login-logo">Enge<span>Flow</span></div>
-    <div class="login-sub">Gestão de Projetos de Engenharia · Acesso restrito à equipe</div>
-    <div class="login-error" id="login-error"></div>
-    <label class="login-label">E-mail</label>
-    <input class="login-input" type="email" id="login-email" placeholder="voce@empresa.com.br" autocomplete="email">
-    <label class="login-label">Senha</label>
-    <input class="login-input" type="password" id="login-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
-    <div class="login-forgot" onclick="doResetPassword()">Esqueci minha senha</div>
+<div id="scr-login">
+  <div class="lbox">
+    <div class="llogo">Enge<span>Flow</span></div>
+    <div class="lsub">Gestão de Projetos · Acesso restrito à equipe</div>
+    <div class="lerr" id="lerr"></div>
+    <label class="llbl" style="font-size:10.5px;color:var(--mu);font-weight:600;display:block;margin-bottom:3px">E-mail</label>
+    <input class="linput" type="email" id="lemail" placeholder="voce@empresa.com.br" autocomplete="email">
+    <label class="llbl" style="font-size:10.5px;color:var(--mu);font-weight:600;display:block;margin-bottom:3px">Senha</label>
+    <input class="linput" type="password" id="lpwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="lbtn" id="lbtn" onclick="doLogin()">Entrar</button>
+    <div class="lfgt" onclick="doReset()">Esqueci minha senha</div>
   </div>
 </div>
 
-<!-- SYNC -->
-<div id="sync-status"><div id="sync-dot"></div><span id="sync-label">Sincronizado</span></div>
+<div id="sync"><div id="sdot"></div><span id="slbl">Sincronizado</span></div>
 
-<!-- HEADER -->
-<header id="main-header" class="hidden">
+<header id="hdr" class="hidden">
   <div class="logo">Enge<span>Flow</span></div>
   <nav>
-    <button class="active" onclick="showView('dashboard')">Dashboard</button>
-    <button onclick="showView('activities')">Atividades</button>
-    <button onclick="showView('resources-gantt')">Gantt Recursos</button>
-    <button onclick="showView('projects-gantt')">Gantt Projetos</button>
-    <button onclick="showView('overview')">Visão Geral</button>
+    <button class="on" onclick="gv('dashboard')">Dashboard</button>
+    <button onclick="gv('activities')">Atividades</button>
+    <button onclick="gv('rgantt')">Gantt Recursos</button>
+    <button onclick="gv('pgantt')">Gantt Projetos</button>
+    <button onclick="gv('overview')">Visão Geral</button>
   </nav>
-  <button class="notif-btn" onclick="toggleNotifPanel()" id="notif-toggle-btn">🔔<span class="notif-badge hidden" id="notif-count">0</span></button>
-  <div class="user-chip">
-    <div class="av" id="user-initials">?</div>
-    <span id="user-email-display" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-    <button class="logout-btn" onclick="doLogout()">⎋ Sair</button>
+  <button class="nbell" onclick="toggleN()" id="nbtn">🔔<span class="nbadge hidden" id="nbdg">0</span></button>
+  <div class="uchip">
+    <div class="uav" id="uav">?</div>
+    <span id="uemail" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px"></span>
+    <button class="outbtn" onclick="doLogout()">⎋ Sair</button>
   </div>
 </header>
 
-<!-- NOTIF PANEL -->
-<div class="notif-panel hidden" id="notif-panel">
-  <div class="notif-header">Notificações <button class="btn btn-xs btn-ghost" onclick="closeNotifPanel()">Fechar</button></div>
-  <div class="notif-list" id="notif-list"></div>
+<div class="npanel hidden" id="npanel">
+  <div class="nphdr">Notificações <button class="btn bxs bgh" onclick="closeN()">Fechar</button></div>
+  <div class="nplist" id="nplist"></div>
 </div>
 
-<!-- APP -->
-<div class="app hidden" id="main-app">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
+<div class="app hidden" id="app">
+  <aside class="side">
 
     <!-- PROJECTS -->
     <div>
-      <div class="section-title">Projetos <button class="btn btn-xs btn-primary" onclick="toggleForm('proj-form')">+ Novo</button></div>
-      <div class="card hidden" id="proj-form" style="margin-bottom:8px">
-        <div class="form-row"><label>Nome do Projeto</label><input id="p-name" placeholder="Ex: Galpão Industrial A"></div>
-        <div class="form-row"><label>Descrição (opcional)</label><input id="p-desc" placeholder="Breve descrição"></div>
-        <div class="form-row-2">
-          <div><label>Início previsto</label><input id="p-start" type="date"></div>
-          <div><label>Fim previsto</label><input id="p-end" type="date"></div>
+      <div class="stitle">Projetos <button class="btn bxs bpri" onclick="tog('fpj')">+ Novo</button></div>
+      <div class="card hidden" id="fpj" style="margin-bottom:8px">
+        <div class="fr"><label class="flbl">Nome</label><input class="fi" id="pn" placeholder="Ex: Galpão Industrial A"></div>
+        <div class="fr"><label class="flbl">Descrição</label><input class="fi" id="pd" placeholder="Opcional"></div>
+        <div class="fr2">
+          <div><label class="flbl">Início previsto</label><input class="fi" id="ps" type="date"></div>
+          <div><label class="flbl">Fim previsto</label><input class="fi" id="pe" type="date"></div>
         </div>
-        <button class="btn btn-primary btn-sm" style="width:100%" onclick="addProject()">Criar Projeto</button>
+        <button class="btn bpri bsm" style="width:100%" onclick="addProject()">Criar Projeto</button>
       </div>
-      <div id="project-list"><div class="empty">Nenhum projeto cadastrado.</div></div>
+      <div id="plist"><div class="empty">Nenhum projeto.</div></div>
     </div>
 
     <hr>
 
     <!-- RESOURCES -->
     <div>
-      <div class="section-title">Recursos <button class="btn btn-xs btn-primary" onclick="toggleForm('res-form')">+ Novo</button></div>
-      <div class="card hidden" id="res-form" style="margin-bottom:8px">
-        <div class="form-row"><label>Nome completo</label><input id="r-name" placeholder="Ex: João Silva"></div>
-        <div class="form-row"><label>Horas disponíveis/dia</label><input id="r-hours" type="number" value="8" min="1" max="24"></div>
-        <button class="btn btn-primary btn-sm" style="width:100%" onclick="addResource()">Adicionar</button>
+      <div class="stitle">Recursos <button class="btn bxs bpri" onclick="tog('frs')">+ Novo</button></div>
+      <div class="card hidden" id="frs" style="margin-bottom:8px">
+        <div class="fr"><label class="flbl">Nome</label><input class="fi" id="rn" placeholder="Ex: João Silva"></div>
+        <div class="fr"><label class="flbl">Horas/dia</label><input class="fi" id="rh" type="number" value="8" min="1" max="24"></div>
+        <button class="btn bpri bsm" style="width:100%" onclick="addResource()">Adicionar</button>
       </div>
-      <div id="resource-list"></div>
+      <div id="rlist"></div>
     </div>
 
     <hr>
 
     <!-- NEW ACTIVITY -->
     <div>
-      <div class="section-title">Nova Atividade <button class="btn btn-xs btn-primary" onclick="toggleForm('act-form')">+ Nova</button></div>
-      <div class="card hidden" id="act-form">
-        <div class="form-row"><label>Descrição</label><input id="a-name" placeholder="Ex: Verificação de desenho"></div>
-        <div class="form-row"><label>Tipo</label>
-          <select id="a-type">
+      <div class="stitle">Nova Atividade <button class="btn bxs bpri" onclick="tog('fat')">+ Nova</button></div>
+      <div class="card hidden" id="fat">
+        <div class="fr"><label class="flbl">Descrição</label><input class="fi" id="an" placeholder="Ex: Verificação de desenho"></div>
+        <div class="fr"><label class="flbl">Tipo</label>
+          <select class="fi" id="at">
             <option>Verificação de desenho</option><option>Modelagem estrutural</option>
             <option>Memória de cálculo</option><option>Reunião</option>
             <option>Revisão de projeto</option><option>Demanda extraordinária</option><option>Outro</option>
           </select>
         </div>
-        <div class="form-row"><label>Projeto (opcional)</label>
-          <select id="a-project" onchange="onProjectChange()"><option value="">Demanda geral</option></select>
+        <div class="fr"><label class="flbl">Projeto (opcional)</label>
+          <select class="fi" id="apj" onchange="syncPred()"><option value="0">Demanda geral</option></select>
         </div>
-        <div class="form-row-2">
-          <div><label>Horas estimadas</label><input id="a-hours" type="number" value="8" min="0.5" step="0.5"></div>
-          <div><label>Data início</label><input id="a-date" type="date"></div>
+        <div class="fr2">
+          <div><label class="flbl">Horas estimadas</label><input class="fi" id="ah" type="number" value="8" min="0.5" step="0.5"></div>
+          <div><label class="flbl">Data início</label><input class="fi" id="ad" type="date"></div>
         </div>
-        <div class="form-row"><label>Recurso</label>
-          <select id="a-resource"><option value="">Selecionar...</option></select>
+        <div class="fr"><label class="flbl">Recurso</label>
+          <select class="fi" id="ar"><option value="0">Selecionar...</option></select>
         </div>
-        <div class="form-row"><label>Prioridade</label>
-          <select id="a-priority">
+        <div class="fr"><label class="flbl">Prioridade</label>
+          <select class="fi" id="apri">
             <option value="1">🔴 Alta</option><option value="2" selected>🟡 Média</option><option value="3">🔵 Baixa</option>
           </select>
         </div>
-        <div class="form-row"><label>Predecessora (opcional)</label>
-          <select id="a-pred"><option value="">Nenhuma</option></select>
+        <div class="fr"><label class="flbl">Predecessora (opcional)</label>
+          <select class="fi" id="apd"><option value="0">Nenhuma</option></select>
         </div>
-        <button class="btn btn-primary btn-sm" style="width:100%;margin-top:2px" onclick="addActivity()">Cadastrar</button>
+        <button class="btn bpri bsm" style="width:100%;margin-top:2px" onclick="addActivity()">Cadastrar</button>
       </div>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
-
     <!-- DASHBOARD -->
-    <div class="view active" id="view-dashboard">
+    <div class="view on" id="view-dashboard">
       <div>
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">
-          <span class="page-title">Dashboard</span>
-          <span style="font-size:11.5px;color:var(--muted)" id="today-label"></span>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:11px">
+          <span class="ptitle">Dashboard</span>
+          <span style="font-size:11px;color:var(--mu)" id="dtlbl"></span>
         </div>
-        <div id="stats-row" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
+        <div id="stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:9px"></div>
       </div>
-      <div id="overlap-alerts"></div>
-      <div><div class="section-title">Atividades em andamento hoje</div><div id="dash-activities"></div></div>
+      <div id="oalerts"></div>
+      <div><div class="stitle">Atividades em andamento hoje</div><div id="dashacts"></div></div>
     </div>
 
-    <!-- ALL ACTIVITIES -->
+    <!-- ACTIVITIES -->
     <div class="view" id="view-activities">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span class="page-title">Todas as Atividades</span>
-        <div style="display:flex;gap:7px;flex-wrap:wrap">
-          <select id="filter-project" onchange="renderActivities()" style="width:150px"><option value="">Todos os projetos</option></select>
-          <select id="filter-resource" onchange="renderActivities()" style="width:140px"><option value="">Todos os recursos</option></select>
-          <select id="filter-status" onchange="renderActivities()" style="width:130px">
-            <option value="">Todos os status</option>
-            <option value="active">Em andamento</option><option value="done">Concluídas</option>
-            <option value="overdue">Atrasadas</option><option value="waiting">Aguardando</option>
-            <option value="suspended">Paralisadas</option>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px">
+        <span class="ptitle">Todas as Atividades</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <select class="fi" id="fprj" onchange="renderActs()" style="width:140px"><option value="0">Todos os projetos</option></select>
+          <select class="fi" id="fres" onchange="renderActs()" style="width:130px"><option value="0">Todos os recursos</option></select>
+          <select class="fi" id="fst" onchange="renderActs()" style="width:125px">
+            <option value="">Todos</option><option value="active">Em andamento</option>
+            <option value="done">Concluídas</option><option value="late">Atrasadas</option>
+            <option value="wait">Aguardando</option><option value="susp">Paralisadas</option>
           </select>
         </div>
       </div>
-      <div id="activities-list"></div>
+      <div id="actslist"></div>
     </div>
 
     <!-- GANTT RECURSOS -->
-    <div class="view" id="view-resources-gantt">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span class="page-title">Gantt por Recursos</span>
-        <select id="gantt-filter-res" onchange="renderResourceGantt()" style="width:160px"><option value="">Todos os recursos</option></select>
+    <div class="view" id="view-rgantt">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px">
+        <span class="ptitle">Gantt por Recursos</span>
+        <select class="fi" id="gfr" onchange="renderRG()" style="width:150px"><option value="0">Todos os recursos</option></select>
       </div>
-      <div class="card" style="overflow-x:auto"><div id="gantt-res-container" style="min-width:500px"></div></div>
-      <div class="gantt-legend">
-        <div class="gantt-legend-item"><span style="display:inline-block;width:3px;height:14px;background:var(--danger);border-radius:2px"></span>Hoje</div>
-        <div class="gantt-legend-item"><span style="display:inline-block;width:14px;height:10px;background:rgba(201,109,0,.3);border-radius:2px;border:1px solid var(--warning)"></span>Desvio</div>
-        <div class="gantt-legend-item"><span style="display:inline-block;width:14px;height:10px;background:rgba(90,110,140,.06);border:1px solid var(--border);border-radius:2px"></span>Fim de semana</div>
+      <div class="card" style="overflow-x:auto"><div id="rgcont" style="min-width:480px"></div></div>
+      <div style="display:flex;gap:12px;font-size:10.5px;color:var(--mu);flex-wrap:wrap">
+        <span><span style="display:inline-block;width:2px;height:12px;background:var(--err);vertical-align:middle;margin-right:3px;border-radius:1px"></span>Hoje</span>
+        <span><span style="display:inline-block;width:12px;height:8px;background:rgba(201,109,0,.3);vertical-align:middle;margin-right:3px;border-radius:2px;border:1px solid var(--warn)"></span>Desvio</span>
       </div>
     </div>
 
     <!-- GANTT PROJETOS -->
-    <div class="view" id="view-projects-gantt">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span class="page-title">Gantt por Projetos</span>
-        <select id="gantt-filter-proj" onchange="renderProjectGantt()" style="width:180px"><option value="">Todos os projetos</option></select>
+    <div class="view" id="view-pgantt">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px">
+        <span class="ptitle">Gantt por Projetos</span>
+        <select class="fi" id="gfp" onchange="renderPG()" style="width:170px"><option value="0">Todos os projetos</option></select>
       </div>
-      <div id="proj-health-area"></div>
-      <div class="card" style="overflow-x:auto"><div id="gantt-proj-container" style="min-width:500px;padding-bottom:14px"></div></div>
-      <div class="gantt-legend">
-        <div class="gantt-legend-item"><div class="gantt-legend-box sc-waiting"></div>Aguardando</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-box sc-active"></div>Em andamento</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-box sc-done"></div>Concluída</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-box sc-overdue"></div>Atrasada</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-box sc-suspended"></div>Paralisada</div>
-        <div class="gantt-legend-item"><span style="display:inline-block;width:22px;height:4px;background:rgba(100,116,139,.35);border-radius:2px"></span>Baseline</div>
-        <div class="gantt-legend-item"><span style="display:inline-block;width:3px;height:14px;background:var(--danger);border-radius:2px"></span>Hoje</div>
+      <div id="pharea"></div>
+      <div class="card" style="overflow-x:auto"><div id="pgcont" style="min-width:480px;padding-bottom:12px"></div></div>
+      <div style="display:flex;gap:12px;font-size:10.5px;color:var(--mu);flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#dbeafe;border:1.5px solid #3b82f6;border-radius:2px;display:inline-block"></span>Aguardando</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:2px;display:inline-block"></span>Em andamento</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#d1fae5;border:1.5px solid #10b981;border-radius:2px;display:inline-block"></span>Concluída</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#fee2e2;border:1.5px solid #ef4444;border-radius:2px;display:inline-block"></span>Atrasada</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#f1f5f9;border:1.5px solid #94a3b8;border-radius:2px;display:inline-block"></span>Paralisada</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:22px;height:3px;background:rgba(100,116,139,.35);display:inline-block;border-radius:2px"></span>Baseline</span>
       </div>
     </div>
 
     <!-- OVERVIEW -->
     <div class="view" id="view-overview">
-      <span class="page-title">Visão Geral da Equipe</span>
-      <div class="overview-grid" id="overview-grid"></div>
+      <span class="ptitle">Visão Geral da Equipe</span>
+      <div class="ovgrid" id="ovgrid"></div>
     </div>
-
   </main>
 </div>
 
-<!-- DEVIATION MODAL -->
-<div class="modal-overlay hidden" id="dev-modal">
+<!-- MODAL: DESVIO -->
+<div class="mover hidden" id="mdev">
   <div class="modal">
     <h3>⚡ Registrar Desvio</h3>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Horas consumidas por atividades extras que impactam este prazo.</p>
-    <div class="form-row"><label>Descrição</label><input id="dev-desc" placeholder="Ex: Reunião com cliente"></div>
-    <div class="form-row"><label>Horas consumidas</label><input id="dev-hours" type="number" value="1" min="0.5" step="0.5"></div>
-    <div id="dev-history" style="margin:10px 0;max-height:150px;overflow-y:auto"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-      <button class="btn btn-ghost" onclick="closeDevModal()">Fechar</button>
-      <button class="btn btn-primary" onclick="addDeviation()">Registrar</button>
+    <p style="color:var(--mu);font-size:11.5px;margin-bottom:11px">Horas extras que impactam o prazo desta atividade.</p>
+    <div class="fr"><label class="flbl">Descrição</label><input class="fi" id="dvd" placeholder="Ex: Reunião emergencial"></div>
+    <div class="fr"><label class="flbl">Horas</label><input class="fi" id="dvh" type="number" value="1" min="0.5" step="0.5"></div>
+    <div id="dvhist" style="margin:8px 0;max-height:140px;overflow-y:auto"></div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:11px">
+      <button class="btn bgh" onclick="closeDev()">Fechar</button>
+      <button class="btn bpri" onclick="saveDev()">Registrar</button>
     </div>
   </div>
 </div>
 
-<!-- PRIORITY MODAL -->
-<div class="modal-overlay hidden" id="pri-modal">
+<!-- MODAL: PRIORIDADE -->
+<div class="mover hidden" id="mpri">
   <div class="modal">
     <h3>⚠️ Sobreposição Detectada</h3>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:14px" id="pri-desc"></p>
-    <div id="pri-list"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-      <button class="btn btn-ghost" onclick="closePriModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="applyPriority()">Aplicar Prioridade</button>
+    <p style="color:var(--mu);font-size:11.5px;margin-bottom:12px" id="mpridesc"></p>
+    <div id="mprilist"></div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px">
+      <button class="btn bgh" onclick="closePri()">Cancelar</button>
+      <button class="btn bpri" onclick="applyPri()">Aplicar Prioridade</button>
     </div>
   </div>
 </div>
 
-<!-- SUSPENSION MODAL -->
-<div class="modal-overlay hidden" id="sus-modal">
+<!-- MODAL: PARALISAÇÃO -->
+<div class="mover hidden" id="msus">
   <div class="modal">
-    <h3 id="sus-title">⏸ Paralisar Atividade</h3>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:14px" id="sus-subtitle">Informe o motivo da paralisação. A atividade ficará congelada no cronograma até ser retomada.</p>
-    <div class="form-row"><label>Motivo da paralisação</label>
-      <input id="sus-reason" placeholder="Ex: Aguardando aprovação da diretoria">
-    </div>
-    <div id="sus-history" style="margin:10px 0;max-height:150px;overflow-y:auto"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-      <button class="btn btn-ghost" onclick="closeSusModal()">Cancelar</button>
-      <button class="btn btn-primary" id="sus-action-btn" onclick="applySuspension()">Confirmar</button>
+    <h3 id="sustitle">⏸ Paralisar Atividade</h3>
+    <p style="color:var(--mu);font-size:11.5px;margin-bottom:12px" id="susdesc"></p>
+    <div class="fr"><label class="flbl" id="suslbl">Motivo</label><input class="fi" id="susreason" placeholder="Ex: Aguardando aprovação"></div>
+    <div id="sushist" style="margin:8px 0;max-height:130px;overflow-y:auto"></div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:11px">
+      <button class="btn bgh" onclick="closeSus()">Cancelar</button>
+      <button class="btn bpri" id="susbtn" onclick="applySus()">Confirmar</button>
     </div>
   </div>
 </div>
 
-<!-- ACTIVITY DETAIL MODAL (for Gantt click) -->
-<div class="modal-overlay hidden" id="detail-modal">
-  <div class="modal" style="width:500px">
-    <h3 id="detail-title"></h3>
-    <div id="detail-body"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap" id="detail-actions"></div>
+<!-- MODAL: DETALHE GANTT -->
+<div class="mover hidden" id="mdet">
+  <div class="modal" style="width:480px">
+    <h3 id="dettitle"></h3>
+    <div id="detbody"></div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap" id="detbtns"></div>
   </div>
 </div>
 
-<!-- Firebase SDKs -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
 <script>
-// ══════════════════════════════════════════════
-//  FIREBASE INIT
-// ══════════════════════════════════════════════
+'use strict';
+// ═══════════════════════════════════════════
+//  FIREBASE
+// ═══════════════════════════════════════════
 firebase.initializeApp({
   apiKey:"AIzaSyBPv_Usi00DaZR2cIlNQjk8DQey2MbWtDQ",
   authDomain:"engeflow-44f15.firebaseapp.com",
@@ -479,975 +435,932 @@ firebase.initializeApp({
   messagingSenderId:"82161507864",
   appId:"1:82161507864:web:73b99ed9035e66ec7f2d6d"
 });
-const auth=firebase.auth();
-const db=firebase.database();
-const ROOT='engeflow';
+const AUTH = firebase.auth();
+const DB   = firebase.database();
+const ROOT = 'engeflow';
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  CONSTANTS
-// ══════════════════════════════════════════════
-const COLORS=['#2f6be0','#6c47d4','#15905f','#c96d00','#c0392b','#0284c7','#7c3aed','#0d9488','#db2777','#ea580c'];
-const PROJ_COLORS=['#2f6be0','#7c3aed','#0d9488','#db2777','#ea580c','#65a30d','#0284c7','#c96d00'];
-const PRI={1:{label:'🔴 Alta',cls:'p1'},2:{label:'🟡 Média',cls:'p2'},3:{label:'🔵 Baixa',cls:'p3'}};
-
-// Activity statuses
-const STATUS={
-  waiting:  {label:'Aguardando',  tagCls:'waiting',   itemCls:'waiting'},
-  active:   {label:'Em andamento',tagCls:'',           itemCls:''},
-  done:     {label:'Concluído',   tagCls:'done',       itemCls:'done'},
-  overdue:  {label:'Atrasada',    tagCls:'overdue',    itemCls:'overdue'},
-  suspended:{label:'Paralisada',  tagCls:'suspended',  itemCls:'suspended'},
+// ═══════════════════════════════════════════
+const PCOLS = ['#2f6be0','#7c3aed','#0d9488','#db2777','#ea580c','#65a30d','#0284c7','#c96d00'];
+const RCOLS = ['#2f6be0','#6c47d4','#15905f','#c96d00','#c0392b','#0284c7','#7c3aed','#0d9488'];
+const PRI   = {1:{lbl:'🔴 Alta',cls:'p1'},2:{lbl:'🟡 Média',cls:'p2'},3:{lbl:'🔵 Baixa',cls:'p3'}};
+const STS   = {
+  wait:{lbl:'Aguardando',  tcls:'t-wait', icls:'wait'},
+  active:{lbl:'Em andamento',tcls:'t-act', icls:''},
+  done:{lbl:'Concluído',   tcls:'t-ok',  icls:'done'},
+  late:{lbl:'Atrasada',    tcls:'t-err', icls:'late'},
+  susp:{lbl:'Paralisada',  tcls:'t-sus', icls:'susp'},
 };
 
-// ══════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════
-let state={
-  projects:[],   // {id,name,desc,startDate,endDate,color}
-  resources:[],  // {id,name,hours,color}
-  activities:[], // {id,name,estimatedHours,startDate,baselineEnd,resourceId,projectId,type,priority,predecessorId,done,suspended,suspendedReason,suspensions:[],deviations:[],progress,completedDate}
-  nextPid:1, nextRid:1, nextAid:1
-};
-let _priContext=null, _devAid=null, _susAid=null, _appReady=false, _dbListener=null;
+// ═══════════════════════════════════════════
+//  STATE — all IDs are numbers, no nulls
+// ═══════════════════════════════════════════
+let S = { projects:[], resources:[], activities:[], pid:1, rid:1, aid:1 };
+let _devId=0, _susId=0, _priCtx=null, _ovReg={};
+let _ready=false, _listener=null;
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  FIREBASE HELPERS
+// ═══════════════════════════════════════════
+// Safely convert Firebase value (may be object-as-array) to JS array
+function toArr(v){
+  if(!v) return [];
+  if(Array.isArray(v)) return v.filter(Boolean);
+  // Firebase stored as {0:{},1:{}} — convert
+  return Object.keys(v).sort((a,b)=>+a - +b).map(k=>v[k]).filter(Boolean);
+}
+
+// Strip any undefined/null from object before sending to Firebase
+function clean(x){
+  return JSON.parse(JSON.stringify(x, (_,v) => (v == null ? 0 : v)));
+}
+
+function syncing(){ document.getElementById('sdot').className='busy'; document.getElementById('slbl').textContent='Salvando...'; }
+function synced(){  document.getElementById('sdot').className='';     document.getElementById('slbl').textContent='Sincronizado'; }
+function syncErr(){ document.getElementById('sdot').className='fail'; document.getElementById('slbl').textContent='Erro de conexão'; }
+
+function save(){
+  syncing();
+  DB.ref(ROOT).set({
+    projects:  clean(S.projects),
+    resources: clean(S.resources),
+    activities:clean(S.activities),
+    pid: S.pid, rid: S.rid, aid: S.aid
+  }).then(synced).catch(e=>{ syncErr(); console.error('FIREBASE SAVE ERROR:', e); });
+}
+
+function startSync(){
+  _listener = DB.ref(ROOT).on('value', snap=>{
+    try {
+      const d = snap.val();
+      if(d){
+        S.projects   = toArr(d.projects);
+        S.resources  = toArr(d.resources);
+        S.activities = toArr(d.activities);
+        S.pid = d.pid || S.projects.length  + 1;
+        S.rid = d.rid || S.resources.length + 1;
+        S.aid = d.aid || S.activities.length+ 1;
+      } else {
+        seedDemo();
+        return;
+      }
+      if(!_ready){ _ready=true; }
+      renderAll();
+    } catch(err){
+      console.error('RENDER ERROR:', err);
+    }
+  }, e=>{ syncErr(); console.error('FIREBASE LISTEN ERROR:', e); });
+
+  DB.ref('.info/connected').on('value', s=>{
+    if(_ready){ if(!s.val()) syncErr(); else synced(); }
+  });
+}
+
+// ═══════════════════════════════════════════
 //  AUTH
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
+const _authTO = setTimeout(()=>{
+  hideLoad();
+  showLogin();
+}, 7000);
 
-// Safety net: if Firebase SDK doesn't respond in 8s, show login screen
-const _authTimeout = setTimeout(()=>{
-  const ls = document.getElementById('loading-screen');
-  if(!ls.classList.contains('hidden')){
-    hideLoading();
-    document.getElementById('login-screen').style.display='flex';
-  }
-}, 8000);
-
-auth.onAuthStateChanged(user=>{
-  clearTimeout(_authTimeout);
-  if(user){ showApp(user); } else { hideApp(); }
+AUTH.onAuthStateChanged(u=>{
+  clearTimeout(_authTO);
+  if(u){ doShowApp(u); }
+  else  { hideLoad(); showLogin(); }
 });
 
-function showApp(user){
-  document.getElementById('user-email-display').textContent=user.email;
-  document.getElementById('user-initials').textContent=user.email.slice(0,2).toUpperCase();
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('main-header').classList.remove('hidden');
-  document.getElementById('main-app').classList.remove('hidden');
-  hideLoading();
-  document.getElementById('a-date').value=todayStr();
-  document.getElementById('p-start').value=todayStr();
-  startListening();
-}
-function hideApp(){
-  if(_dbListener){db.ref(ROOT).off('value',_dbListener);_dbListener=null;_appReady=false;}
-  document.getElementById('main-header').classList.add('hidden');
-  document.getElementById('main-app').classList.add('hidden');
-  hideLoading();
-  document.getElementById('login-screen').style.display='flex';
-}
-async function doLogin(){
-  const email=document.getElementById('login-email').value.trim();
-  const pwd=document.getElementById('login-pwd').value;
-  const btn=document.getElementById('login-btn');
-  document.getElementById('login-error').classList.remove('show');
-  if(!email||!pwd){showLoginError('Preencha e-mail e senha.');return;}
-  btn.disabled=true;btn.textContent='Entrando...';
-  try{await auth.signInWithEmailAndPassword(email,pwd);}
-  catch(e){
-    btn.disabled=false;btn.textContent='Entrar';
-    const msgs={'auth/user-not-found':'E-mail não cadastrado.','auth/wrong-password':'Senha incorreta.','auth/invalid-email':'E-mail inválido.','auth/too-many-requests':'Muitas tentativas. Tente mais tarde.','auth/invalid-credential':'E-mail ou senha incorretos.'};
-    showLoginError(msgs[e.code]||`Erro: ${e.message}`);
-  }
-}
-async function doLogout(){if(!confirm('Deseja sair?'))return;await auth.signOut();}
-async function doResetPassword(){
-  const email=document.getElementById('login-email').value.trim();
-  if(!email){showLoginError('Digite seu e-mail para redefinir a senha.');return;}
-  try{await auth.sendPasswordResetEmail(email);showLoginError('✅ E-mail de redefinição enviado!',true);}
-  catch(e){showLoginError('Não foi possível enviar o e-mail.');}
-}
-function showLoginError(msg,success=false){
-  const el=document.getElementById('login-error');
-  el.textContent=msg;
-  el.style.background=success?'rgba(21,144,95,.08)':'rgba(192,57,43,.08)';
-  el.style.borderColor=success?'rgba(21,144,95,.25)':'rgba(192,57,43,.25)';
-  el.style.color=success?'var(--success)':'var(--danger)';
-  el.classList.add('show');
+function doShowApp(u){
+  document.getElementById('uemail').textContent = u.email;
+  document.getElementById('uav').textContent    = u.email.slice(0,2).toUpperCase();
+  hideLogin();
+  document.getElementById('hdr').classList.remove('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  hideLoad();
+  document.getElementById('ad').value = today();
+  document.getElementById('ps').value = today();
+  startSync();
 }
 
-// ══════════════════════════════════════════════
-//  FIREBASE SYNC
-// ══════════════════════════════════════════════
-function setSyncing(){document.getElementById('sync-dot').className='syncing';document.getElementById('sync-label').textContent='Salvando...';}
-function setSynced(){document.getElementById('sync-dot').className='';document.getElementById('sync-label').textContent='Sincronizado';}
-function setSyncError(){document.getElementById('sync-dot').className='error';document.getElementById('sync-label').textContent='Erro de conexão';}
-
-function cleanForFirebase(obj){
-  // Remove undefined fields; convert null to 0 or '' recursively
-  return JSON.parse(JSON.stringify(obj, (k,v)=>{
-    if(v===undefined) return 0;
-    if(v===null) return 0;
-    return v;
-  }));
-}
-
-function pushState(){
-  setSyncing();
-  const payload = {
-    projects:  cleanForFirebase(state.projects),
-    resources: cleanForFirebase(state.resources),
-    activities:cleanForFirebase(state.activities),
-    nextPid:   state.nextPid||1,
-    nextRid:   state.nextRid||1,
-    nextAid:   state.nextAid||1
-  };
-  db.ref(ROOT).set(payload)
-    .then(setSynced)
-    .catch(e=>{setSyncError();console.error('Firebase write error:',e);});
-}
-
-// Firebase stores arrays as objects {0:{...},1:{...}} — convert back to array
-function toArr(val){
-  if(!val) return [];
-  if(Array.isArray(val)) return val.filter(x=>x!=null);
-  return Object.keys(val).sort((a,b)=>Number(a)-Number(b)).map(k=>val[k]).filter(x=>x!=null);
-}
-
-function startListening(){
-  _dbListener=db.ref(ROOT).on('value',snapshot=>{
-    const data=snapshot.val();
-    if(data){
-      state.projects  =toArr(data.projects);
-      state.resources =toArr(data.resources);
-      state.activities=toArr(data.activities);
-      state.nextPid   =data.nextPid||Math.max(0,...[0].concat(state.projects.map(p=>p.id||0)))+1;
-      state.nextRid   =data.nextRid||Math.max(0,...[0].concat(state.resources.map(r=>r.id||0)))+1;
-      state.nextAid   =data.nextAid||Math.max(0,...[0].concat(state.activities.map(a=>a.id||0)))+1;
-    } else { seedDemo(); return; }
-    if(!_appReady) _appReady=true;
-    renderAll();
-  },err=>{setSyncError();console.error(err);});
-  db.ref('.info/connected').on('value',snap=>{if(_appReady){if(!snap.val())setSyncError();else setSynced();}});
-}
-
-function hideLoading(){
-  const el=document.getElementById('loading-screen');
-  el.classList.add('fade');
+function showLogin(){ document.getElementById('scr-login').style.display='flex'; }
+function hideLogin(){ document.getElementById('scr-login').style.display='none'; }
+function hideLoad(){
+  const el = document.getElementById('scr-load');
+  el.classList.add('hide');
   setTimeout(()=>el.classList.add('hidden'),400);
 }
 
-function seedDemo(){
-  const t=todayStr();
-  state.projects.push({id:state.nextPid++,name:'Galpão Industrial A',desc:'Estrutura metálica principal',startDate:t,endDate:addWorkHours(t,80,8),color:PROJ_COLORS[0]});
-  ['Ana Beatriz','Carlos Eduardo','Marcos Silva'].forEach((n,i)=>state.resources.push({id:state.nextRid++,name:n,hours:8,color:COLORS[i]}));
-  const pid=state.projects[0].id;
-  [
-    {name:'Levantamento topográfico',  hours:8, date:t, rid:1, type:'Verificação de desenho', priority:1, pred:0, proj:pid},
-    {name:'Projeto de fundações',      hours:16,date:t, rid:2, type:'Memória de cálculo',     priority:1, pred:1, proj:pid},
-    {name:'Modelagem estrutural',      hours:24,date:t, rid:3, type:'Modelagem estrutural',   priority:1, pred:2, proj:pid},
-    {name:'Verificação de desenhos',   hours:8, date:t, rid:1, type:'Verificação de desenho', priority:2, pred:3, proj:pid},
-    {name:'Reunião de alinhamento',    hours:2, date:t, rid:1, type:'Reunião',                priority:2, pred:0, proj:0},
-    {name:'Memória de cálculo – Lajes',hours:12,date:t, rid:2, type:'Memória de cálculo',     priority:3, pred:0, proj:0},
-  ].forEach(a=>{
-    const act={id:state.nextAid++,name:a.name,estimatedHours:a.hours,startDate:a.date,
-      baselineEnd:'',resourceId:a.rid,projectId:a.proj||0,type:a.type,priority:a.priority,
-      predecessorId:a.pred||0,done:false,suspended:false,suspendedReason:'',suspensions:[],
-      deviations:[],progress:0,completedDate:''};
-    state.activities.push(act);
-  });
-  // set baseline
-  const sched=computeSchedule();
-  state.activities.forEach(a=>{ if(!a.baselineEnd) a.baselineEnd=sched[a.id]?.end||a.startDate; });
-  pushState();
+async function doLogin(){
+  const email = document.getElementById('lemail').value.trim();
+  const pwd   = document.getElementById('lpwd').value;
+  const btn   = document.getElementById('lbtn');
+  hideErr();
+  if(!email||!pwd){ showErr('Preencha e-mail e senha.'); return; }
+  btn.disabled=true; btn.textContent='Entrando...';
+  try { await AUTH.signInWithEmailAndPassword(email, pwd); }
+  catch(e){
+    btn.disabled=false; btn.textContent='Entrar';
+    const m = {'auth/user-not-found':'E-mail não cadastrado.','auth/wrong-password':'Senha incorreta.',
+      'auth/invalid-email':'E-mail inválido.','auth/too-many-requests':'Muitas tentativas.',
+      'auth/invalid-credential':'E-mail ou senha incorretos.'};
+    showErr(m[e.code]||e.message);
+  }
 }
+async function doLogout(){
+  if(!confirm('Deseja sair?')) return;
+  if(_listener){ DB.ref(ROOT).off('value',_listener); _listener=null; _ready=false; }
+  document.getElementById('hdr').classList.add('hidden');
+  document.getElementById('app').classList.add('hidden');
+  await AUTH.signOut();
+}
+async function doReset(){
+  const email = document.getElementById('lemail').value.trim();
+  if(!email){ showErr('Digite seu e-mail para redefinir a senha.'); return; }
+  try { await AUTH.sendPasswordResetEmail(email); showErr('✅ E-mail de redefinição enviado!', true); }
+  catch(e){ showErr('Não foi possível enviar o e-mail.'); }
+}
+function showErr(msg, ok=false){
+  const el=document.getElementById('lerr');
+  el.textContent=msg;
+  el.style.background=ok?'rgba(21,144,95,.08)':'rgba(192,57,43,.08)';
+  el.style.borderColor=ok?'rgba(21,144,95,.25)':'rgba(192,57,43,.25)';
+  el.style.color=ok?'var(--ok)':'var(--err)';
+  el.classList.add('on');
+}
+function hideErr(){ document.getElementById('lerr').classList.remove('on'); }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  DATE UTILS
-// ══════════════════════════════════════════════
-function todayStr(){return new Date().toISOString().split('T')[0];}
-function fmtDate(s){if(!s)return'—';return new Date(s+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});}
-function fmtShort(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return`${d.getDate()}/${d.getMonth()+1}`;}
+// ═══════════════════════════════════════════
+function today(){ return new Date().toISOString().split('T')[0]; }
+function fmt(s){ if(!s)return'—'; return new Date(s+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function fmts(s){ if(!s)return'—'; const d=new Date(s+'T00:00:00'); return `${d.getDate()}/${d.getMonth()+1}`; }
+function diffD(a,b){ return Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000); }
 
-function addWorkHours(startStr,totalHours,hoursPerDay){
-  if(!startStr||!hoursPerDay||totalHours<=0)return startStr;
-  let d=new Date(startStr+'T00:00:00'),rem=totalHours;
-  while(rem>hoursPerDay){d.setDate(d.getDate()+1);while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);rem-=hoursPerDay;}
+function addWH(start, hours, hpd){
+  if(!start||!hpd||hours<=0) return start;
+  let d=new Date(start+'T00:00:00'), rem=hours;
+  while(rem>hpd){ d.setDate(d.getDate()+1); skipWE(d); rem-=hpd; }
   return d.toISOString().split('T')[0];
 }
-function nextWorkDay(dateStr){
-  const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+1);
-  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
-  return d.toISOString().split('T')[0];
-}
-function daysDiff(a,b){return Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000);}
-function initials(n){return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');}
+function skipWE(d){ while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1); }
+function nextWD(s){ const d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+1); skipWE(d); return d.toISOString().split('T')[0]; }
+function ini(n){ return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join(''); }
 
-// ══════════════════════════════════════════════
-//  ACTIVITY STATUS
-// ══════════════════════════════════════════════
-function getActivityStatus(act,sched){
-  if(act.suspended) return 'suspended';
+// ═══════════════════════════════════════════
+//  SCHEDULING
+// ═══════════════════════════════════════════
+function schedule(){
+  const sc={}, byR={};
+  S.activities.forEach(a=>{ if(!byR[a.rid]) byR[a.rid]=[]; byR[a.rid].push(a); });
+  Object.values(byR).forEach(arr=>arr.sort((a,b)=>a.pri!==b.pri?a.pri-b.pri:a.id-b.id));
+
+  for(let p=0;p<30;p++){
+    let changed=false;
+    S.activities.forEach(act=>{
+      const res=S.resources.find(r=>r.id===act.rid);
+      if(!res) return;
+
+      // completed early: use actual completion date
+      if(act.done && act.doneDate){
+        const prev=sc[act.id];
+        if(!prev||prev.end!==act.doneDate){
+          sc[act.id]={start:act.start, end:act.doneDate};
+          changed=true;
+        }
+        return;
+      }
+
+      let earliest = act.start;
+
+      // predecessor constraint
+      if(act.pred>0){
+        const ps=sc[act.pred];
+        if(ps){ const nw=nextWD(ps.end); if(nw>earliest) earliest=nw; }
+      }
+
+      // priority queue within same resource (skip done/suspended)
+      const q=(byR[act.rid]||[]).filter(x=>!x.done&&!x.susp);
+      const mi=q.indexOf(act);
+      for(let i=0;i<mi;i++){
+        const ps=sc[q[i].id];
+        if(ps&&ps.end>=earliest){ const nw=nextWD(ps.end); if(nw>earliest) earliest=nw; }
+      }
+
+      const th = act.hours + (act.devs||[]).reduce((s,d)=>s+d.h,0);
+      const end = act.susp ? addWH(earliest,th,res.hours) : addWH(earliest,th,res.hours);
+      const prev=sc[act.id];
+      if(!prev||prev.start!==earliest||prev.end!==end){ sc[act.id]={start:earliest,end}; changed=true; }
+    });
+    if(!changed) break;
+  }
+
+  // done without doneDate
+  S.activities.filter(a=>a.done&&!a.doneDate).forEach(act=>{
+    const res=S.resources.find(r=>r.id===act.rid);
+    const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
+    if(!sc[act.id]) sc[act.id]={start:act.start, end:res?addWH(act.start,th,res.hours):act.start};
+  });
+
+  return sc;
+}
+
+function getStatus(act, sc){
+  if(act.susp) return 'susp';
   if(act.done) return 'done';
-  const t=todayStr();
-  const s=sched[act.id];
-  const effEnd=s?.end||act.startDate;
-  const effStart=s?.start||act.startDate;
-  if(effEnd<t) return 'overdue';
-  if(effStart>t) return 'waiting';
+  const t=today(), s=sc[act.id];
+  if(!s) return 'active';
+  if(s.end<t) return 'late';
+  if(s.start>t) return 'wait';
   return 'active';
 }
 
-// ══════════════════════════════════════════════
-//  SCHEDULING ENGINE
-// ══════════════════════════════════════════════
-function computeSchedule(){
-  const sched={},byRes={};
-  state.activities.forEach(a=>{if(!byRes[a.resourceId])byRes[a.resourceId]=[];byRes[a.resourceId].push(a);});
-  Object.values(byRes).forEach(arr=>arr.sort((a,b)=>a.priority!==b.priority?a.priority-b.priority:a.id-b.id));
-
-  for(let pass=0;pass<30;pass++){
-    let changed=false;
-    state.activities.forEach(act=>{
-      const res=state.resources.find(r=>r.id===act.resourceId);if(!res)return;
-      let earliest=act.startDate;
-
-      // if done early, use completedDate as end (successor can start next day)
-      if(act.done&&act.completedDate){
-        sched[act.id]={start:act.startDate,end:act.completedDate,early:act.completedDate<(sched[act.id]?.end||act.startDate)};
-        return;
-      }
-      // suspended: freeze, don't advance
-      if(act.suspended){
-        const totalH=act.estimatedHours+act.deviations.reduce((s,d)=>s+d.hours,0);
-        const end=addWorkHours(earliest,totalH,res.hours);
-        sched[act.id]={start:earliest,end,suspended:true};
-        return;
-      }
-
-      if(act.predecessorId&&act.predecessorId>0){
-        const ps=sched[act.predecessorId];
-        if(ps){const a=nextWorkDay(ps.end);if(a>earliest)earliest=a;}
-      }
-      const queue=(byRes[act.resourceId]||[]).filter(x=>!x.done&&!x.suspended);
-      const myIdx=queue.indexOf(act);
-      for(let i=0;i<myIdx;i++){const ps=sched[queue[i].id];if(ps&&ps.end>=earliest){const a=nextWorkDay(ps.end);if(a>earliest)earliest=a;}}
-
-      const totalH=act.estimatedHours+act.deviations.reduce((s,d)=>s+d.hours,0);
-      const end=addWorkHours(earliest,totalH,res.hours);
-      const prev=sched[act.id];
-      if(!prev||prev.start!==earliest||prev.end!==end){sched[act.id]={start:earliest,end};changed=true;}
-    });
-    if(!changed)break;
-  }
-  // done without completedDate
-  state.activities.filter(a=>a.done&&!a.completedDate).forEach(act=>{
-    const res=state.resources.find(r=>r.id===act.resourceId);
-    const totalH=act.estimatedHours+act.deviations.reduce((s,d)=>s+d.hours,0);
-    sched[act.id]={start:act.startDate,end:res?addWorkHours(act.startDate,totalH,res.hours):act.startDate};
-  });
-  return sched;
-}
-
-function detectOverlaps(sched){
-  const out=[],seen=new Set(),byRes={};
-  state.activities.filter(a=>!a.done&&!a.suspended).forEach(a=>{if(!byRes[a.resourceId])byRes[a.resourceId]=[];byRes[a.resourceId].push(a);});
-  Object.entries(byRes).forEach(([rid,acts])=>{
-    for(let i=0;i<acts.length;i++)for(let j=i+1;j<acts.length;j++){
-      const a=acts[i],b=acts[j],res=state.resources.find(r=>r.id==rid);if(!res)continue;
-      const aEnd=addWorkHours(a.startDate,a.estimatedHours,res.hours);
-      if(a.startDate<=b.startDate&&b.startDate<=aEnd&&!(a.predecessorId>0)&&!(b.predecessorId>0)&&a.predecessorId!==b.id&&b.predecessorId!==a.id){
+function overlaps(sc){
+  const out=[], seen=new Set(), byR={};
+  S.activities.filter(a=>!a.done&&!a.susp).forEach(a=>{ if(!byR[a.rid]) byR[a.rid]=[]; byR[a.rid].push(a); });
+  Object.entries(byR).forEach(([rid,acts])=>{
+    for(let i=0;i<acts.length;i++) for(let j=i+1;j<acts.length;j++){
+      const a=acts[i], b=acts[j], res=S.resources.find(r=>r.id==+rid);
+      if(!res) continue;
+      const ae=addWH(a.start,a.hours,res.hours);
+      if(a.start<=b.start&&b.start<=ae&&!(a.pred>0)&&!(b.pred>0)&&a.pred!==b.id&&b.pred!==a.id){
         const key=[a.id,b.id].sort().join('-');
-        if(!seen.has(key)){seen.add(key);out.push({rid:parseInt(rid),aids:[a.id,b.id]});}
+        if(!seen.has(key)){ seen.add(key); out.push({rid:+rid, aids:[a.id,b.id]}); }
       }
     }
   });
   return out;
 }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  NOTIFICATIONS
-// ══════════════════════════════════════════════
-function buildNotifications(sched){
-  const t=todayStr(),notifs=[];
-  state.activities.filter(a=>!a.done&&!a.suspended).forEach(a=>{
-    const s=sched[a.id];if(!s)return;
-    const daysLeft=daysDiff(s.end,t);
-    const res=state.resources.find(r=>r.id===a.resourceId);
-    if(s.end<t)           notifs.push({icon:'🔴',text:`<b>${a.name}</b> está atrasada`,sub:`${fmtDate(s.end)} · ${res?.name||''}`,pri:0});
-    else if(daysLeft===0) notifs.push({icon:'🟠',text:`<b>${a.name}</b> vence hoje`,sub:`Recurso: ${res?.name||''}`,pri:1});
-    else if(daysLeft<=2)  notifs.push({icon:'🟡',text:`<b>${a.name}</b> vence em ${daysLeft} dia(s)`,sub:`${fmtDate(s.end)} · ${res?.name||''}`,pri:2});
+// ═══════════════════════════════════════════
+function buildNotifs(sc){
+  const t=today(), out=[];
+  S.activities.filter(a=>!a.done&&!a.susp).forEach(a=>{
+    const s=sc[a.id]; if(!s) return;
+    const dl=diffD(s.end,t);
+    const res=S.resources.find(r=>r.id===a.rid);
+    if(s.end<t)       out.push({icon:'🔴',tx:`<b>${a.name}</b> está atrasada`,sub:`${fmt(s.end)} · ${res?.name||''}`,p:0});
+    else if(dl===0)   out.push({icon:'🟠',tx:`<b>${a.name}</b> vence hoje`,sub:res?.name||'',p:1});
+    else if(dl<=2)    out.push({icon:'🟡',tx:`<b>${a.name}</b> vence em ${dl}d`,sub:`${fmt(s.end)} · ${res?.name||''}`,p:2});
   });
-  state.activities.filter(a=>a.suspended).forEach(a=>{
-    notifs.push({icon:'⏸',text:`<b>${a.name}</b> está paralisada`,sub:`Motivo: ${a.suspendedReason||'não informado'}`,pri:1});
+  S.activities.filter(a=>a.susp).forEach(a=>
+    out.push({icon:'⏸',tx:`<b>${a.name}</b> paralisada`,sub:a.suspReason||'',p:1}));
+  overlaps(sc).forEach(ov=>{
+    const res=S.resources.find(r=>r.id===ov.rid);
+    out.push({icon:'⚠️',tx:`Sobreposição · <b>${res?.name||''}</b>`,sub:ov.aids.map(id=>S.activities.find(a=>a.id===id)?.name||'').join(' × '),p:2});
   });
-  detectOverlaps(sched).forEach(ov=>{
-    const res=state.resources.find(r=>r.id===ov.rid);
-    notifs.push({icon:'⚠️',text:`Sobreposição · <b>${res?.name||''}</b>`,sub:ov.aids.map(id=>state.activities.find(a=>a.id===id)?.name||'').join(' × '),pri:2});
-  });
-  return notifs.sort((a,b)=>a.pri-b.pri);
+  return out.sort((a,b)=>a.p-b.p);
 }
 
-function renderNotifications(sched){
-  const notifs=buildNotifications(sched);
-  const badge=document.getElementById('notif-count'),list=document.getElementById('notif-list');
-  if(notifs.length){badge.textContent=notifs.length;badge.classList.remove('hidden');}else badge.classList.add('hidden');
-  list.innerHTML=notifs.length
-    ?notifs.map(n=>`<div class="notif-item"><span class="notif-icon">${n.icon}</span><div class="notif-text"><div>${n.text}</div><div class="notif-sub">${n.sub}</div></div></div>`).join('')
-    :'<div class="notif-empty">Nenhuma notificação 🎉</div>';
+function renderNotifs(sc){
+  const ns=buildNotifs(sc);
+  const bdg=document.getElementById('nbdg'), lst=document.getElementById('nplist');
+  if(ns.length){ bdg.textContent=ns.length; bdg.classList.remove('hidden'); }
+  else bdg.classList.add('hidden');
+  lst.innerHTML=ns.length
+    ?ns.map(n=>`<div class="npi"><span style="font-size:14px;flex-shrink:0">${n.icon}</span><div><div>${n.tx}</div><div class="npsub">${n.sub}</div></div></div>`).join('')
+    :'<div style="padding:16px;text-align:center;color:var(--mu2);font-size:11.5px">Nenhuma notificação 🎉</div>';
 }
-function toggleNotifPanel(){document.getElementById('notif-panel').classList.toggle('hidden');}
-function closeNotifPanel(){document.getElementById('notif-panel').classList.add('hidden');}
+function toggleN(){ document.getElementById('npanel').classList.toggle('hidden'); }
+function closeN(){ document.getElementById('npanel').classList.add('hidden'); }
 document.addEventListener('click',e=>{
-  const p=document.getElementById('notif-panel'),b=document.getElementById('notif-toggle-btn');
-  if(!p.classList.contains('hidden')&&!p.contains(e.target)&&!b.contains(e.target))p.classList.add('hidden');
+  const p=document.getElementById('npanel'),b=document.getElementById('nbtn');
+  if(!p.classList.contains('hidden')&&!p.contains(e.target)&&!b.contains(e.target)) p.classList.add('hidden');
 });
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  PROJECTS
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function addProject(){
-  const name=document.getElementById('p-name').value.trim();
-  const desc=document.getElementById('p-desc').value.trim();
-  const startDate=document.getElementById('p-start').value;
-  const endDate=document.getElementById('p-end').value;
-  if(!name)return alert('Informe o nome do projeto.');
-  if(!startDate||!endDate)return alert('Informe as datas de início e fim.');
-  state.projects.push({id:state.nextPid++,name,desc,startDate,endDate,color:PROJ_COLORS[(state.projects.length)%PROJ_COLORS.length]});
-  document.getElementById('p-name').value='';
-  document.getElementById('p-desc').value='';
-  pushState();
+  const name=document.getElementById('pn').value.trim();
+  const desc=document.getElementById('pd').value.trim();
+  const start=document.getElementById('ps').value;
+  const end=document.getElementById('pe').value;
+  if(!name){ alert('Informe o nome do projeto.'); return; }
+  if(!start||!end){ alert('Informe as datas.'); return; }
+  S.projects.push({ id:S.pid++, name, desc, start, end, color:PCOLS[S.projects.length%PCOLS.length] });
+  document.getElementById('pn').value='';
+  document.getElementById('pd').value='';
+  save();
 }
-function deleteProject(id){
-  if(!confirm('Excluir projeto? As atividades vinculadas ficarão sem projeto.'))return;
-  state.projects=state.projects.filter(p=>p.id!==id);
-  state.activities.forEach(a=>{if(a.projectId===id)a.projectId=0;});
-  pushState();
-}
-
-function renderProjectList(){
-  const el=document.getElementById('project-list');
-  const sel=document.getElementById('a-project');
-  const fP=document.getElementById('filter-project');
-  const gP=document.getElementById('gantt-filter-proj');
-  const pvA=sel.value,pvF=fP.value,pvG=gP.value;
-  sel.innerHTML='<option value="">Demanda geral</option>';
-  fP.innerHTML='<option value="">Todos os projetos</option>';
-  gP.innerHTML='<option value="">Todos os projetos</option>';
-  if(!state.projects.length){el.innerHTML='<div class="empty">Nenhum projeto cadastrado.</div>';return;}
-  el.innerHTML=state.projects.map(p=>{
-    const acts=state.activities.filter(a=>a.projectId===p.id);
-    const done=acts.filter(a=>a.done).length;
-    return `<div class="proj-item" style="border-left-color:${p.color}" onclick="selectProject(${p.id})">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div class="proj-name">${p.name}</div>
-        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteProject(${p.id})">✕</button>
-      </div>
-      <div class="proj-dates">${fmtDate(p.startDate)} → ${fmtDate(p.endDate)}</div>
-      <div class="proj-dates" style="margin-top:2px">${done}/${acts.length} atividades concluídas</div>
-    </div>`;
-  }).join('');
-  state.projects.forEach(p=>{
-    const mk=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t||p.name;return o;};
-    sel.appendChild(mk(p.id));fP.appendChild(mk(p.id));gP.appendChild(mk(p.id));
-  });
-  if(pvA)sel.value=pvA;if(pvF)fP.value=pvF;if(pvG)gP.value=pvG;
+function delProject(id){
+  if(!confirm('Excluir projeto?')) return;
+  S.projects = S.projects.filter(p=>p.id!==id);
+  S.activities.forEach(a=>{ if(a.pjid===id) a.pjid=0; });
+  save();
 }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  RESOURCES
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function addResource(){
-  const name=document.getElementById('r-name').value.trim();
-  const hours=parseFloat(document.getElementById('r-hours').value)||8;
-  if(!name)return alert('Insira o nome do recurso.');
-  state.resources.push({id:state.nextRid++,name,hours,color:COLORS[state.resources.length%COLORS.length]});
-  document.getElementById('r-name').value='';
-  pushState();
+  const name=document.getElementById('rn').value.trim();
+  const hours=parseFloat(document.getElementById('rh').value)||8;
+  if(!name){ alert('Insira o nome do recurso.'); return; }
+  S.resources.push({ id:S.rid++, name, hours, color:RCOLS[S.resources.length%RCOLS.length] });
+  document.getElementById('rn').value='';
+  save();
 }
-function deleteResource(id){
-  if(!confirm('Excluir este recurso?'))return;
-  state.resources=state.resources.filter(r=>r.id!==id);
-  state.activities=state.activities.filter(a=>a.resourceId!==id);
-  pushState();
-}
-
-function renderResourceList(){
-  const el=document.getElementById('resource-list');
-  const sR=document.getElementById('a-resource'),fR=document.getElementById('filter-resource');
-  const gR=document.getElementById('gantt-filter-res');
-  const pvR=sR.value,pvF=fR.value,pvG=gR.value;
-  sR.innerHTML='<option value="">Selecionar...</option>';
-  fR.innerHTML='<option value="">Todos os recursos</option>';
-  gR.innerHTML='<option value="">Todos os recursos</option>';
-  if(!state.resources.length){el.innerHTML='<div class="empty">Nenhum recurso.</div>';return;}
-  el.innerHTML=state.resources.map(r=>{
-    const acts=state.activities.filter(a=>a.resourceId===r.id&&!a.done&&!a.suspended);
-    const totalH=acts.reduce((s,a)=>s+a.estimatedHours+a.deviations.reduce((ss,d)=>ss+d.hours,0),0);
-    const pct=Math.min((totalH/(r.hours*5))*100,100);
-    const fc=pct>85?'var(--danger)':pct>60?'var(--warning)':'var(--success)';
-    return `<div class="resource-item">
-      <div class="avatar" style="background:${r.color}18;color:${r.color}">${initials(r.name)}</div>
-      <div class="resource-info">
-        <div class="resource-name">${r.name}</div>
-        <div class="resource-hours">${r.hours}h/dia · ${totalH.toFixed(1)}h pendentes</div>
-        <div class="load-bar"><div class="load-fill" style="width:${pct}%;background:${fc}"></div></div>
-      </div>
-      <button class="btn btn-danger btn-xs" onclick="deleteResource(${r.id})">✕</button>
-    </div>`;
-  }).join('');
-  state.resources.forEach(r=>{
-    const mk=v=>{const o=document.createElement('option');o.value=v;o.textContent=r.name;return o;};
-    sR.appendChild(mk(r.id));fR.appendChild(mk(r.id));gR.appendChild(mk(r.id));
-  });
-  if(pvR)sR.value=pvR;if(pvF)fR.value=pvF;if(pvG)gR.value=pvG;
-  // pred select
-  onProjectChange();
+function delResource(id){
+  if(!confirm('Excluir recurso?')) return;
+  S.resources=S.resources.filter(r=>r.id!==id);
+  S.activities=S.activities.filter(a=>a.rid!==id);
+  save();
 }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  ACTIVITIES
-// ══════════════════════════════════════════════
-function onProjectChange(){
-  const pid=parseInt(document.getElementById('a-project').value)||0;
-  const sP=document.getElementById('a-pred');
-  const prev=sP.value;
-  sP.innerHTML='<option value="">Nenhuma</option>';
-  // show activities from same project (or all if no project selected)
-  const pool=(pid>0)?state.activities.filter(a=>a.projectId===pid):state.activities;
-  pool.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=`#${a.id} ${a.name.slice(0,30)}`;sP.appendChild(o);});
-  if(prev)sP.value=prev;
+// ═══════════════════════════════════════════
+function syncPred(){
+  const pjid=+document.getElementById('apj').value||0;
+  const sel=document.getElementById('apd');
+  const prev=sel.value;
+  sel.innerHTML='<option value="0">Nenhuma</option>';
+  const pool = pjid>0 ? S.activities.filter(a=>a.pjid===pjid) : S.activities;
+  pool.forEach(a=>{ const o=document.createElement('option'); o.value=a.id; o.textContent=`#${a.id} ${a.name.slice(0,28)}`; sel.appendChild(o); });
+  if(prev) sel.value=prev;
 }
 
 function addActivity(){
-  const name=document.getElementById('a-name').value.trim();
-  const hours=parseFloat(document.getElementById('a-hours').value)||8;
-  const date=document.getElementById('a-date').value;
-  const rid=parseInt(document.getElementById('a-resource').value);
-  const type=document.getElementById('a-type').value;
-  const priority=parseInt(document.getElementById('a-priority').value)||2;
-  const predId=parseInt(document.getElementById('a-pred').value)||0;
-  const projId=parseInt(document.getElementById('a-project').value)||0;
-  if(!name)return alert('Insira a descrição.');
-  if(!date)return alert('Selecione a data de início.');
-  if(!rid)return alert('Selecione um recurso.');
-  const act={id:state.nextAid++,name,estimatedHours:hours,startDate:date,baselineEnd:'',
-    resourceId:rid,projectId:projId,type,priority,predecessorId:predId,
-    done:false,suspended:false,suspendedReason:'',suspensions:[],deviations:[],progress:0,completedDate:''};
-  state.activities.push(act);
-  document.getElementById('a-name').value='';
-  // set baseline after scheduling
-  const sched=computeSchedule();
-  act.baselineEnd=sched[act.id]?.end||date;
-  pushState();
-  const ov=detectOverlaps(sched).find(o=>o.aids.includes(act.id));
-  if(ov)openPriModal(ov);
+  const name=document.getElementById('an').value.trim();
+  const hours=parseFloat(document.getElementById('ah').value)||8;
+  const start=document.getElementById('ad').value;
+  const rid=+document.getElementById('ar').value||0;
+  const type=document.getElementById('at').value;
+  const pri=+document.getElementById('apri').value||2;
+  const pred=+document.getElementById('apd').value||0;
+  const pjid=+document.getElementById('apj').value||0;
+  if(!name){ alert('Insira a descrição.'); return; }
+  if(!start){ alert('Selecione a data de início.'); return; }
+  if(!rid){ alert('Selecione um recurso.'); return; }
+  const act={ id:S.aid++, name, hours, start, baseline:'', rid, pjid, type, pri, pred,
+    done:false, susp:false, suspReason:'', susps:[], devs:[], prog:0, doneDate:'' };
+  S.activities.push(act);
+  document.getElementById('an').value='';
+  // compute baseline
+  const sc=schedule();
+  act.baseline=sc[act.id]?.end||start;
+  save();
+  // check overlap
+  const ov=overlaps(sc).find(o=>o.aids.includes(act.id));
+  if(ov) openPri(ov);
 }
 
 function toggleDone(id){
-  const a=state.activities.find(a=>a.id===id);
-  if(!a)return;
-  if(!a.done){
-    a.done=true;
-    a.suspended=false;
-    a.completedDate=todayStr();
-    a.progress=100;
-  } else {
-    a.done=false;
-    a.completedDate='';
-    a.progress=a.progress===100?90:a.progress;
-  }
-  pushState();
+  const a=S.activities.find(x=>x.id===id); if(!a) return;
+  if(!a.done){ a.done=true; a.susp=false; a.doneDate=today(); a.prog=100; }
+  else        { a.done=false; a.doneDate=''; a.prog=a.prog===100?90:a.prog; }
+  save();
 }
 
-function deleteActivity(id){
-  state.activities.forEach(a=>{if(a.predecessorId===id)a.predecessorId=0;});
-  state.activities=state.activities.filter(a=>a.id!==id);
-  pushState();
+function delActivity(id){
+  S.activities.forEach(a=>{ if(a.pred===id) a.pred=0; });
+  S.activities=S.activities.filter(a=>a.id!==id);
+  save();
 }
 
-function setProgress(id,val){
-  const a=state.activities.find(a=>a.id===id);if(!a)return;
-  a.progress=parseInt(val);
-  document.querySelectorAll(`[data-prog-id="${id}"]`).forEach(el=>{if(el.tagName==='DIV')el.style.width=val+'%';if(el.tagName==='SPAN')el.textContent=val+'%';});
-  clearTimeout(a._pt);a._pt=setTimeout(()=>pushState(),700);
+function setProg(id, val){
+  const a=S.activities.find(x=>x.id===id); if(!a) return;
+  a.prog=+val;
+  // update UI immediately
+  document.querySelectorAll('[data-pg="'+id+'"]').forEach(el=>{
+    if(el.classList.contains('pfill')) el.style.width=val+'%';
+    else el.textContent=val+'%';
+  });
+  clearTimeout(a._pt); a._pt=setTimeout(save, 700);
 }
 
-// ── SUSPENSION ──
-function openSusModal(aid){
-  _susAid=aid;
-  const act=state.activities.find(a=>a.id===aid);
-  const isSuspended=act.suspended;
-  document.getElementById('sus-title').textContent=isSuspended?'▶ Retomar Atividade':'⏸ Paralisar Atividade';
-  document.getElementById('sus-subtitle').textContent=isSuspended
-    ?'A atividade será retomada e o cronograma recalculado.'
-    :'Informe o motivo da paralisação. A atividade ficará congelada até ser retomada.';
-  document.getElementById('sus-reason').value='';
-  document.getElementById('sus-reason').placeholder=isSuspended?'Motivo da retomada (opcional)':'Ex: Aguardando aprovação da diretoria';
-  document.getElementById('sus-action-btn').textContent=isSuspended?'Retomar':'Paralisar';
-  // history
-  const el=document.getElementById('sus-history');
-  el.innerHTML=act.suspensions?.length
-    ?act.suspensions.map(s=>`<div class="dev-item"><div><div style="font-size:12px;font-weight:600">${s.action==='suspend'?'⏸ Paralisado':'▶ Retomado'}: ${s.reason||'—'}</div><div style="font-size:10.5px;color:var(--muted)">${s.date}</div></div></div>`).join('')
-    :'<div style="color:var(--muted2);font-size:11.5px;text-align:center;padding:6px">Sem histórico</div>';
-  document.getElementById('sus-modal').classList.remove('hidden');
+// ═══════════════════════════════════════════
+//  DESVIO MODAL
+// ═══════════════════════════════════════════
+function openDev(id){ _devId=id; renderDevHist(); document.getElementById('dvd').value=''; document.getElementById('dvh').value='1'; document.getElementById('mdev').classList.remove('hidden'); }
+function closeDev(){ document.getElementById('mdev').classList.add('hidden'); }
+function saveDev(){
+  const desc=document.getElementById('dvd').value.trim();
+  const h=parseFloat(document.getElementById('dvh').value)||1;
+  if(!desc){ alert('Descreva o desvio.'); return; }
+  const a=S.activities.find(x=>x.id===_devId); if(!a) return;
+  if(!a.devs) a.devs=[];
+  a.devs.push({desc, h, date:new Date().toLocaleDateString('pt-BR')});
+  document.getElementById('dvd').value='';
+  renderDevHist();
+  save();
 }
-function closeSusModal(){document.getElementById('sus-modal').classList.add('hidden');_susAid=null;}
-function applySuspension(){
-  const act=state.activities.find(a=>a.id===_susAid);if(!act)return;
-  const reason=document.getElementById('sus-reason').value.trim();
-  const isSuspended=act.suspended;
-  if(!isSuspended&&!reason){alert('Informe o motivo da paralisação.');return;}
-  if(!act.suspensions)act.suspensions=[];
-  act.suspensions.push({action:isSuspended?'resume':'suspend',reason,date:new Date().toLocaleDateString('pt-BR')});
-  act.suspended=!isSuspended;
-  act.suspendedReason=isSuspended?'':reason;
-  pushState();closeSusModal();
+function renderDevHist(){
+  const a=S.activities.find(x=>x.id===_devId);
+  const el=document.getElementById('dvhist');
+  if(!a||!a.devs||!a.devs.length){ el.innerHTML='<div style="color:var(--mu2);font-size:11px;text-align:center;padding:6px">Nenhum desvio</div>'; return; }
+  el.innerHTML=a.devs.map(d=>`<div class="devi"><div><div style="font-size:11.5px;font-weight:600">${d.desc}</div><div style="font-size:10px;color:var(--mu)">${d.date}</div></div><span class="mono" style="color:var(--warn);font-size:12.5px;font-weight:600">+${d.h}h</span></div>`).join('');
 }
 
-// ── BUILD CARD HTML ──
-function buildActivityHTML(act,sched){
-  const res=state.resources.find(r=>r.id===act.resourceId);
-  const proj=state.projects.find(p=>p.id===act.projectId);
-  const color=res?.color||'#2f6be0';
-  const status=getActivityStatus(act,sched);
-  const st=STATUS[status]||STATUS.active;
-  const s=sched[act.id];
-  const effStart=s?.start||act.startDate;
-  const effEnd=s?.end||act.startDate;
-  const totalDev=act.deviations.reduce((ss,d)=>ss+d.hours,0);
-  const pred=(act.predecessorId>0)?state.activities.find(a=>a.id===act.predecessorId):false;
-  const isReprog=act.baselineEnd&&effEnd!==act.baselineEnd;
-  const pr=PRI[act.priority||2];
-  return `<div class="activity-item ${st.itemCls}" style="border-left-color:${color}">
-    <div class="activity-header">
-      <div class="activity-name">${act.name}</div>
-      <span class="tag ${st.tagCls}">${st.label}</span>
-      <span class="priority-badge ${pr.cls}">${pr.label}</span>
-      ${proj?`<span class="proj-badge" style="background:${proj.color}18;color:${proj.color}">📁 ${proj.name.slice(0,15)}</span>`:''}
-      <button class="btn btn-warning btn-xs" onclick="openDevModal(${act.id})" title="Desvio">⚡</button>
-      <button class="btn btn-ghost btn-xs" onclick="openSusModal(${act.id})" title="${act.suspended?'Retomar':'Paralisar'}">${act.suspended?'▶':'⏸'}</button>
-      <button class="btn btn-ghost btn-xs" onclick="toggleDone(${act.id})" title="${act.done?'Reabrir':'Concluir'}">${act.done?'↩':'✓'}</button>
-      <button class="btn btn-danger btn-xs" onclick="deleteActivity(${act.id})">✕</button>
+// ═══════════════════════════════════════════
+//  PARALISAÇÃO MODAL
+// ═══════════════════════════════════════════
+function openSus(id){
+  _susId=id;
+  const a=S.activities.find(x=>x.id===id); if(!a) return;
+  const resuming=a.susp;
+  document.getElementById('sustitle').textContent=resuming?'▶ Retomar Atividade':'⏸ Paralisar Atividade';
+  document.getElementById('susdesc').textContent=resuming?'A atividade será retomada e o cronograma recalculado.':'Informe o motivo da paralisação.';
+  document.getElementById('suslbl').textContent=resuming?'Motivo da retomada (opcional)':'Motivo da paralisação';
+  document.getElementById('susreason').value='';
+  document.getElementById('susbtn').textContent=resuming?'Retomar':'Paralisar';
+  const el=document.getElementById('sushist');
+  const hist=(a.susps||[]);
+  el.innerHTML=hist.length
+    ?hist.map(s=>`<div class="devi"><div style="font-size:11px;font-weight:600">${s.action==='susp'?'⏸ Paralisado':'▶ Retomado'}: ${s.reason||'—'}</div><div style="font-size:10px;color:var(--mu)">${s.date}</div></div>`).join('')
+    :'<div style="color:var(--mu2);font-size:11px;text-align:center;padding:6px">Sem histórico</div>';
+  document.getElementById('msus').classList.remove('hidden');
+}
+function closeSus(){ document.getElementById('msus').classList.add('hidden'); }
+function applySus(){
+  const a=S.activities.find(x=>x.id===_susId); if(!a) return;
+  const reason=document.getElementById('susreason').value.trim();
+  const resuming=a.susp;
+  if(!resuming&&!reason){ alert('Informe o motivo da paralisação.'); return; }
+  if(!a.susps) a.susps=[];
+  a.susps.push({action:resuming?'resume':'susp', reason, date:new Date().toLocaleDateString('pt-BR')});
+  a.susp=!resuming;
+  a.suspReason=resuming?'':reason;
+  save(); closeSus();
+}
+
+// ═══════════════════════════════════════════
+//  PRIORIDADE MODAL
+// ═══════════════════════════════════════════
+function openPri(ov){
+  _priCtx=ov;
+  const key=`${ov.rid}_${ov.aids.join('_')}`;
+  _ovReg[key]=ov;
+  const res=S.resources.find(r=>r.id===ov.rid);
+  document.getElementById('mpridesc').textContent=`${res?.name||'Recurso'} tem atividades sobrepostas. Alta prioridade executa primeiro.`;
+  document.getElementById('mprilist').innerHTML=ov.aids.map(id=>{
+    const a=S.activities.find(x=>x.id===id); if(!a) return '';
+    return `<div style="display:flex;align-items:center;gap:9px;padding:8px 9px;background:var(--bg);border-radius:7px;margin-bottom:6px;border:1px solid var(--brd)">
+      <div style="flex:1"><div style="font-weight:600;font-size:12.5px">${a.name}</div><div style="font-size:10px;color:var(--mu)">${a.hours}h · ${fmt(a.start)}</div></div>
+      <select class="fi" id="psel_${id}" style="width:105px">
+        <option value="1" ${a.pri==1?'selected':''}>🔴 Alta</option>
+        <option value="2" ${a.pri==2?'selected':''}>🟡 Média</option>
+        <option value="3" ${a.pri==3?'selected':''}>🔵 Baixa</option>
+      </select>
+    </div>`;
+  }).join('');
+  document.getElementById('mpri').classList.remove('hidden');
+}
+function closePri(){ document.getElementById('mpri').classList.add('hidden'); _priCtx=null; }
+function applyPri(){
+  if(!_priCtx) return;
+  _priCtx.aids.forEach(id=>{ const s=document.getElementById('psel_'+id); if(s){ const a=S.activities.find(x=>x.id===id); if(a) a.pri=+s.value; } });
+  save(); closePri();
+}
+
+// ═══════════════════════════════════════════
+//  ACTIVITY CARD HTML
+// ═══════════════════════════════════════════
+function actHTML(a, sc){
+  const res=S.resources.find(r=>r.id===a.rid);
+  const prj=S.projects.find(p=>p.id===a.pjid);
+  const col=res?.color||'#2f6be0';
+  const st=getStatus(a,sc), sv=STS[st];
+  const s=sc[a.id];
+  const es=s?.start||a.start, ee=s?.end||a.start;
+  const tdv=(a.devs||[]).reduce((x,d)=>x+d.h,0);
+  const pred=a.pred>0?S.activities.find(x=>x.id===a.pred):null;
+  const rep=a.baseline&&ee!==a.baseline;
+  const pr=PRI[a.pri||2];
+  return `<div class="aitem ${sv.icls}" style="border-left-color:${col}">
+    <div class="ahead">
+      <div class="aname">${a.name}</div>
+      <span class="tag ${sv.tcls}">${sv.lbl}</span>
+      <span class="pbadge ${pr.cls}">${pr.lbl}</span>
+      ${prj?`<span class="prjbadge" style="background:${prj.color}18;color:${prj.color}">📁 ${prj.name.slice(0,14)}</span>`:''}
+      <button class="btn bxs bwn" onclick="openDev(${a.id})" title="Desvio">⚡</button>
+      <button class="btn bxs bgh" onclick="openSus(${a.id})">${a.susp?'▶':'⏸'}</button>
+      <button class="btn bxs bgh" onclick="toggleDone(${a.id})">${a.done?'↩':'✓'}</button>
+      <button class="btn bxs bdn" onclick="delActivity(${a.id})">✕</button>
     </div>
-    <div class="activity-meta">
+    <div class="ameta">
       <span>👤 ${res?.name||'—'}</span>
-      <span>🕒 ${act.estimatedHours}h${totalDev>0?` <span style="color:var(--warning)">+${totalDev}h</span>`:''}</span>
-      ${effStart!==act.startDate?`<span>📅 Reprog.: <b>${fmtDate(effStart)}</b></span>`:`<span>📅 ${fmtDate(act.startDate)}</span>`}
-      <span>🏁 <b>${fmtDate(effEnd)}</b></span>
-      ${isReprog?`<span style="color:${effEnd>act.baselineEnd?'var(--danger)':'var(--success)'}">Baseline: ${fmtDate(act.baselineEnd)} ${effEnd>act.baselineEnd?'⚠':'✓'}</span>`:''}
-      <span>🔖 ${act.type}</span>
+      <span>🕒 ${a.hours}h${tdv>0?` <span style="color:var(--warn)">+${tdv}h</span>`:''}</span>
+      ${es!==a.start?`<span>📅 Reprog.: <b>${fmt(es)}</b></span>`:`<span>📅 ${fmt(a.start)}</span>`}
+      <span>🏁 <b>${fmt(ee)}</b></span>
+      ${rep?`<span style="color:${ee>a.baseline?'var(--err)':'var(--ok)'}">Baseline: ${fmt(a.baseline)} ${ee>a.baseline?'⚠':'✓'}</span>`:''}
     </div>
-    ${pred?`<div style="margin-top:4px"><span class="dep-badge">⛓ Após: #${pred.id} ${pred.name.slice(0,25)}</span></div>`:''}
-    ${act.suspended?`<div style="margin-top:4px;font-size:10.5px;color:var(--suspended);font-weight:600">⏸ Paralisado: ${act.suspendedReason}</div>`:''}
-    ${act.deviations.length?`<div style="margin-top:4px;font-size:10.5px;color:var(--warning)">⚠ ${act.deviations.length} desvio(s)</div>`:''}
-    ${act.done&&act.completedDate?`<div style="margin-top:4px;font-size:10.5px;color:var(--success)">✅ Concluído em ${fmtDate(act.completedDate)}</div>`:''}
-    <div style="margin-top:8px">
-      <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:3px">
-        <span>Progresso</span><span data-prog-id="${act.id}">${act.progress}%</span>
+    ${pred?`<div style="margin-top:3px"><span class="dbadge">⛓ Após: #${pred.id} ${pred.name.slice(0,24)}</span></div>`:''}
+    ${a.susp?`<div style="margin-top:3px;font-size:10px;color:var(--sus);font-weight:600">⏸ ${a.suspReason}</div>`:''}
+    ${a.done&&a.doneDate?`<div style="margin-top:3px;font-size:10px;color:var(--ok)">✅ Concluído em ${fmt(a.doneDate)}</div>`:''}
+    <div style="margin-top:7px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-bottom:2px">
+        <span>Progresso</span><span data-pg="${a.id}">${a.prog}%</span>
       </div>
-      <input type="range" min="0" max="100" value="${act.progress}" oninput="setProgress(${act.id},this.value)" style="width:100%;accent-color:${color};margin-bottom:3px" ${act.done||act.suspended?'disabled':''}>
-      <div class="progress-bar"><div class="progress-fill" data-prog-id="${act.id}" style="width:${act.progress}%;background:${color}"></div></div>
+      <input type="range" min="0" max="100" value="${a.prog}" oninput="setProg(${a.id},this.value)" style="width:100%;accent-color:${col};margin-bottom:2px" ${a.done||a.susp?'disabled':''}>
+      <div class="pbar"><div class="pfill data-pg='${a.id}'" data-pg="${a.id}" style="width:${a.prog}%;background:${col}"></div></div>
     </div>
   </div>`;
 }
 
-function renderActivityList(containerId,allMode){
-  const el=document.getElementById(containerId);
-  const t=todayStr(),sched=computeSchedule();
-  const filterRid=allMode?parseInt(document.getElementById('filter-resource').value)||0:0;
-  const filterPid=allMode?parseInt(document.getElementById('filter-project').value)||0:0;
-  const filterStatus=allMode?document.getElementById('filter-status').value:'';
-  let acts=[...state.activities];
-  if(filterRid)acts=acts.filter(a=>a.resourceId===filterRid);
-  if(filterPid)acts=acts.filter(a=>a.projectId===filterPid);
-  if(!allMode)acts=acts.filter(a=>{const s=sched[a.id];return s&&s.start<=t&&!a.done&&!a.suspended;});
-  if(filterStatus==='active')  acts=acts.filter(a=>getActivityStatus(a,sched)==='active');
-  if(filterStatus==='done')    acts=acts.filter(a=>a.done);
-  if(filterStatus==='overdue') acts=acts.filter(a=>getActivityStatus(a,sched)==='overdue');
-  if(filterStatus==='waiting') acts=acts.filter(a=>getActivityStatus(a,sched)==='waiting');
-  if(filterStatus==='suspended')acts=acts.filter(a=>a.suspended);
-  acts.sort((a,b)=>(sched[a.id]?.start||a.startDate).localeCompare(sched[b.id]?.start||b.startDate));
-  if(!acts.length){el.innerHTML='<div class="empty">Nenhuma atividade encontrada.</div>';return;}
-  el.innerHTML=acts.map(a=>buildActivityHTML(a,sched)).join('');
+function renderActList(elId, allMode){
+  const el=document.getElementById(elId);
+  const t=today(), sc=schedule();
+  const frid=allMode?+document.getElementById('fres').value||0:0;
+  const fpid=allMode?+document.getElementById('fprj').value||0:0;
+  const fst=allMode?document.getElementById('fst').value:'';
+  let acts=[...S.activities];
+  if(frid>0) acts=acts.filter(a=>a.rid===frid);
+  if(fpid>0) acts=acts.filter(a=>a.pjid===fpid);
+  if(!allMode) acts=acts.filter(a=>{ const s=sc[a.id]; return s&&s.start<=t&&!a.done&&!a.susp; });
+  if(fst) acts=acts.filter(a=>getStatus(a,sc)===fst);
+  acts.sort((a,b)=>(sc[a.id]?.start||a.start).localeCompare(sc[b.id]?.start||b.start));
+  el.innerHTML=acts.length?acts.map(a=>actHTML(a,sc)).join(''):'<div class="empty">Nenhuma atividade encontrada.</div>';
 }
-function renderActivities(){renderActivityList('activities-list',true);}
-function renderDashActivities(){renderActivityList('dash-activities',false);}
+function renderActs(){ renderActList('actslist',true); }
+function renderDash(){ renderActList('dashacts',false); }
 
-// ── OVERLAP ALERTS ──
-function renderOverlapAlerts(sched){
-  const el=document.getElementById('overlap-alerts');
-  const ovs=detectOverlaps(sched);
-  if(!ovs.length){el.innerHTML='';return;}
+// ═══════════════════════════════════════════
+//  OVERLAP ALERTS
+// ═══════════════════════════════════════════
+function renderOAlerts(sc){
+  const el=document.getElementById('oalerts');
+  const ovs=overlaps(sc);
+  if(!ovs.length){ el.innerHTML=''; return; }
   el.innerHTML=ovs.map(ov=>{
-    const res=state.resources.find(r=>r.id===ov.rid);
-    const names=ov.aids.map(id=>state.activities.find(a=>a.id===id)?.name||'').join(' × ');
-    const key=registerOv(ov);
-    return `<div class="overlap-alert">⚠️ <b>Sobreposição</b> para <b>${res?.name||''}</b>: ${names}.
-      <button class="btn btn-xs btn-warning" style="margin-left:6px" onclick="openPriModalByKey('${key}')">Reordenar</button>
+    const res=S.resources.find(r=>r.id===ov.rid);
+    const names=ov.aids.map(id=>S.activities.find(a=>a.id===id)?.name||'').join(' × ');
+    const key=`${ov.rid}_${ov.aids.join('_')}`;
+    _ovReg[key]=ov;
+    return `<div class="oalert">⚠️ <b>Sobreposição</b> para <b>${res?.name||''}</b>: ${names}.
+      <button class="btn bxs bwn" style="margin-left:5px" onclick="_openOv('${key}')">Reordenar</button>
     </div>`;
   }).join('');
 }
+window._openOv=function(key){ const ov=_ovReg[key]; if(ov) openPri(ov); };
 
-// ── DEVIATION MODAL ──
-function openDevModal(aid){
-  _devAid=aid;const act=state.activities.find(a=>a.id===aid);
-  document.getElementById('dev-desc').value='';document.getElementById('dev-hours').value='1';
-  renderDevHistory(act);document.getElementById('dev-modal').classList.remove('hidden');
-}
-function closeDevModal(){document.getElementById('dev-modal').classList.add('hidden');}
-function addDeviation(){
-  const desc=document.getElementById('dev-desc').value.trim();
-  const hours=parseFloat(document.getElementById('dev-hours').value)||1;
-  if(!desc)return alert('Descreva o desvio.');
-  const act=state.activities.find(a=>a.id===_devAid);
-  act.deviations.push({desc,hours,date:new Date().toLocaleDateString('pt-BR')});
-  document.getElementById('dev-desc').value='';
-  renderDevHistory(act);pushState();
-}
-function renderDevHistory(act){
-  const el=document.getElementById('dev-history');
-  if(!act.deviations.length){el.innerHTML='<div style="color:var(--muted2);font-size:11.5px;text-align:center;padding:8px">Nenhum desvio ainda</div>';return;}
-  el.innerHTML=act.deviations.map(d=>`<div class="dev-item">
-    <div><div style="font-size:12px;font-weight:600">${d.desc}</div><div style="font-size:10.5px;color:var(--muted)">${d.date}</div></div>
-    <span style="color:var(--warning);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">+${d.hours}h</span>
-  </div>`).join('');
+// ═══════════════════════════════════════════
+//  GANTT ENGINE
+// ═══════════════════════════════════════════
+function ganttCSS(status){
+  return {
+    wait:  'background:#dbeafe;border-color:#3b82f6;color:#1d4ed8',
+    active:'background:#fef3c7;border-color:#f59e0b;color:#92400e',
+    done:  'background:#d1fae5;border-color:#10b981;color:#065f46',
+    late:  'background:#fee2e2;border-color:#ef4444;color:#991b1b',
+    susp:  'background:#f1f5f9;border-color:#94a3b8;color:#475569',
+  }[status]||'background:#fef3c7;border-color:#f59e0b;color:#92400e';
 }
 
-// ── PRIORITY MODAL ──
-// ── OVERLAP REGISTRY (avoids JSON.stringify in onclick) ──
-const _ovRegistry={};
-function registerOv(ov){const key=`${ov.rid}_${ov.aids.join('_')}`;_ovRegistry[key]=ov;return key;}
-function openPriModalByKey(key){const ov=_ovRegistry[key];if(ov)openPriModal(ov);}
-
-function openPriModal(ov){
-  _priContext=ov;
-  const res=state.resources.find(r=>r.id===ov.rid);
-  document.getElementById('pri-desc').textContent=`${res?.name||'Este recurso'} tem atividades sobrepostas. Alta prioridade executa primeiro.`;
-  document.getElementById('pri-list').innerHTML=ov.aids.map(id=>{
-    const a=state.activities.find(x=>x.id===id);if(!a)return'';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--bg);border-radius:8px;margin-bottom:7px;border:1px solid var(--border)">
-      <div style="flex:1"><div style="font-weight:600;font-size:13px">${a.name}</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">${a.estimatedHours}h · ${fmtDate(a.startDate)}</div></div>
-      <select id="pri-sel-${id}" style="width:115px">
-        <option value="1" ${a.priority==1?'selected':''}>🔴 Alta</option>
-        <option value="2" ${a.priority==2?'selected':''}>🟡 Média</option>
-        <option value="3" ${a.priority==3?'selected':''}>🔵 Baixa</option>
-      </select>
-    </div>`;
-  }).join('');
-  document.getElementById('pri-modal').classList.remove('hidden');
-}
-function closePriModal(){document.getElementById('pri-modal').classList.add('hidden');_priContext=null;}
-function applyPriority(){
-  if(!_priContext)return;
-  _priContext.aids.forEach(id=>{const sel=document.getElementById('pri-sel-'+id);if(sel){const a=state.activities.find(x=>x.id===id);if(a)a.priority=parseInt(sel.value);}});
-  pushState();closePriModal();
-}
-
-// ══════════════════════════════════════════════
-//  GANTT BUILDER (shared)
-// ══════════════════════════════════════════════
-function buildGanttGrid(acts,sched,container,showBaseline=false,groupFn=null){
-  if(!acts.length){container.innerHTML='<div class="empty">Nenhuma atividade para exibir.</div>';return;}
-  const t=todayStr();
-  let minD=t,maxD=t;
-  acts.forEach(a=>{
-    const s=sched[a.id];if(!s)return;
-    if(s.start<minD)minD=s.start;if(s.end>maxD)maxD=s.end;
-    if(showBaseline&&a.baselineEnd&&a.baselineEnd>maxD)maxD=a.baselineEnd;
-  });
-  const startDt=new Date(minD+'T00:00:00');startDt.setDate(startDt.getDate()-1);
-  const endDt=new Date(maxD+'T00:00:00');endDt.setDate(endDt.getDate()+3);
-  const totalMs=endDt-startDt;
-
-  const pl=ds=>Math.max(0,(new Date(ds+'T00:00:00')-startDt)/totalMs*100).toFixed(3)+'%';
-  const pw=(ds,de)=>{const a=new Date(ds+'T00:00:00'),b=new Date(de+'T00:00:00');b.setDate(b.getDate()+1);return(Math.max(0.3,(b-a)/totalMs*100)).toFixed(3)+'%';};
-
-  const days=[];const cur=new Date(startDt);while(cur<=endDt){days.push(new Date(cur));cur.setDate(cur.getDate()+1);}
+function drawGantt(acts, sc, contId, baseline=false, grpFn=null){
+  const el=document.getElementById(contId);
+  if(!acts.length){ el.innerHTML='<div class="empty">Nenhuma atividade.</div>'; return; }
+  const t=today();
+  let mn=t, mx=t;
+  acts.forEach(a=>{ const s=sc[a.id]; if(!s)return; if(s.start<mn)mn=s.start; if(s.end>mx)mx=s.end; if(baseline&&a.baseline&&a.baseline>mx)mx=a.baseline; });
+  const sdt=new Date(mn+'T00:00:00'); sdt.setDate(sdt.getDate()-1);
+  const edt=new Date(mx+'T00:00:00'); edt.setDate(edt.getDate()+3);
+  const tms=edt-sdt;
+  const pl=ds=>Math.max(0,(new Date(ds+'T00:00:00')-sdt)/tms*100).toFixed(2)+'%';
+  const pw=(ds,de)=>{ const a=new Date(ds+'T00:00:00'),b=new Date(de+'T00:00:00'); b.setDate(b.getDate()+1); return Math.max(.3,(b-a)/tms*100).toFixed(2)+'%'; };
+  const days=[]; const c=new Date(sdt); while(c<=edt){ days.push(new Date(c)); c.setDate(c.getDate()+1); }
   const step=Math.max(1,Math.floor(days.length/14));
   const hdr=days.filter((_,i)=>i%step===0).map(d=>{
     const wk=d.getDay()===0||d.getDay()===6;
-    return `<span style="flex:${step};text-align:center;font-size:9px;color:${wk?'var(--muted2)':'var(--muted)'}">${d.getDate()}/${d.getMonth()+1}</span>`;
+    return `<span style="flex:${step};text-align:center;font-size:8.5px;color:${wk?'var(--mu2)':'var(--mu)'}">${d.getDate()}/${d.getMonth()+1}</span>`;
   }).join('');
-  const wkShades=days.filter(d=>d.getDay()===0||d.getDay()===6).map(d=>{const ds=d.toISOString().split('T')[0];return`<div class="gantt-weekend" style="left:${pl(ds)};width:${pw(ds,ds)}"></div>`;}).join('');
-  const todayPl=pl(t);
+  const wks=days.filter(d=>d.getDay()===0||d.getDay()===6).map(d=>{ const ds=d.toISOString().split('T')[0]; return `<div class="gwk" style="left:${pl(ds)};width:${pw(ds,ds)}"></div>`; }).join('');
+  const tp=pl(t);
 
-  // status → gantt bar classes
-  function statusStyle(status){
-    const map={
-      waiting:  'background:#dbeafe;border-color:#3b82f6;color:#1d4ed8',
-      active:   'background:#fef3c7;border-color:#f59e0b;color:#92400e',
-      done:     'background:#d1fae5;border-color:#10b981;color:#065f46',
-      overdue:  'background:#fee2e2;border-color:#ef4444;color:#991b1b',
-      suspended:'background:#f1f5f9;border-color:#94a3b8;color:#475569',
-    };
-    return map[status]||map.active;
-  }
-
-  const groups=groupFn?groupFn(acts):{'':acts};
+  const groups=grpFn?grpFn(acts):{'':acts};
   let rows='';
-
-  Object.entries(groups).forEach(([groupLabel,groupActs])=>{
-    if(groupLabel){
-      rows+=`<div class="gantt-group-row">
-        <div class="gantt-group-label" style="color:${groupActs[0]?._groupColor||'var(--accent)'}">${groupLabel}</div>
-        <div class="gantt-group-line"></div>
-      </div>`;
-    }
-    groupActs.forEach(act=>{
-      const s=sched[act.id];if(!s)return;
-      const status=getActivityStatus(act,sched);
-      const style=statusStyle(status);
-      const isPushed=s.start!==act.startDate;
-      const isEarly=act.done&&act.completedDate&&act.completedDate<(act.baselineEnd||act.completedDate);
-      const nameShort=act.name.length>24?act.name.slice(0,22)+'…':act.name;
-      const res=state.resources.find(r=>r.id===act.resourceId);
-      rows+=`<div class="gantt-row">
-        <div class="gantt-label-col">
-          <div class="gantt-label" title="${act.name}">${nameShort}</div>
-          <div class="gantt-sub">${fmtShort(s.start)} → ${fmtShort(s.end)}${isPushed?' ↷':''}${isEarly?' ⚡':''}</div>
+  Object.entries(groups).forEach(([lbl,gas])=>{
+    if(lbl) rows+=`<div class="ggrp"><div class="ggrplbl" style="color:${gas[0]?._gc||'var(--acc)'}">${lbl}</div><div class="ggrpln"></div></div>`;
+    gas.forEach(a=>{
+      const s=sc[a.id]; if(!s) return;
+      const st=getStatus(a,sc), css=ganttCSS(st);
+      const nm=a.name.length>22?a.name.slice(0,20)+'…':a.name;
+      const pushed=s.start!==a.start;
+      rows+=`<div class="grow">
+        <div class="glcol">
+          <div class="glbl" title="${a.name}">${nm}</div>
+          <div class="gsub">${fmts(s.start)} → ${fmts(s.end)}${pushed?' ↷':''}</div>
         </div>
-        <div class="gantt-track" style="overflow:visible">
-          ${wkShades}
-          <div class="gantt-today" style="left:${todayPl}"></div>
-          <div class="gantt-bar" style="left:${pl(s.start)};width:${pw(s.start,s.end)};${style}"
-            onclick="openActivityDetail(${act.id})"
-            title="${act.name} | ${STATUS[status]?.label||status} | ${fmtDate(s.start)} → ${fmtDate(s.end)}${act.baselineEnd?' | Baseline: '+fmtDate(act.baselineEnd):''}">
-            ${act.suspended?'⏸ ':act.done?'✓ ':''}${nameShort}
+        <div class="gtrk" style="overflow:visible">
+          ${wks}<div class="gtoday" style="left:${tp}"></div>
+          <div class="gbar" style="left:${pl(s.start)};width:${pw(s.start,s.end)};${css}" onclick="openDet(${a.id})" title="${a.name} | ${STS[st]?.lbl||st} | ${fmt(s.start)} → ${fmt(s.end)}">
+            ${a.susp?'⏸ ':a.done?'✓ ':''}${nm}
           </div>
-          ${showBaseline&&act.baselineEnd&&act.baselineEnd!==s.end
-            ?`<div class="gantt-baseline" style="left:${pl(act.baselineEnd)};width:12px" title="Baseline: ${fmtDate(act.baselineEnd)}"></div>`:''}
-          ${act.deviations.length?`<div class="gantt-bar" style="left:${pl(s.start)};width:1%;min-width:4px;background:rgba(201,109,0,.35);border:1px solid var(--warning);height:6px;top:10px;z-index:4;border-radius:2px" title="${act.deviations.length} desvio(s)"></div>`:''}
+          ${baseline&&a.baseline&&a.baseline!==s.end?`<div class="gbase" style="left:${pl(a.baseline)};width:14px" title="Baseline: ${fmt(a.baseline)}"></div>`:''}
+          ${(a.devs||[]).length?`<div class="gbar" style="left:${pl(s.start)};width:.8%;min-width:3px;background:rgba(201,109,0,.35);border-color:var(--warn);height:5px;top:9px;z-index:4"></div>`:''}
         </div>
       </div>`;
     });
   });
-
-  container.innerHTML=`<div class="gantt-header-row"><div class="gantt-label-col"></div><div style="flex:1;display:flex">${hdr}</div></div>${rows}`;
+  el.innerHTML=`<div class="ghdr"><div class="glcol"></div><div style="flex:1;display:flex">${hdr}</div></div>${rows}`;
 }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  RESOURCE GANTT
-// ══════════════════════════════════════════════
-function renderResourceGantt(){
-  const el=document.getElementById('gantt-res-container');
-  const sched=computeSchedule();
-  const filterRid=parseInt(document.getElementById('gantt-filter-res').value)||0;
-  let acts=[...state.activities];
-  if(filterRid)acts=acts.filter(a=>a.resourceId===filterRid);
-
-  const groupFn=acts=>{
+// ═══════════════════════════════════════════
+function renderRG(){
+  const sc=schedule();
+  const frid=+document.getElementById('gfr').value||0;
+  let acts=frid>0?S.activities.filter(a=>a.rid===frid):[...S.activities];
+  const grpFn=list=>{
     const g={};
-    state.resources.forEach(r=>{
-      const ra=acts.filter(a=>a.resourceId===r.id);
-      if(ra.length){
-        ra.forEach(a=>a._groupColor=r.color);
-        g[`${initials(r.name)} ${r.name.split(' ')[0]}`]=ra;
-      }
+    S.resources.forEach(r=>{
+      if(frid>0&&r.id!==frid) return;
+      const ra=list.filter(a=>a.rid===r.id);
+      if(ra.length){ ra.forEach(a=>a._gc=r.color); g[`${ini(r.name)} ${r.name.split(' ')[0]}`]=ra; }
     });
     return g;
   };
-  buildGanttGrid(acts,sched,el,false,groupFn);
+  drawGantt(acts,sc,'rgcont',false,grpFn);
 }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  PROJECT GANTT
-// ══════════════════════════════════════════════
-function renderProjectGantt(){
-  const el=document.getElementById('gantt-proj-container');
-  const healthArea=document.getElementById('proj-health-area');
-  const sched=computeSchedule();
-  const filterPid=parseInt(document.getElementById('gantt-filter-proj').value)||0;
-
-  const projs=filterPid?state.projects.filter(p=>p.id===filterPid):state.projects;
-
-  if(!projs.length&&!state.activities.filter(a=>!(a.projectId>0)).length){
-    el.innerHTML='<div class="empty">Nenhum projeto cadastrado.</div>';
-    healthArea.innerHTML='';return;
-  }
+// ═══════════════════════════════════════════
+function renderPG(){
+  const sc=schedule();
+  const fpid=+document.getElementById('gfp').value||0;
+  const projs=fpid>0?S.projects.filter(p=>p.id===fpid):S.projects;
 
   // Health cards
-  let healthHTML='';
+  let hhtml='';
   projs.forEach(p=>{
-    const acts=state.activities.filter(a=>a.projectId===p.id);
-    const sched2=sched;
-    const lastEnd=acts.reduce((max,a)=>{const e=sched2[a.id]?.end||a.startDate;return e>max?e:max;},p.startDate);
-    const diffD=daysDiff(lastEnd,p.endDate);
-    const diffText=diffD===0?'No prazo':diffD>0?`${diffD}d adiantado`:`${Math.abs(diffD)}d atrasado`;
-    const pillCls=diffD>0?'pill-early':diffD===0?'pill-ok':'pill-danger';
-    const done=acts.filter(a=>a.done).length;
-    const suspended=acts.filter(a=>a.suspended).length;
-    healthHTML+=`<div class="health-card" style="border-left:3px solid ${p.color}">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:14px;color:${p.color};margin-bottom:2px">${p.name}</div>
-        ${p.desc?`<div style="font-size:11px;color:var(--muted)">${p.desc}</div>`:''}
-      </div>
-      <div class="health-stat"><div class="health-val" style="color:var(--muted)">${fmtDate(p.endDate)}</div><div class="health-lbl">Fim previsto (baseline)</div></div>
-      <div class="health-stat"><div class="health-val" style="color:${diffD>=0?'var(--success)':'var(--danger)'}">${fmtDate(lastEnd)}</div><div class="health-lbl">Fim reprogramado</div></div>
-      <div class="health-stat"><div style="margin-bottom:4px"><span class="health-pill ${pillCls}">${diffText}</span></div><div class="health-lbl">${done}/${acts.length} concluídas${suspended>0?` · ${suspended} paralisada(s)`:''}</div></div>
+    const pas=S.activities.filter(a=>a.pjid===p.id);
+    const lastEnd=pas.reduce((mx,a)=>{ const e=sc[a.id]?.end||a.start; return e>mx?e:mx; },p.start);
+    const dd=diffD(p.end,lastEnd);
+    const done=pas.filter(a=>a.done).length;
+    const susp=pas.filter(a=>a.susp).length;
+    const pillCls=dd>0?'hp-early':dd===0?'hp-ok':'hp-err';
+    const pillTx=dd>0?`${dd}d adiantado`:dd===0?'No prazo':`${Math.abs(dd)}d atrasado`;
+    hhtml+=`<div class="hcard" style="border-left:3px solid ${p.color}">
+      <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;color:${p.color}">${p.name}</div>${p.desc?`<div style="font-size:10.5px;color:var(--mu)">${p.desc}</div>`:''}</div>
+      <div><div style="font-size:10px;color:var(--mu);margin-bottom:2px">Fim previsto</div><div class="mono" style="font-size:14px;color:var(--mu)">${fmt(p.end)}</div></div>
+      <div><div style="font-size:10px;color:var(--mu);margin-bottom:2px">Fim reprogramado</div><div class="mono" style="font-size:14px;color:${dd>=0?'var(--ok)':'var(--err)'};font-weight:600">${fmt(lastEnd)}</div></div>
+      <div><span class="hpill ${pillCls}">${pillTx}</span><div style="font-size:10px;color:var(--mu);margin-top:4px">${done}/${pas.length} concluídas${susp>0?` · ${susp} paral.`:''}</div></div>
     </div>`;
   });
-
-  // Also show general activities
-  const generalActs=state.activities.filter(a=>!(a.projectId>0));
-  if(generalActs.length&&!filterPid){
-    healthHTML+=`<div class="health-card">
-      <div style="flex:1"><div style="font-weight:700;font-size:13px;color:var(--muted)">Demandas Gerais</div><div style="font-size:11px;color:var(--muted2)">${generalActs.length} atividade(s) sem projeto</div></div>
-    </div>`;
+  const genActs=S.activities.filter(a=>!(a.pjid>0));
+  if(genActs.length&&!fpid){
+    hhtml+=`<div class="hcard"><div style="flex:1"><div style="font-weight:600;font-size:12.5px;color:var(--mu)">Demandas Gerais</div><div style="font-size:10.5px;color:var(--mu2)">${genActs.length} atividade(s) sem projeto</div></div></div>`;
   }
-  healthArea.innerHTML=healthHTML;
+  document.getElementById('pharea').innerHTML=hhtml;
 
-  // Build gantt data
-  let allActs=[];
-  const groupFn=acts=>{
+  // Gantt
+  let allActs=fpid>0?S.activities.filter(a=>a.pjid===fpid):[...S.activities];
+  const grpFn=list=>{
     const g={};
     projs.forEach(p=>{
-      const pa=acts.filter(a=>a.projectId===p.id);
-      if(pa.length){pa.forEach(a=>a._groupColor=p.color);g[p.name]=pa;}
+      const pa=list.filter(a=>a.pjid===p.id);
+      if(pa.length){ pa.forEach(a=>a._gc=p.color); g[p.name]=pa; }
     });
-    if(!filterPid){
-      const ga=acts.filter(a=>!(a.projectId>0));
-      if(ga.length){ga.forEach(a=>a._groupColor='var(--muted)');g['Demandas Gerais']=ga;}
+    if(!fpid){
+      const ga=list.filter(a=>!(a.pjid>0));
+      if(ga.length){ ga.forEach(a=>a._gc='var(--mu)'); g['Demandas Gerais']=ga; }
     }
     return g;
   };
-
-  if(filterPid){
-    allActs=state.activities.filter(a=>a.projectId===filterPid);
-  } else {
-    allActs=[...state.activities];
-  }
-
-  buildGanttGrid(allActs,sched,el,true,groupFn);
+  drawGantt(allActs,sc,'pgcont',true,grpFn);
 }
 
-// ══════════════════════════════════════════════
-//  ACTIVITY DETAIL MODAL (from Gantt bar click)
-// ══════════════════════════════════════════════
-function openActivityDetail(id){
-  const act=state.activities.find(a=>a.id===id);if(!act)return;
-  const sched=computeSchedule();
-  const res=state.resources.find(r=>r.id===act.resourceId);
-  const proj=state.projects.find(p=>p.id===act.projectId);
-  const s=sched[act.id];
-  const status=getActivityStatus(act,sched);
-  const st=STATUS[status]||STATUS.active;
-  const totalDev=act.deviations.reduce((ss,d)=>ss+d.hours,0);
-  const isReprog=act.baselineEnd&&s?.end!==act.baselineEnd;
-  const diffD=isReprog?daysDiff(s.end,act.baselineEnd):0;
-
-  document.getElementById('detail-title').textContent=act.name;
-  document.getElementById('detail-body').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">STATUS</div><span class="tag ${st.tagCls}">${st.label}</span></div>
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">PRIORIDADE</div><span class="priority-badge ${PRI[act.priority||2].cls}">${PRI[act.priority||2].label}</span></div>
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">RECURSO</div><div style="font-size:12.5px;font-weight:600">${res?.name||'—'}</div></div>
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">PROJETO</div><div style="font-size:12.5px;font-weight:600">${proj?.name||'Demanda geral'}</div></div>
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">INÍCIO EFETIVO</div><div style="font-size:12.5px">${fmtDate(s?.start||act.startDate)}</div></div>
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">FIM REPROGRAMADO</div><div style="font-size:12.5px;font-weight:600;color:${isReprog&&diffD<0?'var(--danger)':'var(--success)'}">${fmtDate(s?.end)}</div></div>
-      ${act.baselineEnd?`<div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">BASELINE</div><div style="font-size:12.5px">${fmtDate(act.baselineEnd)}</div></div>
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">VARIAÇÃO</div><div style="font-size:12.5px;font-weight:600;color:${diffD>=0?'var(--success)':'var(--danger)'}">${diffD>=0?`+${diffD}d adiantado`:`${Math.abs(diffD)}d atrasado`}</div></div>`:''}
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">HORAS EST.</div><div style="font-size:12.5px">${act.estimatedHours}h${totalDev>0?` +${totalDev}h desvio`:''}</div></div>
-      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">PROGRESSO</div><div style="font-size:12.5px;font-weight:600">${act.progress}%</div></div>
+// ═══════════════════════════════════════════
+//  ACTIVITY DETAIL (Gantt click)
+// ═══════════════════════════════════════════
+function openDet(id){
+  const a=S.activities.find(x=>x.id===id); if(!a) return;
+  const sc=schedule();
+  const res=S.resources.find(r=>r.id===a.rid);
+  const prj=S.projects.find(p=>p.id===a.pjid);
+  const s=sc[a.id], st=getStatus(a,sc), sv=STS[st];
+  const rep=a.baseline&&s?.end!==a.baseline;
+  const dd=rep?diffD(a.baseline,s.end):0;
+  const tdv=(a.devs||[]).reduce((x,d)=>x+d.h,0);
+  document.getElementById('dettitle').textContent=a.name;
+  document.getElementById('detbody').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px">
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">STATUS</div><span class="tag ${sv.tcls}">${sv.lbl}</span></div>
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">PRIORIDADE</div><span class="pbadge ${PRI[a.pri||2].cls}">${PRI[a.pri||2].lbl}</span></div>
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">RECURSO</div><div style="font-size:12px;font-weight:600">${res?.name||'—'}</div></div>
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">PROJETO</div><div style="font-size:12px;font-weight:600">${prj?.name||'Demanda geral'}</div></div>
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">INÍCIO EFETIVO</div><div style="font-size:12px">${fmt(s?.start||a.start)}</div></div>
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">FIM REPROGRAMADO</div><div style="font-size:12px;font-weight:600;color:${rep&&dd<0?'var(--err)':'var(--ok)'}">${fmt(s?.end)}</div></div>
+      ${a.baseline?`<div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">BASELINE</div><div style="font-size:12px">${fmt(a.baseline)}</div></div>
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">VARIAÇÃO</div><div style="font-size:12px;font-weight:600;color:${dd>=0?'var(--ok)':'var(--err)'}">${dd>=0?`+${dd}d adiantado`:`${Math.abs(dd)}d atrasado`}</div></div>`:''}
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">HORAS EST.</div><div style="font-size:12px">${a.hours}h${tdv>0?` +${tdv}h desvio`:''}</div></div>
+      <div><div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:2px">PROGRESSO</div><div style="font-size:12px;font-weight:600">${a.prog}%</div></div>
     </div>
-    ${act.suspended?`<div style="background:rgba(100,116,139,.08);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px">⏸ <b>Paralisado:</b> ${act.suspendedReason}</div>`:''}
-    ${act.deviations.length?`<div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:6px">DESVIOS (${act.deviations.length})</div>${act.deviations.map(d=>`<div class="dev-item"><div><div style="font-size:12px;font-weight:600">${d.desc}</div><div style="font-size:10.5px;color:var(--muted)">${d.date}</div></div><span style="color:var(--warning);font-family:'JetBrains Mono',monospace;font-weight:600">+${d.hours}h</span></div>`).join('')}`:''}`;
-
-  document.getElementById('detail-actions').innerHTML=`
-    <button class="btn btn-ghost" onclick="document.getElementById('detail-modal').classList.add('hidden')">Fechar</button>
-    <button class="btn btn-warning btn-sm" onclick="document.getElementById('detail-modal').classList.add('hidden');openDevModal(${id})">⚡ Desvio</button>
-    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('detail-modal').classList.add('hidden');openSusModal(${id})">${act.suspended?'▶ Retomar':'⏸ Paralisar'}</button>
-    <button class="btn btn-primary btn-sm" onclick="document.getElementById('detail-modal').classList.add('hidden');toggleDone(${id})">${act.done?'↩ Reabrir':'✓ Concluir'}</button>`;
-
-  document.getElementById('detail-modal').classList.remove('hidden');
+    ${a.susp?`<div style="background:rgba(100,116,139,.08);border:1px solid var(--brd2);border-radius:7px;padding:7px 10px;font-size:11.5px;margin-bottom:7px">⏸ <b>Paralisado:</b> ${a.suspReason}</div>`:''}
+    ${(a.devs||[]).length?`<div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:5px">DESVIOS</div>${a.devs.map(d=>`<div class="devi"><div><div style="font-size:11px;font-weight:600">${d.desc}</div><div style="font-size:9.5px;color:var(--mu)">${d.date}</div></div><span class="mono" style="color:var(--warn);font-weight:600">+${d.h}h</span></div>`).join('')}`:''}`;
+  document.getElementById('detbtns').innerHTML=`
+    <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden')">Fechar</button>
+    <button class="btn bwn bsm" onclick="document.getElementById('mdet').classList.add('hidden');openDev(${id})">⚡ Desvio</button>
+    <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openSus(${id})">${a.susp?'▶ Retomar':'⏸ Paralisar'}</button>
+    <button class="btn bpri bsm" onclick="document.getElementById('mdet').classList.add('hidden');toggleDone(${id})">${a.done?'↩ Reabrir':'✓ Concluir'}</button>`;
+  document.getElementById('mdet').classList.remove('hidden');
 }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  OVERVIEW
-// ══════════════════════════════════════════════
-function renderOverview(){
-  const el=document.getElementById('overview-grid');
-  if(!state.resources.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso cadastrado.</div>';return;}
-  const sched=computeSchedule(),t=todayStr();
-  el.innerHTML=state.resources.map(r=>{
-    const acts=state.activities.filter(a=>a.resourceId===r.id&&!a.done&&!a.suspended);
-    const totalH=acts.reduce((s,a)=>s+a.estimatedHours+a.deviations.reduce((ss,d)=>ss+d.hours,0),0);
-    const pct=Math.min((totalH/(r.hours*5))*100,100);
-    const fc=pct>85?'var(--danger)':pct>60?'var(--warning)':'var(--success)';
+// ═══════════════════════════════════════════
+function renderOV(){
+  const el=document.getElementById('ovgrid');
+  if(!S.resources.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso.</div>'; return; }
+  const sc=schedule(), t=today();
+  el.innerHTML=S.resources.map(r=>{
+    const acts=S.activities.filter(a=>a.rid===r.id&&!a.done&&!a.susp);
+    const th=acts.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
+    const pct=Math.min((th/(r.hours*5))*100,100);
+    const fc=pct>85?'var(--err)':pct>60?'var(--warn)':'var(--ok)';
     const lbl=pct>85?'Alta demanda':pct>60?'Moderada':'Disponível';
-    const overdue=acts.filter(a=>sched[a.id]?.end<t).length;
-    const suspended=state.activities.filter(a=>a.resourceId===r.id&&a.suspended).length;
-    return `<div class="ov-card">
-      <div style="display:flex;align-items:center;gap:9px">
-        <div class="avatar" style="width:36px;height:36px;font-size:13px;background:${r.color}18;color:${r.color}">${initials(r.name)}</div>
-        <div><div class="ov-name">${r.name}</div><div class="ov-stat">${r.hours}h/dia</div></div>
+    const late=acts.filter(a=>sc[a.id]?.end<t).length;
+    const susp=S.activities.filter(a=>a.rid===r.id&&a.susp).length;
+    return `<div class="ovcard">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="av" style="width:34px;height:34px;font-size:12px;background:${r.color}18;color:${r.color}">${ini(r.name)}</div>
+        <div><div style="font-weight:700;font-size:13px">${r.name}</div><div style="font-size:10.5px;color:var(--mu)">${r.hours}h/dia</div></div>
       </div>
-      <div class="ov-big" style="color:${fc}">${totalH.toFixed(1)}<span style="font-size:12px;color:var(--muted)">h</span></div>
-      <div style="font-size:11px;color:${fc};font-weight:700">● ${lbl}</div>
-      <div class="load-bar" style="height:5px"><div class="load-fill" style="width:${pct}%;background:${fc}"></div></div>
-      <div class="ov-stat">${acts.length} pendente(s) · ~${Math.ceil(totalH/r.hours)} dia(s)</div>
-      ${overdue>0?`<div style="font-size:11px;color:var(--danger);font-weight:700">🔴 ${overdue} atrasada(s)</div>`:''}
-      ${suspended>0?`<div style="font-size:11px;color:var(--suspended);font-weight:700">⏸ ${suspended} paralisada(s)</div>`:''}
+      <div class="mono" style="font-size:22px;color:${fc}">${th.toFixed(1)}<span style="font-size:11px;color:var(--mu)">h</span></div>
+      <div style="font-size:10.5px;color:${fc};font-weight:700">● ${lbl}</div>
+      <div class="lbar" style="height:5px"><div class="lfill" style="width:${pct}%;background:${fc}"></div></div>
+      <div style="font-size:10.5px;color:var(--mu)">${acts.length} pendente(s) · ~${Math.ceil(th/r.hours)}d</div>
+      ${late>0?`<div style="font-size:10.5px;color:var(--err);font-weight:700">🔴 ${late} atrasada(s)</div>`:''}
+      ${susp>0?`<div style="font-size:10.5px;color:var(--sus);font-weight:700">⏸ ${susp} paralisada(s)</div>`:''}
     </div>`;
   }).join('');
 }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  STATS
-// ══════════════════════════════════════════════
-function renderStats(sched){
-  const el=document.getElementById('stats-row'),t=todayStr();
-  const total=state.activities.length,done=state.activities.filter(a=>a.done).length;
-  const overdue=state.activities.filter(a=>!a.done&&!a.suspended&&sched[a.id]?.end<t).length;
-  const suspended=state.activities.filter(a=>a.suspended).length;
-  const stats=[
-    {lbl:'Projetos',val:state.projects.length,color:'var(--accent2)',icon:'📁'},
-    {lbl:'Recursos',val:state.resources.length,color:'var(--accent)',icon:'👥'},
-    {lbl:'Atividades',val:total,color:'var(--text)',icon:'📋'},
-    {lbl:'Atrasadas',val:overdue,color:overdue>0?'var(--danger)':'var(--muted2)',icon:'🔴'},
-    {lbl:'Paralisadas',val:suspended,color:suspended>0?'var(--suspended)':'var(--muted2)',icon:'⏸'},
-  ];
-  el.innerHTML=stats.map(s=>`<div class="card" style="text-align:center;padding:13px 10px">
-    <div style="font-size:18px;margin-bottom:4px">${s.icon}</div>
-    <div style="font-size:22px;font-family:'JetBrains Mono',monospace;font-weight:600;color:${s.color}">${s.val}</div>
-    <div style="font-size:10.5px;color:var(--muted);margin-top:3px">${s.lbl}</div>
+// ═══════════════════════════════════════════
+function renderStats(sc){
+  const el=document.getElementById('stats'), t=today();
+  const late=S.activities.filter(a=>!a.done&&!a.susp&&sc[a.id]?.end<t).length;
+  const susp=S.activities.filter(a=>a.susp).length;
+  [
+    {lbl:'Projetos',  val:S.projects.length,   col:'var(--acc2)', icon:'📁'},
+    {lbl:'Recursos',  val:S.resources.length,   col:'var(--acc)',  icon:'👥'},
+    {lbl:'Atividades',val:S.activities.length,  col:'var(--tx)',   icon:'📋'},
+    {lbl:'Atrasadas', val:late, col:late>0?'var(--err)':'var(--mu2)', icon:'🔴'},
+    {lbl:'Paralisadas',val:susp,col:susp>0?'var(--sus)':'var(--mu2)',icon:'⏸'},
+  ].forEach(s=>{
+    el.innerHTML=``;
+  });
+  el.innerHTML=[
+    {lbl:'Projetos',  val:S.projects.length,   col:'var(--acc2)', icon:'📁'},
+    {lbl:'Recursos',  val:S.resources.length,   col:'var(--acc)',  icon:'👥'},
+    {lbl:'Atividades',val:S.activities.length,  col:'var(--tx)',   icon:'📋'},
+    {lbl:'Atrasadas', val:late, col:late>0?'var(--err)':'var(--mu2)', icon:'🔴'},
+    {lbl:'Paralisadas',val:susp,col:susp>0?'var(--sus)':'var(--mu2)',icon:'⏸'},
+  ].map(s=>`<div class="card" style="text-align:center;padding:12px 9px">
+    <div style="font-size:17px;margin-bottom:3px">${s.icon}</div>
+    <div class="mono" style="font-size:20px;font-weight:600;color:${s.col}">${s.val}</div>
+    <div style="font-size:10px;color:var(--mu);margin-top:2px">${s.lbl}</div>
   </div>`).join('');
-  document.getElementById('today-label').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('dtlbl').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
 }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  SELECTS SYNC
+// ═══════════════════════════════════════════
+function syncSelects(){
+  // project selects
+  const apj=document.getElementById('apj');
+  const fprj=document.getElementById('fprj');
+  const gfp=document.getElementById('gfp');
+  const pvApj=apj.value, pvFp=fprj.value, pvGp=gfp.value;
+  apj.innerHTML='<option value="0">Demanda geral</option>';
+  fprj.innerHTML='<option value="0">Todos os projetos</option>';
+  gfp.innerHTML='<option value="0">Todos os projetos</option>';
+  S.projects.forEach(p=>{
+    [apj,fprj,gfp].forEach(sel=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
+  });
+  if(pvApj) apj.value=pvApj;
+  if(pvFp)  fprj.value=pvFp;
+  if(pvGp)  gfp.value=pvGp;
+
+  // resource selects
+  const ar=document.getElementById('ar');
+  const fres=document.getElementById('fres');
+  const gfr=document.getElementById('gfr');
+  const pvAr=ar.value, pvFr=fres.value, pvGr=gfr.value;
+  ar.innerHTML='<option value="0">Selecionar...</option>';
+  fres.innerHTML='<option value="0">Todos os recursos</option>';
+  gfr.innerHTML='<option value="0">Todos os recursos</option>';
+  S.resources.forEach(r=>{
+    [ar,fres,gfr].forEach(sel=>{ const o=document.createElement('option'); o.value=r.id; o.textContent=r.name; sel.appendChild(o); });
+  });
+  if(pvAr) ar.value=pvAr;
+  if(pvFr) fres.value=pvFr;
+  if(pvGr) gfr.value=pvGr;
+
+  syncPred();
+}
+
+// ═══════════════════════════════════════════
+//  RENDER SIDEBAR LISTS
+// ═══════════════════════════════════════════
+function renderPList(){
+  const el=document.getElementById('plist');
+  if(!S.projects.length){ el.innerHTML='<div class="empty">Nenhum projeto.</div>'; return; }
+  el.innerHTML=S.projects.map(p=>{
+    const acts=S.activities.filter(a=>a.pjid===p.id);
+    const done=acts.filter(a=>a.done).length;
+    return `<div class="pitem" style="border-left-color:${p.color}" onclick="selectProj(${p.id})">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:600;font-size:12px">${p.name}</div>
+        <button class="btn bxs bdn" onclick="event.stopPropagation();delProject(${p.id})">✕</button>
+      </div>
+      <div style="font-size:10px;color:var(--mu)">${fmt(p.start)} → ${fmt(p.end)}</div>
+      <div style="font-size:10px;color:var(--mu);margin-top:1px">${done}/${acts.length} concluídas</div>
+    </div>`;
+  }).join('');
+}
+window.selectProj=function(pid){ gv('pgantt'); document.getElementById('gfp').value=pid; renderPG(); };
+
+function renderRList(){
+  const el=document.getElementById('rlist');
+  if(!S.resources.length){ el.innerHTML='<div class="empty">Nenhum recurso.</div>'; return; }
+  const sc=schedule();
+  el.innerHTML=S.resources.map(r=>{
+    const acts=S.activities.filter(a=>a.rid===r.id&&!a.done&&!a.susp);
+    const th=acts.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
+    const pct=Math.min((th/(r.hours*5))*100,100);
+    const fc=pct>85?'var(--err)':pct>60?'var(--warn)':'var(--ok)';
+    return `<div class="ritem">
+      <div class="av" style="width:27px;height:27px;font-size:10px;background:${r.color}18;color:${r.color}">${ini(r.name)}</div>
+      <div class="rinfo">
+        <div class="rname">${r.name}</div>
+        <div class="rhrs">${r.hours}h/dia · ${th.toFixed(1)}h pendentes</div>
+        <div class="lbar"><div class="lfill" style="width:${pct}%;background:${fc}"></div></div>
+      </div>
+      <button class="btn bxs bdn" onclick="delResource(${r.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
 //  NAV
-// ══════════════════════════════════════════════
-function selectProject(pid){
-  showView('projects-gantt');
-  document.getElementById('gantt-filter-proj').value=pid;
-  renderProjectGantt();
+// ═══════════════════════════════════════════
+function gv(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('view-'+name).classList.add('on');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
+  const map={dashboard:'Dashboard',activities:'Atividades',rgantt:'Gantt Rec',pgantt:'Gantt Pro',overview:'Visão'};
+  document.querySelectorAll('nav button').forEach(b=>{ if(b.textContent.includes(map[name]||'')) b.classList.add('on'); });
+  if(name==='rgantt') renderRG();
+  if(name==='pgantt') renderPG();
 }
-function showView(name){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-'+name).classList.add('active');
-  const map={dashboard:'Dashboard',activities:'Atividades','resources-gantt':'Gantt Rec','projects-gantt':'Gantt Pro',overview:'Visão'};
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.textContent.includes(map[name]||'')));
-  if(name==='resources-gantt') renderResourceGantt();
-  if(name==='projects-gantt')  renderProjectGantt();
-}
-function toggleForm(id){document.getElementById(id).classList.toggle('hidden');}
+function tog(id){ document.getElementById(id).classList.toggle('hidden'); }
 
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 //  RENDER ALL
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderAll(){
-  const sched=computeSchedule();
-  renderProjectList();
-  renderResourceList();
-  renderStats(sched);
-  renderDashActivities();
-  renderActivities();
-  renderResourceGantt();
-  renderProjectGantt();
-  renderOverview();
-  renderNotifications(sched);
-  renderOverlapAlerts(sched);
+  try {
+    const sc=schedule();
+    syncSelects();
+    renderPList();
+    renderRList();
+    renderStats(sc);
+    renderDash();
+    renderActs();
+    renderRG();
+    renderPG();
+    renderOV();
+    renderNotifs(sc);
+    renderOAlerts(sc);
+  } catch(e){
+    console.error('renderAll ERROR:', e);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  SEED DATA
+// ═══════════════════════════════════════════
+function seedDemo(){
+  const t=today();
+  S.projects.push({ id:S.pid++, name:'Galpão Industrial A', desc:'Estrutura metálica principal', start:t, end:addWH(t,80,8), color:PCOLS[0] });
+  ['Ana Beatriz','Carlos Eduardo','Marcos Silva'].forEach((n,i)=>
+    S.resources.push({ id:S.rid++, name:n, hours:8, color:RCOLS[i] }));
+  const pid=S.projects[0].id;
+  [
+    {name:'Levantamento topográfico',   hours:8,  rid:1, type:'Verificação de desenho', pri:1, pred:0,    pjid:pid},
+    {name:'Projeto de fundações',       hours:16, rid:2, type:'Memória de cálculo',     pri:1, pred:1,    pjid:pid},
+    {name:'Modelagem estrutural',       hours:24, rid:3, type:'Modelagem estrutural',   pri:1, pred:2,    pjid:pid},
+    {name:'Verificação de desenhos',    hours:8,  rid:1, type:'Verificação de desenho', pri:2, pred:3,    pjid:pid},
+    {name:'Reunião de alinhamento',     hours:2,  rid:1, type:'Reunião',                pri:2, pred:0,    pjid:0},
+    {name:'Memória de cálculo – Lajes', hours:12, rid:2, type:'Memória de cálculo',     pri:3, pred:0,    pjid:0},
+  ].forEach(a=>{
+    const act={ id:S.aid++, name:a.name, hours:a.hours, start:t, baseline:'', rid:a.rid, pjid:a.pjid,
+      type:a.type, pri:a.pri, pred:a.pred, done:false, susp:false, suspReason:'', susps:[], devs:[], prog:0, doneDate:'' };
+    S.activities.push(act);
+  });
+  const sc=schedule();
+  S.activities.forEach(a=>{ if(!a.baseline) a.baseline=sc[a.id]?.end||a.start; });
+  save();
 }
 </script>
 </body>
