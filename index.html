@@ -466,9 +466,17 @@ let _ready=false, _listener=null;
 // Safely convert Firebase value (may be object-as-array) to JS array
 function toArr(v){
   if(!v) return [];
-  if(Array.isArray(v)) return v.filter(Boolean);
-  // Firebase stored as {0:{},1:{}} — convert
-  return Object.keys(v).sort((a,b)=>+a - +b).map(k=>v[k]).filter(Boolean);
+  let arr;
+  if(Array.isArray(v)) arr = v.filter(Boolean);
+  else arr = Object.keys(v).sort((a,b)=>+a - +b).map(k=>v[k]).filter(Boolean);
+  // Normalize: ensure all ID fields are numbers (Firebase can coerce types)
+  return arr.map(item=>{
+    if(typeof item !== 'object') return item;
+    const out = Object.assign({}, item);
+    ['id','rid','pjid','pred','pri','prog','hours'].forEach(k=>{ if(out[k]!==undefined) out[k]=+out[k]||0; });
+    if(out.devs && Array.isArray(out.devs)) out.devs=out.devs.map(d=>Object.assign({},d,{h:+d.h||0}));
+    return out;
+  });
 }
 
 // Strip any undefined/null from object before sending to Firebase
@@ -498,10 +506,12 @@ function startSync(){
         S.projects   = toArr(d.projects);
         S.resources  = toArr(d.resources);
         S.activities = toArr(d.activities);
-        S.pid = d.pid || S.projects.length  + 1;
-        S.rid = d.rid || S.resources.length + 1;
-        S.aid = d.aid || S.activities.length+ 1;
+        S.pid = +d.pid || S.projects.length  + 1;
+        S.rid = +d.rid || S.resources.length + 1;
+        S.aid = +d.aid || S.activities.length+ 1;
+        console.log('[Firebase] projects:', S.projects.length, 'resources:', S.resources.length, 'activities:', S.activities.length);
       } else {
+        console.log('[Firebase] no data — seeding demo');
         seedDemo();
         return;
       }
@@ -613,13 +623,13 @@ function ini(n){ return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCas
 // ═══════════════════════════════════════════
 function schedule(){
   const sc={}, byR={};
-  S.activities.forEach(a=>{ if(!byR[a.rid]) byR[a.rid]=[]; byR[a.rid].push(a); });
+  S.activities.forEach(a=>{ const k=+a.rid; if(!byR[k]) byR[k]=[]; byR[k].push(a); });
   Object.values(byR).forEach(arr=>arr.sort((a,b)=>a.pri!==b.pri?a.pri-b.pri:a.id-b.id));
 
   for(let p=0;p<30;p++){
     let changed=false;
     S.activities.forEach(act=>{
-      const res=S.resources.find(r=>r.id===act.rid);
+      const res=S.resources.find(r=>+r.id===+act.rid);
       if(!res) return;
 
       // completed early: use actual completion date
@@ -635,13 +645,13 @@ function schedule(){
       let earliest = act.start;
 
       // predecessor constraint
-      if(act.pred>0){
-        const ps=sc[act.pred];
+      if(+act.pred>0){
+        const ps=sc[+act.pred];
         if(ps){ const nw=nextWD(ps.end); if(nw>earliest) earliest=nw; }
       }
 
       // priority queue within same resource (skip done/suspended)
-      const q=(byR[act.rid]||[]).filter(x=>!x.done&&!x.susp);
+      const q=(byR[+act.rid]||[]).filter(x=>!x.done&&!x.susp);
       const mi=q.indexOf(act);
       for(let i=0;i<mi;i++){
         const ps=sc[q[i].id];
@@ -678,7 +688,7 @@ function getStatus(act, sc){
 
 function overlaps(sc){
   const out=[], seen=new Set(), byR={};
-  S.activities.filter(a=>!a.done&&!a.susp).forEach(a=>{ if(!byR[a.rid]) byR[a.rid]=[]; byR[a.rid].push(a); });
+  S.activities.filter(a=>!a.done&&!a.susp).forEach(a=>{ const k=+a.rid; if(!byR[k]) byR[k]=[]; byR[k].push(a); });
   Object.entries(byR).forEach(([rid,acts])=>{
     for(let i=0;i<acts.length;i++) for(let j=i+1;j<acts.length;j++){
       const a=acts[i], b=acts[j], res=S.resources.find(r=>r.id==+rid);
@@ -749,7 +759,7 @@ function addProject(){
 function delProject(id){
   if(!confirm('Excluir projeto?')) return;
   S.projects = S.projects.filter(p=>p.id!==id);
-  S.activities.forEach(a=>{ if(a.pjid===id) a.pjid=0; });
+  S.activities.forEach(a=>{ if(+a.pjid===id) a.pjid=0; });
   save();
 }
 
@@ -779,7 +789,7 @@ function syncPred(){
   const sel=document.getElementById('apd');
   const prev=sel.value;
   sel.innerHTML='<option value="0">Nenhuma</option>';
-  const pool = pjid>0 ? S.activities.filter(a=>a.pjid===pjid) : S.activities;
+  const pool = pjid>0 ? S.activities.filter(a=>+a.pjid===pjid) : S.activities;
   pool.forEach(a=>{ const o=document.createElement('option'); o.value=a.id; o.textContent=`#${a.id} ${a.name.slice(0,28)}`; sel.appendChild(o); });
   if(prev) sel.value=prev;
 }
@@ -921,14 +931,14 @@ function applyPri(){
 //  ACTIVITY CARD HTML
 // ═══════════════════════════════════════════
 function actHTML(a, sc){
-  const res=S.resources.find(r=>r.id===a.rid);
-  const prj=S.projects.find(p=>p.id===a.pjid);
+  const res=S.resources.find(r=>+r.id===+a.rid);
+  const prj=S.projects.find(p=>+p.id===+a.pjid);
   const col=res?.color||'#2f6be0';
   const st=getStatus(a,sc), sv=STS[st];
   const s=sc[a.id];
   const es=s?.start||a.start, ee=s?.end||a.start;
   const tdv=(a.devs||[]).reduce((x,d)=>x+d.h,0);
-  const pred=a.pred>0?S.activities.find(x=>x.id===a.pred):null;
+  const pred=+a.pred>0?S.activities.find(x=>+x.id===+a.pred):null;
   const rep=a.baseline&&ee!==a.baseline;
   const pr=PRI[a.pri||2];
   return `<div class="aitem ${sv.icls}" style="border-left-color:${col}">
@@ -957,7 +967,7 @@ function actHTML(a, sc){
         <span>Progresso</span><span data-pg="${a.id}">${a.prog}%</span>
       </div>
       <input type="range" min="0" max="100" value="${a.prog}" oninput="setProg(${a.id},this.value)" style="width:100%;accent-color:${col};margin-bottom:2px" ${a.done||a.susp?'disabled':''}>
-      <div class="pbar"><div class="pfill data-pg='${a.id}'" data-pg="${a.id}" style="width:${a.prog}%;background:${col}"></div></div>
+      <div class="pbar"><div class="pfill" data-pg="${a.id}" style="width:${a.prog}%;background:${col}"></div></div>
     </div>
   </div>`;
 }
@@ -1070,7 +1080,7 @@ function renderRG(){
     const g={};
     S.resources.forEach(r=>{
       if(frid>0&&r.id!==frid) return;
-      const ra=list.filter(a=>a.rid===r.id);
+      const ra=list.filter(a=>+a.rid===+r.id);
       if(ra.length){ ra.forEach(a=>a._gc=r.color); g[`${ini(r.name)} ${r.name.split(' ')[0]}`]=ra; }
     });
     return g;
@@ -1089,7 +1099,7 @@ function renderPG(){
   // Health cards
   let hhtml='';
   projs.forEach(p=>{
-    const pas=S.activities.filter(a=>a.pjid===p.id);
+    const pas=S.activities.filter(a=>+a.pjid===+p.id);
     const lastEnd=pas.reduce((mx,a)=>{ const e=sc[a.id]?.end||a.start; return e>mx?e:mx; },p.start);
     const dd=diffD(p.end,lastEnd);
     const done=pas.filter(a=>a.done).length;
@@ -1110,15 +1120,15 @@ function renderPG(){
   document.getElementById('pharea').innerHTML=hhtml;
 
   // Gantt
-  let allActs=fpid>0?S.activities.filter(a=>a.pjid===fpid):[...S.activities];
+  let allActs=fpid>0?S.activities.filter(a=>+a.pjid===fpid):[...S.activities];
   const grpFn=list=>{
     const g={};
     projs.forEach(p=>{
-      const pa=list.filter(a=>a.pjid===p.id);
+      const pa=list.filter(a=>+a.pjid===+p.id);
       if(pa.length){ pa.forEach(a=>a._gc=p.color); g[p.name]=pa; }
     });
     if(!fpid){
-      const ga=list.filter(a=>!(a.pjid>0));
+      const ga=list.filter(a=>!(+a.pjid>0));
       if(ga.length){ ga.forEach(a=>a._gc='var(--mu)'); g['Demandas Gerais']=ga; }
     }
     return g;
@@ -1132,8 +1142,8 @@ function renderPG(){
 function openDet(id){
   const a=S.activities.find(x=>x.id===id); if(!a) return;
   const sc=schedule();
-  const res=S.resources.find(r=>r.id===a.rid);
-  const prj=S.projects.find(p=>p.id===a.pjid);
+  const res=S.resources.find(r=>+r.id===+a.rid);
+  const prj=S.projects.find(p=>+p.id===+a.pjid);
   const s=sc[a.id], st=getStatus(a,sc), sv=STS[st];
   const rep=a.baseline&&s?.end!==a.baseline;
   const dd=rep?diffD(a.baseline,s.end):0;
@@ -1170,13 +1180,13 @@ function renderOV(){
   if(!S.resources.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso.</div>'; return; }
   const sc=schedule(), t=today();
   el.innerHTML=S.resources.map(r=>{
-    const acts=S.activities.filter(a=>a.rid===r.id&&!a.done&&!a.susp);
+    const acts=S.activities.filter(a=>+a.rid===+r.id&&!a.done&&!a.susp);
     const th=acts.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
     const pct=Math.min((th/(r.hours*5))*100,100);
     const fc=pct>85?'var(--err)':pct>60?'var(--warn)':'var(--ok)';
     const lbl=pct>85?'Alta demanda':pct>60?'Moderada':'Disponível';
     const late=acts.filter(a=>sc[a.id]?.end<t).length;
-    const susp=S.activities.filter(a=>a.rid===r.id&&a.susp).length;
+    const susp=S.activities.filter(a=>+a.rid===+r.id&&a.susp).length;
     return `<div class="ovcard">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="av" style="width:34px;height:34px;font-size:12px;background:${r.color}18;color:${r.color}">${ini(r.name)}</div>
@@ -1285,7 +1295,7 @@ function renderRList(){
   if(!S.resources.length){ el.innerHTML='<div class="empty">Nenhum recurso.</div>'; return; }
   const sc=schedule();
   el.innerHTML=S.resources.map(r=>{
-    const acts=S.activities.filter(a=>a.rid===r.id&&!a.done&&!a.susp);
+    const acts=S.activities.filter(a=>+a.rid===+r.id&&!a.done&&!a.susp);
     const th=acts.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
     const pct=Math.min((th/(r.hours*5))*100,100);
     const fc=pct>85?'var(--err)':pct>60?'var(--warn)':'var(--ok)';
