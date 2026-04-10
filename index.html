@@ -473,8 +473,16 @@ function toArr(v){
   return arr.map(item=>{
     if(typeof item !== 'object') return item;
     const out = Object.assign({}, item);
+    // numeric fields
     ['id','rid','pjid','pred','pri','prog','hours'].forEach(k=>{ if(out[k]!==undefined) out[k]=+out[k]||0; });
-    if(out.devs && Array.isArray(out.devs)) out.devs=out.devs.map(d=>Object.assign({},d,{h:+d.h||0}));
+    // string fields — guarantee they exist and are strings
+    ['name','start','baseline','doneDate','type','suspReason'].forEach(k=>{ if(out[k]==null||out[k]===undefined) out[k]=''; else out[k]=String(out[k]); });
+    // boolean fields
+    ['done','susp'].forEach(k=>{ out[k]=!!out[k]; });
+    // array fields
+    if(!Array.isArray(out.devs))  out.devs  = toArr(out.devs);
+    if(!Array.isArray(out.susps)) out.susps = toArr(out.susps);
+    if(out.devs) out.devs=out.devs.map(d=>Object.assign({},d,{h:+d.h||0, desc:d.desc||'', date:d.date||''}));
     return out;
   });
 }
@@ -510,6 +518,17 @@ function startSync(){
         S.rid = +d.rid || S.resources.length + 1;
         S.aid = +d.aid || S.activities.length+ 1;
         console.log('[Firebase] projects:', S.projects.length, 'resources:', S.resources.length, 'activities:', S.activities.length);
+        // Repair any corrupt activities missing required fields
+        let repaired = false;
+        S.activities.forEach(a=>{
+          if(!a.start && a.startDate){ a.start=a.startDate; repaired=true; } // old field name
+          if(!a.start){ a.start=today(); repaired=true; }
+          if(!a.name){ a.name='Atividade sem nome'; repaired=true; }
+          if(!a.hours){ a.hours=8; repaired=true; }
+          if(!a.rid){ a.rid=0; }
+          if(!a.id){ a.id=S.aid++; repaired=true; }
+        });
+        if(repaired){ console.log('[Repair] fixed corrupt activities, saving...'); save(); return; }
       } else {
         console.log('[Firebase] no data — seeding demo');
         seedDemo();
@@ -630,7 +649,7 @@ function schedule(){
     let changed=false;
     S.activities.forEach(act=>{
       const res=S.resources.find(r=>+r.id===+act.rid);
-      if(!res) return;
+      if(!res || !act.start) return;
 
       // completed early: use actual completion date
       if(act.done && act.doneDate){
@@ -983,7 +1002,13 @@ function renderActList(elId, allMode){
   if(fpid>0) acts=acts.filter(a=>a.pjid===fpid);
   if(!allMode) acts=acts.filter(a=>{ const s=sc[a.id]; return s&&s.start<=t&&!a.done&&!a.susp; });
   if(fst) acts=acts.filter(a=>getStatus(a,sc)===fst);
-  acts.sort((a,b)=>(sc[a.id]?.start||a.start).localeCompare(sc[b.id]?.start||b.start));
+  // safety: remove any activity with no start date (corrupt data)
+  acts=acts.filter(a=>a.start);
+  acts.sort((a,b)=>{
+    const sa=sc[a.id]?.start||a.start||'';
+    const sb=sc[b.id]?.start||b.start||'';
+    return sa.localeCompare(sb);
+  });
   el.innerHTML=acts.length?acts.map(a=>actHTML(a,sc)).join(''):'<div class="empty">Nenhuma atividade encontrada.</div>';
 }
 function renderActs(){ renderActList('actslist',true); }
