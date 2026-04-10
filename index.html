@@ -11,7 +11,7 @@
   --bg:#eef1f7; --surface:#f4f6fb; --surface2:#ffffff;
   --border:#d4daea; --border2:#c2cad9;
   --accent:#2f6be0; --accent2:#6c47d4;
-  --success:#15905f; --warning:#c96d00; --danger:#c0392b;
+  --success:#15905f; --warning:#c96d00; --danger:#c0392b; --suspended:#64748b;
   --text:#1a2540; --text2:#2d3f5e; --muted:#5a6e8c; --muted2:#8da0bc;
   --radius:10px;
   --shadow:0 2px 8px rgba(30,50,100,.09),0 6px 20px rgba(30,50,100,.06);
@@ -20,95 +20,64 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;min-height:100vh;}
 
-/* ── LOADING ── */
-#loading-screen{
-  position:fixed;inset:0;background:var(--surface2);z-index:999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-  transition:opacity .4s;
-}
+/* STATUS COLORS */
+.sc-waiting   { background:#dbeafe; border-color:#3b82f6; color:#1d4ed8; }
+.sc-active    { background:#fef3c7; border-color:#f59e0b; color:#b45309; }
+.sc-done      { background:#d1fae5; border-color:#10b981; color:#065f46; }
+.sc-overdue   { background:#fee2e2; border-color:#ef4444; color:#991b1b; }
+.sc-suspended { background:#f1f5f9; border-color:#94a3b8; color:#475569; }
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:var(--surface2);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s;}
 #loading-screen.fade{opacity:0;pointer-events:none;}
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── LOGIN SCREEN ── */
-#login-screen{
-  position:fixed;inset:0;background:var(--bg);z-index:900;
-  display:flex;align-items:center;justify-content:center;
-  transition:opacity .4s;
-}
-#login-screen.fade{opacity:0;pointer-events:none;}
-.login-box{
-  background:var(--surface2);border:1px solid var(--border);border-radius:16px;
-  padding:36px 32px;width:380px;max-width:95vw;
-  box-shadow:0 8px 40px rgba(30,50,100,.12);
-  display:flex;flex-direction:column;gap:0;
-}
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;align-items:center;justify-content:center;}
+.login-box{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:36px 32px;width:380px;max-width:95vw;box-shadow:0 8px 40px rgba(30,50,100,.12);}
 .login-logo{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.5px;margin-bottom:6px;}
 .login-logo span{color:var(--accent);}
 .login-sub{font-size:12.5px;color:var(--muted);margin-bottom:28px;}
 .login-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.2px;display:block;margin-bottom:4px;}
-.login-input{
-  background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;
-  color:var(--text);font-family:inherit;font-size:13.5px;padding:9px 12px;
-  width:100%;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:14px;
-}
+.login-input{background:var(--surface);border:1.5px solid var(--border2);border-radius:8px;color:var(--text);font-family:inherit;font-size:13.5px;padding:9px 12px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:14px;box-sizing:border-box;}
 .login-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,107,224,.1);}
-.login-btn{
-  background:var(--accent);color:#fff;border:none;border-radius:8px;
-  font-family:inherit;font-size:13.5px;font-weight:600;padding:10px;
-  width:100%;cursor:pointer;transition:background .15s;margin-top:4px;
-}
+.login-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:600;padding:10px;width:100%;cursor:pointer;transition:background .15s;margin-top:4px;}
 .login-btn:hover{background:#235dcc;}
 .login-btn:disabled{background:var(--muted2);cursor:not-allowed;}
-.login-error{
-  background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);
-  border-radius:8px;padding:9px 12px;font-size:12px;color:var(--danger);
-  margin-bottom:14px;display:none;
-}
+.login-error{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--danger);margin-bottom:14px;display:none;}
 .login-error.show{display:block;}
 .login-forgot{font-size:11.5px;color:var(--accent);cursor:pointer;text-align:center;margin-top:14px;text-decoration:underline;}
-.login-forgot:hover{color:#235dcc;}
 
-/* ── SYNC ── */
-#sync-status{
-  position:fixed;bottom:14px;right:14px;z-index:150;
-  display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;
-  font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);box-shadow:var(--shadow-sm);
-}
+/* SYNC */
+#sync-status{position:fixed;bottom:14px;right:14px;z-index:150;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);box-shadow:var(--shadow-sm);}
 #sync-dot{width:7px;height:7px;border-radius:50%;background:var(--success);}
 #sync-dot.syncing{background:var(--warning);animation:pulse .8s infinite;}
 #sync-dot.error{background:var(--danger);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* ── HEADER ── */
-header{
-  background:var(--surface2);border-bottom:1px solid var(--border);
-  padding:0 22px;display:flex;align-items:center;gap:24px;height:52px;
-  position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm);
-}
+/* HEADER */
+header{background:var(--surface2);border-bottom:1px solid var(--border);padding:0 22px;display:flex;align-items:center;gap:20px;height:52px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm);}
 .logo{font-weight:700;font-size:16px;letter-spacing:-.5px;color:var(--text);white-space:nowrap;}
 .logo span{color:var(--accent);}
 nav{display:flex;gap:3px;flex:1;}
-nav button{background:none;border:none;color:var(--muted);padding:5px 12px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:500;transition:all .15s;white-space:nowrap;}
+nav button{background:none;border:none;color:var(--muted);padding:5px 11px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;transition:all .15s;white-space:nowrap;}
 nav button.active{background:var(--accent);color:#fff;}
 nav button:not(.active):hover{background:var(--bg);color:var(--text);}
-
-/* user chip */
-.user-chip{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 6px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:11.5px;font-weight:500;color:var(--text2);}
-.user-chip .avatar-sm{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.logout-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:2px 4px;border-radius:4px;font-family:inherit;}
-.logout-btn:hover{color:var(--danger);}
-
 .notif-btn{position:relative;background:none;border:none;cursor:pointer;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--muted);transition:background .15s;}
 .notif-btn:hover{background:var(--bg);}
 .notif-badge{position:absolute;top:3px;right:3px;background:var(--danger);color:#fff;font-size:9px;font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--surface2);}
+.user-chip{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 6px;border-radius:20px;background:var(--bg);border:1px solid var(--border);font-size:11.5px;font-weight:500;color:var(--text2);white-space:nowrap;}
+.user-chip .av{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logout-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:2px 4px;border-radius:4px;font-family:inherit;}
+.logout-btn:hover{color:var(--danger);}
 
-/* ── LAYOUT ── */
+/* LAYOUT */
 .app{display:flex;height:calc(100vh - 52px);overflow:hidden;}
-.sidebar{width:285px;min-width:285px;background:var(--surface2);border-right:1px solid var(--border);overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:12px;}
-.main{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:18px;}
+.sidebar{width:280px;min-width:280px;background:var(--surface2);border-right:1px solid var(--border);overflow-y:auto;padding:13px 12px;display:flex;flex-direction:column;gap:11px;}
+.main{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:18px;}
 
-.section-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.section-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;}
 .page-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px;}
 .card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:13px;box-shadow:var(--shadow-sm);}
 
@@ -131,6 +100,13 @@ label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-wei
 .btn-sm{padding:4px 10px;font-size:11.5px;}
 .btn-xs{padding:2px 7px;font-size:11px;border-radius:5px;}
 
+/* PROJECT CARDS IN SIDEBAR */
+.proj-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid #2f6be0;border-radius:8px;padding:7px 10px;margin-bottom:6px;cursor:pointer;transition:box-shadow .15s;}
+.proj-item:hover{box-shadow:var(--shadow-sm);}
+.proj-name{font-weight:600;font-size:12.5px;}
+.proj-dates{font-size:10.5px;color:var(--muted);}
+
+/* RESOURCE ITEMS */
 .resource-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:9px;box-shadow:var(--shadow-sm);}
 .avatar{width:29px;height:29px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
 .resource-info{flex:1;min-width:0;}
@@ -139,19 +115,23 @@ label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-wei
 .load-bar{height:3px;border-radius:2px;background:var(--border);margin-top:5px;overflow:hidden;}
 .load-fill{height:100%;border-radius:2px;transition:width .4s;}
 
+/* ACTIVITY CARDS */
 .activity-item{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:10px 13px;margin-bottom:7px;box-shadow:var(--shadow-sm);transition:box-shadow .15s;}
 .activity-item:hover{box-shadow:var(--shadow);}
-.activity-item.done{border-left-color:var(--success);opacity:.72;}
+.activity-item.done{border-left-color:var(--success);opacity:.75;}
 .activity-item.overdue{border-left-color:var(--danger);background:#fff8f7;}
-.activity-item.waiting{border-left-color:var(--muted2);}
+.activity-item.waiting{border-left-color:#3b82f6;}
+.activity-item.suspended{border-left-color:var(--suspended);background:#f8fafc;}
 .activity-header{display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;}
 .activity-name{font-weight:600;flex:1;min-width:100px;font-size:13px;}
 .tag{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;white-space:nowrap;background:rgba(47,107,224,.1);color:var(--accent);}
 .tag.done{background:rgba(21,144,95,.1);color:var(--success);}
 .tag.overdue{background:rgba(192,57,43,.1);color:var(--danger);}
-.tag.waiting{background:rgba(141,160,188,.12);color:var(--muted);}
+.tag.waiting{background:rgba(59,130,246,.1);color:#1d4ed8;}
+.tag.suspended{background:rgba(100,116,139,.1);color:var(--suspended);}
 .activity-meta{font-size:11px;color:var(--muted);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;line-height:1.5;}
 .dep-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:rgba(108,71,212,.1);color:var(--accent2);padding:2px 6px;border-radius:12px;font-weight:600;}
+.proj-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px;border-radius:12px;font-weight:600;}
 .progress-bar{height:4px;border-radius:2px;background:var(--bg);overflow:hidden;margin-top:5px;}
 .progress-fill{height:100%;border-radius:2px;transition:width .3s;}
 
@@ -162,47 +142,69 @@ label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-wei
 
 .overlap-alert{background:rgba(201,109,0,.07);border:1px solid rgba(201,109,0,.25);border-radius:8px;padding:9px 13px;margin-bottom:8px;font-size:12px;color:var(--warning);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 
-.gantt-header{display:flex;align-items:center;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px;}
-.gantt-row{display:flex;align-items:center;margin-bottom:4px;min-height:32px;}
-.gantt-label-col{width:165px;min-width:165px;padding-right:10px;}
+/* ── GANTT ── */
+.gantt-wrap{overflow-x:auto;}
+.gantt-header-row{display:flex;align-items:center;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:4px;}
+.gantt-row{display:flex;align-items:center;margin-bottom:3px;min-height:30px;}
+.gantt-label-col{width:180px;min-width:180px;padding-right:10px;flex-shrink:0;}
 .gantt-label{font-size:11.5px;font-weight:500;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.gantt-sub{font-size:9.5px;color:var(--muted2);}
-.gantt-track{flex:1;height:28px;background:var(--bg);border-radius:5px;position:relative;overflow:hidden;border:1px solid var(--border);}
-.gantt-bar{position:absolute;height:18px;top:4px;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:9.5px;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer;transition:filter .15s;border:1.5px solid transparent;}
-.gantt-bar:hover{filter:brightness(.92);z-index:2;}
-.gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--danger);opacity:.65;z-index:5;pointer-events:none;}
+.gantt-sub{font-size:9px;color:var(--muted2);}
+.gantt-track{flex:1;height:26px;background:var(--bg);border-radius:5px;position:relative;overflow:visible;border:1px solid var(--border);}
+.gantt-bar{position:absolute;height:16px;top:4px;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer;transition:filter .15s;border:1.5px solid;}
+.gantt-bar:hover{filter:brightness(.93);z-index:10;}
+.gantt-baseline{position:absolute;height:4px;bottom:-7px;border-radius:2px;background:rgba(100,116,139,.35);border:none;z-index:2;}
+.gantt-today{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--danger);opacity:.7;z-index:8;pointer-events:none;}
 .gantt-weekend{position:absolute;top:0;bottom:0;background:rgba(90,110,140,.05);pointer-events:none;}
-.gantt-group-row{display:flex;align-items:center;margin:8px 0 3px;}
-.gantt-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;width:165px;padding-right:10px;}
+.gantt-group-row{display:flex;align-items:center;margin:10px 0 4px;}
+.gantt-group-label{width:180px;min-width:180px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding-right:10px;flex-shrink:0;}
 .gantt-group-line{flex:1;height:1px;background:var(--border);}
 
-.overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:13px;}
-.ov-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:15px;display:flex;flex-direction:column;gap:7px;box-shadow:var(--shadow-sm);}
+/* PROJECT GANTT LEGEND */
+.gantt-legend{display:flex;gap:14px;font-size:11px;color:var(--muted);flex-wrap:wrap;padding:4px 2px;}
+.gantt-legend-item{display:flex;align-items:center;gap:5px;}
+.gantt-legend-box{width:14px;height:10px;border-radius:3px;border:1.5px solid;}
+
+/* PROJECT HEALTH CARD */
+.health-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);display:flex;gap:20px;flex-wrap:wrap;align-items:center;}
+.health-stat{display:flex;flex-direction:column;gap:2px;}
+.health-val{font-size:18px;font-family:'JetBrains Mono',monospace;font-weight:600;}
+.health-lbl{font-size:10.5px;color:var(--muted);}
+.health-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.pill-ok{background:rgba(21,144,95,.1);color:var(--success);}
+.pill-warn{background:rgba(201,109,0,.1);color:var(--warning);}
+.pill-danger{background:rgba(192,57,43,.1);color:var(--danger);}
+.pill-early{background:rgba(47,107,224,.1);color:var(--accent);}
+
+/* OVERVIEW */
+.overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.ov-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:7px;box-shadow:var(--shadow-sm);}
 .ov-name{font-weight:700;font-size:13.5px;}
 .ov-stat{font-size:11px;color:var(--muted);}
 .ov-big{font-size:24px;font-family:'JetBrains Mono',monospace;font-weight:500;}
 
+/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(20,35,70,.3);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-.modal{background:var(--surface2);border:1px solid var(--border);border-radius:13px;padding:22px;width:450px;max-width:95vw;box-shadow:0 10px 40px rgba(20,35,70,.14);max-height:90vh;overflow-y:auto;}
+.modal{background:var(--surface2);border:1px solid var(--border);border-radius:13px;padding:22px;width:460px;max-width:95vw;box-shadow:0 10px 40px rgba(20,35,70,.14);max-height:90vh;overflow-y:auto;}
 .modal h3{font-size:14.5px;margin-bottom:14px;font-weight:700;}
 
+/* NOTIFICATION PANEL */
 .notif-panel{position:fixed;top:56px;right:10px;width:330px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(20,35,70,.12);z-index:250;overflow:hidden;}
 .notif-header{padding:11px 15px;border-bottom:1px solid var(--border);font-weight:700;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;}
 .notif-list{max-height:340px;overflow-y:auto;}
-.notif-item{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--text2);transition:background .12s;}
+.notif-item{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;gap:9px;align-items:flex-start;font-size:11.5px;color:var(--text2);}
 .notif-item:hover{background:var(--bg);}
 .notif-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
 .notif-text{flex:1;}
 .notif-sub{color:var(--muted);font-size:10.5px;margin-top:1px;}
 .notif-empty{padding:18px;text-align:center;color:var(--muted2);font-size:12px;}
 
+/* MISC */
 .empty{color:var(--muted2);font-size:12px;text-align:center;padding:20px 0;}
 .hidden{display:none !important;}
 hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
 .view{display:none;}
 .view.active{display:flex;flex-direction:column;gap:18px;}
 .dev-item{padding:7px 10px;background:var(--bg);border-radius:6px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;}
-
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
@@ -210,96 +212,105 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
 </head>
 <body>
 
-<!-- ── LOADING ── -->
+<!-- LOADING -->
 <div id="loading-screen">
   <div class="spinner"></div>
-  <div style="font-size:14px;font-weight:600;color:var(--text)">Enge<span style="color:var(--accent)">Flow</span></div>
-  <div style="font-size:12px;color:var(--muted)" id="loading-msg">Verificando autenticação...</div>
+  <div style="font-size:14px;font-weight:600">Enge<span style="color:var(--accent)">Flow</span></div>
+  <div style="font-size:12px;color:var(--muted)">Verificando autenticação...</div>
 </div>
 
-<!-- ── LOGIN SCREEN ── -->
-<div id="login-screen" class="hidden">
+<!-- LOGIN -->
+<div id="login-screen" style="display:none">
   <div class="login-box">
     <div class="login-logo">Enge<span>Flow</span></div>
     <div class="login-sub">Gestão de Projetos de Engenharia · Acesso restrito à equipe</div>
-
     <div class="login-error" id="login-error"></div>
-
-    <label class="login-label">E-mail corporativo</label>
+    <label class="login-label">E-mail</label>
     <input class="login-input" type="email" id="login-email" placeholder="voce@empresa.com.br" autocomplete="email">
-
     <label class="login-label">Senha</label>
-    <input class="login-input" type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password"
-      onkeydown="if(event.key==='Enter')doLogin()">
-
+    <input class="login-input" type="password" id="login-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
-
     <div class="login-forgot" onclick="doResetPassword()">Esqueci minha senha</div>
   </div>
 </div>
 
-<!-- ── SYNC ── -->
-<div id="sync-status">
-  <div id="sync-dot"></div>
-  <span id="sync-label">Sincronizado</span>
-</div>
+<!-- SYNC -->
+<div id="sync-status"><div id="sync-dot"></div><span id="sync-label">Sincronizado</span></div>
 
-<!-- ── HEADER ── -->
+<!-- HEADER -->
 <header id="main-header" class="hidden">
   <div class="logo">Enge<span>Flow</span></div>
   <nav>
     <button class="active" onclick="showView('dashboard')">Dashboard</button>
     <button onclick="showView('activities')">Atividades</button>
-    <button onclick="showView('gantt')">Gantt</button>
+    <button onclick="showView('resources-gantt')">Gantt Recursos</button>
+    <button onclick="showView('projects-gantt')">Gantt Projetos</button>
     <button onclick="showView('overview')">Visão Geral</button>
   </nav>
-  <button class="notif-btn" onclick="toggleNotifPanel()" id="notif-toggle-btn">
-    🔔<span class="notif-badge hidden" id="notif-count">0</span>
-  </button>
+  <button class="notif-btn" onclick="toggleNotifPanel()" id="notif-toggle-btn">🔔<span class="notif-badge hidden" id="notif-count">0</span></button>
   <div class="user-chip">
-    <div class="avatar-sm" id="user-initials">?</div>
-    <span id="user-email-display" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-    <button class="logout-btn" onclick="doLogout()" title="Sair">⎋ Sair</button>
+    <div class="av" id="user-initials">?</div>
+    <span id="user-email-display" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button class="logout-btn" onclick="doLogout()">⎋ Sair</button>
   </div>
 </header>
 
-<!-- ── NOTIFICATION PANEL ── -->
+<!-- NOTIF PANEL -->
 <div class="notif-panel hidden" id="notif-panel">
   <div class="notif-header">Notificações <button class="btn btn-xs btn-ghost" onclick="closeNotifPanel()">Fechar</button></div>
   <div class="notif-list" id="notif-list"></div>
 </div>
 
-<!-- ── APP ── -->
+<!-- APP -->
 <div class="app hidden" id="main-app">
+
+  <!-- SIDEBAR -->
   <aside class="sidebar">
+
+    <!-- PROJECTS -->
     <div>
-      <div class="section-title">Recursos
-        <button class="btn btn-xs btn-primary" onclick="toggleForm('res-form')">+ Novo</button>
+      <div class="section-title">Projetos <button class="btn btn-xs btn-primary" onclick="toggleForm('proj-form')">+ Novo</button></div>
+      <div class="card hidden" id="proj-form" style="margin-bottom:8px">
+        <div class="form-row"><label>Nome do Projeto</label><input id="p-name" placeholder="Ex: Galpão Industrial A"></div>
+        <div class="form-row"><label>Descrição (opcional)</label><input id="p-desc" placeholder="Breve descrição"></div>
+        <div class="form-row-2">
+          <div><label>Início previsto</label><input id="p-start" type="date"></div>
+          <div><label>Fim previsto</label><input id="p-end" type="date"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="width:100%" onclick="addProject()">Criar Projeto</button>
       </div>
-      <div class="card hidden" id="res-form" style="margin-bottom:10px">
+      <div id="project-list"><div class="empty">Nenhum projeto cadastrado.</div></div>
+    </div>
+
+    <hr>
+
+    <!-- RESOURCES -->
+    <div>
+      <div class="section-title">Recursos <button class="btn btn-xs btn-primary" onclick="toggleForm('res-form')">+ Novo</button></div>
+      <div class="card hidden" id="res-form" style="margin-bottom:8px">
         <div class="form-row"><label>Nome completo</label><input id="r-name" placeholder="Ex: João Silva"></div>
         <div class="form-row"><label>Horas disponíveis/dia</label><input id="r-hours" type="number" value="8" min="1" max="24"></div>
         <button class="btn btn-primary btn-sm" style="width:100%" onclick="addResource()">Adicionar</button>
       </div>
       <div id="resource-list"></div>
     </div>
+
     <hr>
+
+    <!-- NEW ACTIVITY -->
     <div>
-      <div class="section-title">Nova Atividade
-        <button class="btn btn-xs btn-primary" onclick="toggleForm('act-form')">+ Nova</button>
-      </div>
+      <div class="section-title">Nova Atividade <button class="btn btn-xs btn-primary" onclick="toggleForm('act-form')">+ Nova</button></div>
       <div class="card hidden" id="act-form">
         <div class="form-row"><label>Descrição</label><input id="a-name" placeholder="Ex: Verificação de desenho"></div>
         <div class="form-row"><label>Tipo</label>
           <select id="a-type">
-            <option>Verificação de desenho</option>
-            <option>Modelagem estrutural</option>
-            <option>Memória de cálculo</option>
-            <option>Reunião</option>
-            <option>Revisão de projeto</option>
-            <option>Demanda extraordinária</option>
-            <option>Outro</option>
+            <option>Verificação de desenho</option><option>Modelagem estrutural</option>
+            <option>Memória de cálculo</option><option>Reunião</option>
+            <option>Revisão de projeto</option><option>Demanda extraordinária</option><option>Outro</option>
           </select>
+        </div>
+        <div class="form-row"><label>Projeto (opcional)</label>
+          <select id="a-project" onchange="onProjectChange()"><option value="">Demanda geral</option></select>
         </div>
         <div class="form-row-2">
           <div><label>Horas estimadas</label><input id="a-hours" type="number" value="8" min="0.5" step="0.5"></div>
@@ -310,9 +321,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
         </div>
         <div class="form-row"><label>Prioridade</label>
           <select id="a-priority">
-            <option value="1">🔴 Alta</option>
-            <option value="2" selected>🟡 Média</option>
-            <option value="3">🔵 Baixa</option>
+            <option value="1">🔴 Alta</option><option value="2" selected>🟡 Média</option><option value="3">🔵 Baixa</option>
           </select>
         </div>
         <div class="form-row"><label>Predecessora (opcional)</label>
@@ -323,7 +332,9 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
     </div>
   </aside>
 
+  <!-- MAIN -->
   <main class="main">
+
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
       <div>
@@ -334,45 +345,57 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
         <div id="stats-row" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px"></div>
       </div>
       <div id="overlap-alerts"></div>
-      <div>
-        <div class="section-title">Atividades em andamento hoje</div>
-        <div id="dash-activities"></div>
-      </div>
+      <div><div class="section-title">Atividades em andamento hoje</div><div id="dash-activities"></div></div>
     </div>
 
-    <!-- ACTIVITIES -->
+    <!-- ALL ACTIVITIES -->
     <div class="view" id="view-activities">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <span class="page-title">Todas as Atividades</span>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
-          <select id="filter-resource" onchange="renderActivities()" style="width:155px">
-            <option value="">Todos os recursos</option>
-          </select>
-          <select id="filter-status" onchange="renderActivities()" style="width:140px">
+          <select id="filter-project" onchange="renderActivities()" style="width:150px"><option value="">Todos os projetos</option></select>
+          <select id="filter-resource" onchange="renderActivities()" style="width:140px"><option value="">Todos os recursos</option></select>
+          <select id="filter-status" onchange="renderActivities()" style="width:130px">
             <option value="">Todos os status</option>
-            <option value="active">Em andamento</option>
-            <option value="done">Concluídas</option>
-            <option value="overdue">Atrasadas</option>
-            <option value="waiting">Aguardando início</option>
+            <option value="active">Em andamento</option><option value="done">Concluídas</option>
+            <option value="overdue">Atrasadas</option><option value="waiting">Aguardando</option>
+            <option value="suspended">Paralisadas</option>
           </select>
         </div>
       </div>
       <div id="activities-list"></div>
     </div>
 
-    <!-- GANTT -->
-    <div class="view" id="view-gantt">
+    <!-- GANTT RECURSOS -->
+    <div class="view" id="view-resources-gantt">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span class="page-title">Gráfico de Gantt</span>
-        <select id="gantt-filter-res" onchange="renderGantt()" style="width:160px">
-          <option value="">Todos os recursos</option>
-        </select>
+        <span class="page-title">Gantt por Recursos</span>
+        <select id="gantt-filter-res" onchange="renderResourceGantt()" style="width:160px"><option value="">Todos os recursos</option></select>
       </div>
-      <div class="card" style="overflow-x:auto"><div id="gantt-container" style="min-width:500px"></div></div>
-      <div style="display:flex;gap:14px;font-size:11px;color:var(--muted);flex-wrap:wrap;padding:0 2px">
-        <span><span style="display:inline-block;width:3px;height:12px;background:var(--danger);vertical-align:middle;margin-right:4px;border-radius:2px"></span>Hoje</span>
-        <span><span style="display:inline-block;width:12px;height:8px;background:rgba(201,109,0,.3);vertical-align:middle;margin-right:4px;border-radius:2px"></span>Desvio</span>
-        <span><span style="display:inline-block;width:12px;height:8px;background:rgba(90,110,140,.06);border:1px solid var(--border);vertical-align:middle;margin-right:4px;border-radius:2px"></span>Fim de semana</span>
+      <div class="card" style="overflow-x:auto"><div id="gantt-res-container" style="min-width:500px"></div></div>
+      <div class="gantt-legend">
+        <div class="gantt-legend-item"><span style="display:inline-block;width:3px;height:14px;background:var(--danger);border-radius:2px"></span>Hoje</div>
+        <div class="gantt-legend-item"><span style="display:inline-block;width:14px;height:10px;background:rgba(201,109,0,.3);border-radius:2px;border:1px solid var(--warning)"></span>Desvio</div>
+        <div class="gantt-legend-item"><span style="display:inline-block;width:14px;height:10px;background:rgba(90,110,140,.06);border:1px solid var(--border);border-radius:2px"></span>Fim de semana</div>
+      </div>
+    </div>
+
+    <!-- GANTT PROJETOS -->
+    <div class="view" id="view-projects-gantt">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span class="page-title">Gantt por Projetos</span>
+        <select id="gantt-filter-proj" onchange="renderProjectGantt()" style="width:180px"><option value="">Todos os projetos</option></select>
+      </div>
+      <div id="proj-health-area"></div>
+      <div class="card" style="overflow-x:auto"><div id="gantt-proj-container" style="min-width:500px;padding-bottom:14px"></div></div>
+      <div class="gantt-legend">
+        <div class="gantt-legend-item"><div class="gantt-legend-box sc-waiting"></div>Aguardando</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-box sc-active"></div>Em andamento</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-box sc-done"></div>Concluída</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-box sc-overdue"></div>Atrasada</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-box sc-suspended"></div>Paralisada</div>
+        <div class="gantt-legend-item"><span style="display:inline-block;width:22px;height:4px;background:rgba(100,116,139,.35);border-radius:2px"></span>Baseline</div>
+        <div class="gantt-legend-item"><span style="display:inline-block;width:3px;height:14px;background:var(--danger);border-radius:2px"></span>Hoje</div>
       </div>
     </div>
 
@@ -381,6 +404,7 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
       <span class="page-title">Visão Geral da Equipe</span>
       <div class="overview-grid" id="overview-grid"></div>
     </div>
+
   </main>
 </div>
 
@@ -389,9 +413,9 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
   <div class="modal">
     <h3>⚡ Registrar Desvio</h3>
     <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Horas consumidas por atividades extras que impactam este prazo.</p>
-    <div class="form-row"><label>Descrição do desvio</label><input id="dev-desc" placeholder="Ex: Reunião com cliente"></div>
+    <div class="form-row"><label>Descrição</label><input id="dev-desc" placeholder="Ex: Reunião com cliente"></div>
     <div class="form-row"><label>Horas consumidas</label><input id="dev-hours" type="number" value="1" min="0.5" step="0.5"></div>
-    <div id="dev-history" style="margin:10px 0;max-height:160px;overflow-y:auto"></div>
+    <div id="dev-history" style="margin:10px 0;max-height:150px;overflow-y:auto"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
       <button class="btn btn-ghost" onclick="closeDevModal()">Fechar</button>
       <button class="btn btn-primary" onclick="addDeviation()">Registrar</button>
@@ -412,112 +436,138 @@ hr{border:none;border-top:1px solid var(--border);margin:10px 0;}
   </div>
 </div>
 
+<!-- SUSPENSION MODAL -->
+<div class="modal-overlay hidden" id="sus-modal">
+  <div class="modal">
+    <h3 id="sus-title">⏸ Paralisar Atividade</h3>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:14px" id="sus-subtitle">Informe o motivo da paralisação. A atividade ficará congelada no cronograma até ser retomada.</p>
+    <div class="form-row"><label>Motivo da paralisação</label>
+      <input id="sus-reason" placeholder="Ex: Aguardando aprovação da diretoria">
+    </div>
+    <div id="sus-history" style="margin:10px 0;max-height:150px;overflow-y:auto"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn btn-ghost" onclick="closeSusModal()">Cancelar</button>
+      <button class="btn btn-primary" id="sus-action-btn" onclick="applySuspension()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVITY DETAIL MODAL (for Gantt click) -->
+<div class="modal-overlay hidden" id="detail-modal">
+  <div class="modal" style="width:500px">
+    <h3 id="detail-title"></h3>
+    <div id="detail-body"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap" id="detail-actions"></div>
+  </div>
+</div>
+
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <script>
-// ════════════════════════════════════════════════
-//  FIREBASE
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  FIREBASE INIT
+// ══════════════════════════════════════════════
 firebase.initializeApp({
-  apiKey:            "AIzaSyBPv_Usi00DaZR2cIlNQjk8DQey2MbWtDQ",
-  authDomain:        "engeflow-44f15.firebaseapp.com",
-  databaseURL:       "https://engeflow-44f15-default-rtdb.firebaseio.com",
-  projectId:         "engeflow-44f15",
-  storageBucket:     "engeflow-44f15.firebasestorage.app",
-  messagingSenderId: "82161507864",
-  appId:             "1:82161507864:web:73b99ed9035e66ec7f2d6d"
+  apiKey:"AIzaSyBPv_Usi00DaZR2cIlNQjk8DQey2MbWtDQ",
+  authDomain:"engeflow-44f15.firebaseapp.com",
+  databaseURL:"https://engeflow-44f15-default-rtdb.firebaseio.com",
+  projectId:"engeflow-44f15",
+  storageBucket:"engeflow-44f15.firebasestorage.app",
+  messagingSenderId:"82161507864",
+  appId:"1:82161507864:web:73b99ed9035e66ec7f2d6d"
 });
-const auth = firebase.auth();
-const db   = firebase.database();
-const ROOT = 'engeflow';
+const auth=firebase.auth();
+const db=firebase.database();
+const ROOT='engeflow';
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  CONSTANTS
-// ════════════════════════════════════════════════
-const COLORS=['#2f6be0','#6c47d4','#15905f','#c96d00','#c0392b','#0284c7','#7c3aed','#0d9488'];
+// ══════════════════════════════════════════════
+const COLORS=['#2f6be0','#6c47d4','#15905f','#c96d00','#c0392b','#0284c7','#7c3aed','#0d9488','#db2777','#ea580c'];
+const PROJ_COLORS=['#2f6be0','#7c3aed','#0d9488','#db2777','#ea580c','#65a30d','#0284c7','#c96d00'];
 const PRI={1:{label:'🔴 Alta',cls:'p1'},2:{label:'🟡 Média',cls:'p2'},3:{label:'🔵 Baixa',cls:'p3'}};
 
-let state={resources:[],activities:[],nextRid:1,nextAid:1};
-let _priContext=null, _devAid=null, _appReady=false, _dbListener=null;
+// Activity statuses
+const STATUS={
+  waiting:  {label:'Aguardando',  tagCls:'waiting',   itemCls:'waiting'},
+  active:   {label:'Em andamento',tagCls:'',           itemCls:''},
+  done:     {label:'Concluído',   tagCls:'done',       itemCls:'done'},
+  overdue:  {label:'Atrasada',    tagCls:'overdue',    itemCls:'overdue'},
+  suspended:{label:'Paralisada',  tagCls:'suspended',  itemCls:'suspended'},
+};
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let state={
+  projects:[],   // {id,name,desc,startDate,endDate,color}
+  resources:[],  // {id,name,hours,color}
+  activities:[], // {id,name,estimatedHours,startDate,baselineEnd,resourceId,projectId,type,priority,predecessorId,done,suspended,suspendedReason,suspensions:[],deviations:[],progress,completedDate}
+  nextPid:1, nextRid:1, nextAid:1
+};
+let _priContext=null, _devAid=null, _susAid=null, _appReady=false, _dbListener=null;
+
+// ══════════════════════════════════════════════
 //  AUTH
-// ════════════════════════════════════════════════
-auth.onAuthStateChanged(user=>{
-  if(user){
-    showApp(user);
-  } else {
-    hideApp();
+// ══════════════════════════════════════════════
+
+// Safety net: if Firebase SDK doesn't respond in 8s, show login screen
+const _authTimeout = setTimeout(()=>{
+  const ls = document.getElementById('loading-screen');
+  if(!ls.classList.contains('hidden')){
+    hideLoading();
+    document.getElementById('login-screen').style.display='flex';
   }
+}, 8000);
+
+auth.onAuthStateChanged(user=>{
+  clearTimeout(_authTimeout);
+  if(user){ showApp(user); } else { hideApp(); }
 });
 
 function showApp(user){
-  // update UI
-  document.getElementById('user-email-display').textContent = user.email;
-  document.getElementById('user-initials').textContent = user.email.slice(0,2).toUpperCase();
-  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('user-email-display').textContent=user.email;
+  document.getElementById('user-initials').textContent=user.email.slice(0,2).toUpperCase();
+  document.getElementById('login-screen').style.display='none';
   document.getElementById('main-header').classList.remove('hidden');
   document.getElementById('main-app').classList.remove('hidden');
   hideLoading();
-  document.getElementById('a-date').value = todayStr();
+  document.getElementById('a-date').value=todayStr();
+  document.getElementById('p-start').value=todayStr();
   startListening();
 }
-
 function hideApp(){
-  // stop db listener if active
-  if(_dbListener){ db.ref(ROOT).off('value',_dbListener); _dbListener=null; _appReady=false; }
+  if(_dbListener){db.ref(ROOT).off('value',_dbListener);_dbListener=null;_appReady=false;}
   document.getElementById('main-header').classList.add('hidden');
   document.getElementById('main-app').classList.add('hidden');
   hideLoading();
-  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-screen').style.display='flex';
 }
-
 async function doLogin(){
-  const email = document.getElementById('login-email').value.trim();
-  const pwd   = document.getElementById('login-pwd').value;
-  const btn   = document.getElementById('login-btn');
-  const errEl = document.getElementById('login-error');
-
-  errEl.classList.remove('show');
-  if(!email||!pwd){ showLoginError('Preencha e-mail e senha.'); return; }
-
-  btn.disabled=true; btn.textContent='Entrando...';
-  try {
-    await auth.signInWithEmailAndPassword(email, pwd);
-    // onAuthStateChanged handles the rest
-  } catch(e){
-    btn.disabled=false; btn.textContent='Entrar';
-    const msgs={
-      'auth/user-not-found':    'E-mail não cadastrado. Solicite acesso ao administrador.',
-      'auth/wrong-password':    'Senha incorreta.',
-      'auth/invalid-email':     'E-mail inválido.',
-      'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
-      'auth/invalid-credential':'E-mail ou senha incorretos.',
-    };
-    showLoginError(msgs[e.code] || `Erro: ${e.message}`);
+  const email=document.getElementById('login-email').value.trim();
+  const pwd=document.getElementById('login-pwd').value;
+  const btn=document.getElementById('login-btn');
+  document.getElementById('login-error').classList.remove('show');
+  if(!email||!pwd){showLoginError('Preencha e-mail e senha.');return;}
+  btn.disabled=true;btn.textContent='Entrando...';
+  try{await auth.signInWithEmailAndPassword(email,pwd);}
+  catch(e){
+    btn.disabled=false;btn.textContent='Entrar';
+    const msgs={'auth/user-not-found':'E-mail não cadastrado.','auth/wrong-password':'Senha incorreta.','auth/invalid-email':'E-mail inválido.','auth/too-many-requests':'Muitas tentativas. Tente mais tarde.','auth/invalid-credential':'E-mail ou senha incorretos.'};
+    showLoginError(msgs[e.code]||`Erro: ${e.message}`);
   }
 }
-
-async function doLogout(){
-  if(!confirm('Deseja sair do EngeFlow?')) return;
-  await auth.signOut();
-}
-
+async function doLogout(){if(!confirm('Deseja sair?'))return;await auth.signOut();}
 async function doResetPassword(){
-  const email = document.getElementById('login-email').value.trim();
-  if(!email){ showLoginError('Digite seu e-mail acima para redefinir a senha.'); return; }
-  try {
-    await auth.sendPasswordResetEmail(email);
-    showLoginError('✅ E-mail de redefinição enviado! Verifique sua caixa de entrada.', true);
-  } catch(e){
-    showLoginError('Não foi possível enviar o e-mail. Verifique o endereço digitado.');
-  }
+  const email=document.getElementById('login-email').value.trim();
+  if(!email){showLoginError('Digite seu e-mail para redefinir a senha.');return;}
+  try{await auth.sendPasswordResetEmail(email);showLoginError('✅ E-mail de redefinição enviado!',true);}
+  catch(e){showLoginError('Não foi possível enviar o e-mail.');}
 }
-
-function showLoginError(msg, success=false){
+function showLoginError(msg,success=false){
   const el=document.getElementById('login-error');
   el.textContent=msg;
   el.style.background=success?'rgba(21,144,95,.08)':'rgba(192,57,43,.08)';
@@ -526,41 +576,36 @@ function showLoginError(msg, success=false){
   el.classList.add('show');
 }
 
-// ════════════════════════════════════════════════
-//  SYNC
-// ════════════════════════════════════════════════
-function setSyncing(){ document.getElementById('sync-dot').className='syncing'; document.getElementById('sync-label').textContent='Salvando...'; }
-function setSynced(){  document.getElementById('sync-dot').className='';        document.getElementById('sync-label').textContent='Sincronizado'; }
-function setSyncError(){ document.getElementById('sync-dot').className='error'; document.getElementById('sync-label').textContent='Erro de conexão'; }
+// ══════════════════════════════════════════════
+//  FIREBASE SYNC
+// ══════════════════════════════════════════════
+function setSyncing(){document.getElementById('sync-dot').className='syncing';document.getElementById('sync-label').textContent='Salvando...';}
+function setSynced(){document.getElementById('sync-dot').className='';document.getElementById('sync-label').textContent='Sincronizado';}
+function setSyncError(){document.getElementById('sync-dot').className='error';document.getElementById('sync-label').textContent='Erro de conexão';}
 
 function pushState(){
   setSyncing();
   db.ref(ROOT).set({
-    resources:  state.resources,
-    activities: state.activities,
-    nextRid:    state.nextRid,
-    nextAid:    state.nextAid
-  }).then(setSynced).catch(e=>{ setSyncError(); console.error(e); });
+    projects:state.projects, resources:state.resources, activities:state.activities,
+    nextPid:state.nextPid, nextRid:state.nextRid, nextAid:state.nextAid
+  }).then(setSynced).catch(e=>{setSyncError();console.error(e);});
 }
 
 function startListening(){
-  _dbListener = db.ref(ROOT).on('value', snapshot=>{
+  _dbListener=db.ref(ROOT).on('value',snapshot=>{
     const data=snapshot.val();
     if(data){
-      state.resources  = data.resources  || [];
-      state.activities = data.activities || [];
-      state.nextRid    = data.nextRid    || state.resources.length  + 1;
-      state.nextAid    = data.nextAid    || state.activities.length + 1;
-    } else {
-      seedDemo(); return;
-    }
-    if(!_appReady){ _appReady=true; }
+      state.projects  =data.projects  ||[];
+      state.resources =data.resources ||[];
+      state.activities=data.activities||[];
+      state.nextPid   =data.nextPid   ||(state.projects.length+1);
+      state.nextRid   =data.nextRid   ||(state.resources.length+1);
+      state.nextAid   =data.nextAid   ||(state.activities.length+1);
+    } else { seedDemo(); return; }
+    if(!_appReady) _appReady=true;
     renderAll();
-  }, err=>{ setSyncError(); console.error(err); });
-
-  db.ref('.info/connected').on('value', snap=>{
-    if(_appReady){ if(!snap.val()) setSyncError(); else setSynced(); }
-  });
+  },err=>{setSyncError();console.error(err);});
+  db.ref('.info/connected').on('value',snap=>{if(_appReady){if(!snap.val())setSyncError();else setSynced();}});
 }
 
 function hideLoading(){
@@ -571,71 +616,109 @@ function hideLoading(){
 
 function seedDemo(){
   const t=todayStr();
-  ['Ana Beatriz','Carlos Eduardo','Marcos Silva'].forEach((n,i)=>
-    state.resources.push({id:state.nextRid++,name:n,hours:8,color:COLORS[i]}));
+  state.projects.push({id:state.nextPid++,name:'Galpão Industrial A',desc:'Estrutura metálica principal',startDate:t,endDate:addWorkHours(t,80,8),color:PROJ_COLORS[0]});
+  ['Ana Beatriz','Carlos Eduardo','Marcos Silva'].forEach((n,i)=>state.resources.push({id:state.nextRid++,name:n,hours:8,color:COLORS[i]}));
+  const pid=state.projects[0].id;
   [
-    {name:'Verificação de desenho estrutural',hours:8, date:t,rid:1,type:'Verificação de desenho',priority:1,pred:null},
-    {name:'Reunião de alinhamento técnico',   hours:2, date:t,rid:1,type:'Reunião',              priority:2,pred:null},
-    {name:'Modelagem da estrutura metálica',  hours:16,date:t,rid:2,type:'Modelagem estrutural',  priority:1,pred:null},
-    {name:'Memória de cálculo – Fundações',   hours:12,date:t,rid:3,type:'Memória de cálculo',    priority:1,pred:null},
-    {name:'Revisão geral do projeto',         hours:6, date:t,rid:1,type:'Revisão de projeto',    priority:3,pred:1},
-  ].forEach(a=>state.activities.push({
-    id:state.nextAid++,name:a.name,estimatedHours:a.hours,startDate:a.date,
-    resourceId:a.rid,type:a.type,priority:a.priority,predecessorId:a.pred,done:false,deviations:[],progress:0
-  }));
+    {name:'Levantamento topográfico',  hours:8, date:t, rid:1, type:'Verificação de desenho', priority:1, pred:0, proj:pid},
+    {name:'Projeto de fundações',      hours:16,date:t, rid:2, type:'Memória de cálculo',     priority:1, pred:1, proj:pid},
+    {name:'Modelagem estrutural',      hours:24,date:t, rid:3, type:'Modelagem estrutural',   priority:1, pred:2, proj:pid},
+    {name:'Verificação de desenhos',   hours:8, date:t, rid:1, type:'Verificação de desenho', priority:2, pred:3, proj:pid},
+    {name:'Reunião de alinhamento',    hours:2, date:t, rid:1, type:'Reunião',                priority:2, pred:0, proj:0},
+    {name:'Memória de cálculo – Lajes',hours:12,date:t, rid:2, type:'Memória de cálculo',     priority:3, pred:0, proj:0},
+  ].forEach(a=>{
+    const act={id:state.nextAid++,name:a.name,estimatedHours:a.hours,startDate:a.date,
+      baselineEnd:'',resourceId:a.rid,projectId:a.proj||0,type:a.type,priority:a.priority,
+      predecessorId:a.pred||0,done:false,suspended:false,suspendedReason:'',suspensions:[],
+      deviations:[],progress:0,completedDate:''};
+    state.activities.push(act);
+  });
+  // set baseline
+  const sched=computeSchedule();
+  state.activities.forEach(a=>{ if(!a.baselineEnd) a.baselineEnd=sched[a.id]?.end||a.startDate; });
   pushState();
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  DATE UTILS
-// ════════════════════════════════════════════════
-function todayStr(){ return new Date().toISOString().split('T')[0]; }
-function fmtDate(s){
-  if(!s) return '';
-  return new Date(s+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
-}
+// ══════════════════════════════════════════════
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function fmtDate(s){if(!s)return'—';return new Date(s+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function fmtShort(s){if(!s)return'—';const d=new Date(s+'T00:00:00');return`${d.getDate()}/${d.getMonth()+1}`;}
+
 function addWorkHours(startStr,totalHours,hoursPerDay){
-  if(!startStr||!hoursPerDay||totalHours<=0) return startStr;
-  let d=new Date(startStr+'T00:00:00'), rem=totalHours;
-  while(rem>hoursPerDay){
-    d.setDate(d.getDate()+1);
-    while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
-    rem-=hoursPerDay;
-  }
+  if(!startStr||!hoursPerDay||totalHours<=0)return startStr;
+  let d=new Date(startStr+'T00:00:00'),rem=totalHours;
+  while(rem>hoursPerDay){d.setDate(d.getDate()+1);while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);rem-=hoursPerDay;}
   return d.toISOString().split('T')[0];
 }
 function nextWorkDay(dateStr){
-  const d=new Date(dateStr+'T00:00:00');
-  d.setDate(d.getDate()+1);
-  while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
+  const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+1);
+  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
   return d.toISOString().split('T')[0];
 }
-function initials(n){ return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join(''); }
+function daysDiff(a,b){return Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000);}
+function initials(n){return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');}
 
-// ════════════════════════════════════════════════
-//  SCHEDULING
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  ACTIVITY STATUS
+// ══════════════════════════════════════════════
+function getActivityStatus(act,sched){
+  if(act.suspended) return 'suspended';
+  if(act.done) return 'done';
+  const t=todayStr();
+  const s=sched[act.id];
+  const effEnd=s?.end||act.startDate;
+  const effStart=s?.start||act.startDate;
+  if(effEnd<t) return 'overdue';
+  if(effStart>t) return 'waiting';
+  return 'active';
+}
+
+// ══════════════════════════════════════════════
+//  SCHEDULING ENGINE
+// ══════════════════════════════════════════════
 function computeSchedule(){
-  const sched={}, byRes={};
-  state.activities.forEach(a=>{ if(!byRes[a.resourceId]) byRes[a.resourceId]=[]; byRes[a.resourceId].push(a); });
+  const sched={},byRes={};
+  state.activities.forEach(a=>{if(!byRes[a.resourceId])byRes[a.resourceId]=[];byRes[a.resourceId].push(a);});
   Object.values(byRes).forEach(arr=>arr.sort((a,b)=>a.priority!==b.priority?a.priority-b.priority:a.id-b.id));
-  for(let pass=0;pass<25;pass++){
+
+  for(let pass=0;pass<30;pass++){
     let changed=false;
     state.activities.forEach(act=>{
-      const res=state.resources.find(r=>r.id===act.resourceId); if(!res) return;
+      const res=state.resources.find(r=>r.id===act.resourceId);if(!res)return;
       let earliest=act.startDate;
-      if(act.predecessorId){ const ps=sched[act.predecessorId]; if(ps){ const a=nextWorkDay(ps.end); if(a>earliest) earliest=a; } }
-      const queue=(byRes[act.resourceId]||[]).filter(x=>!x.done);
+
+      // if done early, use completedDate as end (successor can start next day)
+      if(act.done&&act.completedDate){
+        sched[act.id]={start:act.startDate,end:act.completedDate,early:act.completedDate<(sched[act.id]?.end||act.startDate)};
+        return;
+      }
+      // suspended: freeze, don't advance
+      if(act.suspended){
+        const totalH=act.estimatedHours+act.deviations.reduce((s,d)=>s+d.hours,0);
+        const end=addWorkHours(earliest,totalH,res.hours);
+        sched[act.id]={start:earliest,end,suspended:true};
+        return;
+      }
+
+      if(act.predecessorId&&act.predecessorId>0){
+        const ps=sched[act.predecessorId];
+        if(ps){const a=nextWorkDay(ps.end);if(a>earliest)earliest=a;}
+      }
+      const queue=(byRes[act.resourceId]||[]).filter(x=>!x.done&&!x.suspended);
       const myIdx=queue.indexOf(act);
-      for(let i=0;i<myIdx;i++){ const ps=sched[queue[i].id]; if(ps&&ps.end>=earliest){ const a=nextWorkDay(ps.end); if(a>earliest) earliest=a; } }
+      for(let i=0;i<myIdx;i++){const ps=sched[queue[i].id];if(ps&&ps.end>=earliest){const a=nextWorkDay(ps.end);if(a>earliest)earliest=a;}}
+
       const totalH=act.estimatedHours+act.deviations.reduce((s,d)=>s+d.hours,0);
       const end=addWorkHours(earliest,totalH,res.hours);
       const prev=sched[act.id];
-      if(!prev||prev.start!==earliest||prev.end!==end){ sched[act.id]={start:earliest,end}; changed=true; }
+      if(!prev||prev.start!==earliest||prev.end!==end){sched[act.id]={start:earliest,end};changed=true;}
     });
-    if(!changed) break;
+    if(!changed)break;
   }
-  state.activities.filter(a=>a.done).forEach(act=>{
+  // done without completedDate
+  state.activities.filter(a=>a.done&&!a.completedDate).forEach(act=>{
     const res=state.resources.find(r=>r.id===act.resourceId);
     const totalH=act.estimatedHours+act.deviations.reduce((s,d)=>s+d.hours,0);
     sched[act.id]={start:act.startDate,end:res?addWorkHours(act.startDate,totalH,res.hours):act.startDate};
@@ -645,84 +728,138 @@ function computeSchedule(){
 
 function detectOverlaps(sched){
   const out=[],seen=new Set(),byRes={};
-  state.activities.filter(a=>!a.done).forEach(a=>{ if(!byRes[a.resourceId]) byRes[a.resourceId]=[]; byRes[a.resourceId].push(a); });
+  state.activities.filter(a=>!a.done&&!a.suspended).forEach(a=>{if(!byRes[a.resourceId])byRes[a.resourceId]=[];byRes[a.resourceId].push(a);});
   Object.entries(byRes).forEach(([rid,acts])=>{
-    for(let i=0;i<acts.length;i++) for(let j=i+1;j<acts.length;j++){
-      const a=acts[i],b=acts[j],res=state.resources.find(r=>r.id==rid); if(!res) continue;
+    for(let i=0;i<acts.length;i++)for(let j=i+1;j<acts.length;j++){
+      const a=acts[i],b=acts[j],res=state.resources.find(r=>r.id==rid);if(!res)continue;
       const aEnd=addWorkHours(a.startDate,a.estimatedHours,res.hours);
-      if(a.startDate<=b.startDate&&b.startDate<=aEnd&&!a.predecessorId&&!b.predecessorId&&a.predecessorId!==b.id&&b.predecessorId!==a.id){
+      if(a.startDate<=b.startDate&&b.startDate<=aEnd&&!(a.predecessorId>0)&&!(b.predecessorId>0)&&a.predecessorId!==b.id&&b.predecessorId!==a.id){
         const key=[a.id,b.id].sort().join('-');
-        if(!seen.has(key)){ seen.add(key); out.push({rid:parseInt(rid),aids:[a.id,b.id]}); }
+        if(!seen.has(key)){seen.add(key);out.push({rid:parseInt(rid),aids:[a.id,b.id]});}
       }
     }
   });
   return out;
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  NOTIFICATIONS
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function buildNotifications(sched){
-  const t=todayStr(), notifs=[];
-  state.activities.filter(a=>!a.done).forEach(a=>{
-    const s=sched[a.id]; if(!s) return;
-    const daysLeft=Math.round((new Date(s.end+'T00:00:00')-new Date(t+'T00:00:00'))/86400000);
+  const t=todayStr(),notifs=[];
+  state.activities.filter(a=>!a.done&&!a.suspended).forEach(a=>{
+    const s=sched[a.id];if(!s)return;
+    const daysLeft=daysDiff(s.end,t);
     const res=state.resources.find(r=>r.id===a.resourceId);
-    if(s.end<t)           notifs.push({icon:'🔴',text:`<b>${a.name}</b> está atrasada`,sub:`Prazo: ${fmtDate(s.end)} · ${res?.name||''}`,pri:0});
+    if(s.end<t)           notifs.push({icon:'🔴',text:`<b>${a.name}</b> está atrasada`,sub:`${fmtDate(s.end)} · ${res?.name||''}`,pri:0});
     else if(daysLeft===0) notifs.push({icon:'🟠',text:`<b>${a.name}</b> vence hoje`,sub:`Recurso: ${res?.name||''}`,pri:1});
-    else if(daysLeft<=2)  notifs.push({icon:'🟡',text:`<b>${a.name}</b> vence em ${daysLeft} dia(s)`,sub:`Prazo: ${fmtDate(s.end)} · ${res?.name||''}`,pri:2});
+    else if(daysLeft<=2)  notifs.push({icon:'🟡',text:`<b>${a.name}</b> vence em ${daysLeft} dia(s)`,sub:`${fmtDate(s.end)} · ${res?.name||''}`,pri:2});
+  });
+  state.activities.filter(a=>a.suspended).forEach(a=>{
+    notifs.push({icon:'⏸',text:`<b>${a.name}</b> está paralisada`,sub:`Motivo: ${a.suspendedReason||'não informado'}`,pri:1});
   });
   detectOverlaps(sched).forEach(ov=>{
     const res=state.resources.find(r=>r.id===ov.rid);
-    notifs.push({icon:'⚠️',text:`Sobreposição · <b>${res?.name||''}</b>`,sub:ov.aids.map(id=>state.activities.find(a=>a.id===id)?.name||'').join(' × '),pri:1});
+    notifs.push({icon:'⚠️',text:`Sobreposição · <b>${res?.name||''}</b>`,sub:ov.aids.map(id=>state.activities.find(a=>a.id===id)?.name||'').join(' × '),pri:2});
   });
   return notifs.sort((a,b)=>a.pri-b.pri);
 }
+
 function renderNotifications(sched){
   const notifs=buildNotifications(sched);
-  const badge=document.getElementById('notif-count');
-  const list=document.getElementById('notif-list');
-  if(notifs.length){ badge.textContent=notifs.length; badge.classList.remove('hidden'); }
-  else badge.classList.add('hidden');
+  const badge=document.getElementById('notif-count'),list=document.getElementById('notif-list');
+  if(notifs.length){badge.textContent=notifs.length;badge.classList.remove('hidden');}else badge.classList.add('hidden');
   list.innerHTML=notifs.length
     ?notifs.map(n=>`<div class="notif-item"><span class="notif-icon">${n.icon}</span><div class="notif-text"><div>${n.text}</div><div class="notif-sub">${n.sub}</div></div></div>`).join('')
     :'<div class="notif-empty">Nenhuma notificação 🎉</div>';
 }
-function toggleNotifPanel(){ document.getElementById('notif-panel').classList.toggle('hidden'); }
-function closeNotifPanel(){ document.getElementById('notif-panel').classList.add('hidden'); }
+function toggleNotifPanel(){document.getElementById('notif-panel').classList.toggle('hidden');}
+function closeNotifPanel(){document.getElementById('notif-panel').classList.add('hidden');}
 document.addEventListener('click',e=>{
   const p=document.getElementById('notif-panel'),b=document.getElementById('notif-toggle-btn');
-  if(!p.classList.contains('hidden')&&!p.contains(e.target)&&!b.contains(e.target)) p.classList.add('hidden');
+  if(!p.classList.contains('hidden')&&!p.contains(e.target)&&!b.contains(e.target))p.classList.add('hidden');
 });
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  PROJECTS
+// ══════════════════════════════════════════════
+function addProject(){
+  const name=document.getElementById('p-name').value.trim();
+  const desc=document.getElementById('p-desc').value.trim();
+  const startDate=document.getElementById('p-start').value;
+  const endDate=document.getElementById('p-end').value;
+  if(!name)return alert('Informe o nome do projeto.');
+  if(!startDate||!endDate)return alert('Informe as datas de início e fim.');
+  state.projects.push({id:state.nextPid++,name,desc,startDate,endDate,color:PROJ_COLORS[(state.projects.length)%PROJ_COLORS.length]});
+  document.getElementById('p-name').value='';
+  document.getElementById('p-desc').value='';
+  pushState();
+}
+function deleteProject(id){
+  if(!confirm('Excluir projeto? As atividades vinculadas ficarão sem projeto.'))return;
+  state.projects=state.projects.filter(p=>p.id!==id);
+  state.activities.forEach(a=>{if(a.projectId===id)a.projectId=0;});
+  pushState();
+}
+
+function renderProjectList(){
+  const el=document.getElementById('project-list');
+  const sel=document.getElementById('a-project');
+  const fP=document.getElementById('filter-project');
+  const gP=document.getElementById('gantt-filter-proj');
+  const pvA=sel.value,pvF=fP.value,pvG=gP.value;
+  sel.innerHTML='<option value="">Demanda geral</option>';
+  fP.innerHTML='<option value="">Todos os projetos</option>';
+  gP.innerHTML='<option value="">Todos os projetos</option>';
+  if(!state.projects.length){el.innerHTML='<div class="empty">Nenhum projeto cadastrado.</div>';return;}
+  el.innerHTML=state.projects.map(p=>{
+    const acts=state.activities.filter(a=>a.projectId===p.id);
+    const done=acts.filter(a=>a.done).length;
+    return `<div class="proj-item" style="border-left-color:${p.color}" onclick="selectProject(${p.id})">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="proj-name">${p.name}</div>
+        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteProject(${p.id})">✕</button>
+      </div>
+      <div class="proj-dates">${fmtDate(p.startDate)} → ${fmtDate(p.endDate)}</div>
+      <div class="proj-dates" style="margin-top:2px">${done}/${acts.length} atividades concluídas</div>
+    </div>`;
+  }).join('');
+  state.projects.forEach(p=>{
+    const mk=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t||p.name;return o;};
+    sel.appendChild(mk(p.id));fP.appendChild(mk(p.id));gP.appendChild(mk(p.id));
+  });
+  if(pvA)sel.value=pvA;if(pvF)fP.value=pvF;if(pvG)gP.value=pvG;
+}
+
+// ══════════════════════════════════════════════
 //  RESOURCES
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function addResource(){
   const name=document.getElementById('r-name').value.trim();
   const hours=parseFloat(document.getElementById('r-hours').value)||8;
-  if(!name) return alert('Insira o nome do recurso.');
+  if(!name)return alert('Insira o nome do recurso.');
   state.resources.push({id:state.nextRid++,name,hours,color:COLORS[state.resources.length%COLORS.length]});
   document.getElementById('r-name').value='';
   pushState();
 }
 function deleteResource(id){
-  if(!confirm('Excluir este recurso e suas atividades?')) return;
+  if(!confirm('Excluir este recurso?'))return;
   state.resources=state.resources.filter(r=>r.id!==id);
   state.activities=state.activities.filter(a=>a.resourceId!==id);
   pushState();
 }
+
 function renderResourceList(){
   const el=document.getElementById('resource-list');
-  const sR=document.getElementById('a-resource'), fR=document.getElementById('filter-resource');
-  const gR=document.getElementById('gantt-filter-res'), sP=document.getElementById('a-pred');
-  const pvR=sR.value, pvF=fR.value, pvG=gR.value, pvP=sP.value;
+  const sR=document.getElementById('a-resource'),fR=document.getElementById('filter-resource');
+  const gR=document.getElementById('gantt-filter-res');
+  const pvR=sR.value,pvF=fR.value,pvG=gR.value;
   sR.innerHTML='<option value="">Selecionar...</option>';
   fR.innerHTML='<option value="">Todos os recursos</option>';
   gR.innerHTML='<option value="">Todos os recursos</option>';
-  if(!state.resources.length){ el.innerHTML='<div class="empty">Nenhum recurso cadastrado.</div>'; return; }
+  if(!state.resources.length){el.innerHTML='<div class="empty">Nenhum recurso.</div>';return;}
   el.innerHTML=state.resources.map(r=>{
-    const acts=state.activities.filter(a=>a.resourceId===r.id&&!a.done);
+    const acts=state.activities.filter(a=>a.resourceId===r.id&&!a.done&&!a.suspended);
     const totalH=acts.reduce((s,a)=>s+a.estimatedHours+a.deviations.reduce((ss,d)=>ss+d.hours,0),0);
     const pct=Math.min((totalH/(r.hours*5))*100,100);
     const fc=pct>85?'var(--danger)':pct>60?'var(--warning)':'var(--success)';
@@ -737,18 +874,28 @@ function renderResourceList(){
     </div>`;
   }).join('');
   state.resources.forEach(r=>{
-    const mk=v=>{ const o=document.createElement('option'); o.value=v; o.textContent=r.name; return o; };
-    sR.appendChild(mk(r.id)); fR.appendChild(mk(r.id)); gR.appendChild(mk(r.id));
+    const mk=v=>{const o=document.createElement('option');o.value=v;o.textContent=r.name;return o;};
+    sR.appendChild(mk(r.id));fR.appendChild(mk(r.id));gR.appendChild(mk(r.id));
   });
-  if(pvR) sR.value=pvR; if(pvF) fR.value=pvF; if(pvG) gR.value=pvG;
-  sP.innerHTML='<option value="">Nenhuma</option>';
-  state.activities.forEach(a=>{ const o=document.createElement('option'); o.value=a.id; o.textContent=`#${a.id} ${a.name.slice(0,28)}`; sP.appendChild(o); });
-  if(pvP) sP.value=pvP;
+  if(pvR)sR.value=pvR;if(pvF)fR.value=pvF;if(pvG)gR.value=pvG;
+  // pred select
+  onProjectChange();
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  ACTIVITIES
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+function onProjectChange(){
+  const pid=parseInt(document.getElementById('a-project').value)||0;
+  const sP=document.getElementById('a-pred');
+  const prev=sP.value;
+  sP.innerHTML='<option value="">Nenhuma</option>';
+  // show activities from same project (or all if no project selected)
+  const pool=(pid>0)?state.activities.filter(a=>a.projectId===pid):state.activities;
+  pool.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=`#${a.id} ${a.name.slice(0,30)}`;sP.appendChild(o);});
+  if(prev)sP.value=prev;
+}
+
 function addActivity(){
   const name=document.getElementById('a-name').value.trim();
   const hours=parseFloat(document.getElementById('a-hours').value)||8;
@@ -756,145 +903,206 @@ function addActivity(){
   const rid=parseInt(document.getElementById('a-resource').value);
   const type=document.getElementById('a-type').value;
   const priority=parseInt(document.getElementById('a-priority').value)||2;
-  const predId=parseInt(document.getElementById('a-pred').value)||null;
-  if(!name) return alert('Insira a descrição.');
-  if(!date) return alert('Selecione a data de início.');
-  if(!rid)  return alert('Selecione um recurso.');
-  const act={id:state.nextAid++,name,estimatedHours:hours,startDate:date,resourceId:rid,type,priority,predecessorId:predId,done:false,deviations:[],progress:0};
+  const predId=parseInt(document.getElementById('a-pred').value)||0;
+  const projId=parseInt(document.getElementById('a-project').value)||0;
+  if(!name)return alert('Insira a descrição.');
+  if(!date)return alert('Selecione a data de início.');
+  if(!rid)return alert('Selecione um recurso.');
+  const act={id:state.nextAid++,name,estimatedHours:hours,startDate:date,baselineEnd:'',
+    resourceId:rid,projectId:projId,type,priority,predecessorId:predId,
+    done:false,suspended:false,suspendedReason:'',suspensions:[],deviations:[],progress:0,completedDate:''};
   state.activities.push(act);
   document.getElementById('a-name').value='';
-  pushState();
+  // set baseline after scheduling
   const sched=computeSchedule();
+  act.baselineEnd=sched[act.id]?.end||date;
+  pushState();
   const ov=detectOverlaps(sched).find(o=>o.aids.includes(act.id));
-  if(ov) openPriModal(ov);
+  if(ov)openPriModal(ov);
 }
-function toggleDone(id){ const a=state.activities.find(a=>a.id===id); if(a){ a.done=!a.done; pushState(); } }
+
+function toggleDone(id){
+  const a=state.activities.find(a=>a.id===id);
+  if(!a)return;
+  if(!a.done){
+    a.done=true;
+    a.suspended=false;
+    a.completedDate=todayStr();
+    a.progress=100;
+  } else {
+    a.done=false;
+    a.completedDate='';
+    a.progress=a.progress===100?90:a.progress;
+  }
+  pushState();
+}
+
 function deleteActivity(id){
-  state.activities.forEach(a=>{ if(a.predecessorId===id) a.predecessorId=null; });
+  state.activities.forEach(a=>{if(a.predecessorId===id)a.predecessorId=0;});
   state.activities=state.activities.filter(a=>a.id!==id);
   pushState();
 }
+
 function setProgress(id,val){
-  const a=state.activities.find(a=>a.id===id); if(!a) return;
+  const a=state.activities.find(a=>a.id===id);if(!a)return;
   a.progress=parseInt(val);
-  document.querySelectorAll(`[data-prog-id="${id}"]`).forEach(el=>{ if(el.tagName==='DIV') el.style.width=val+'%'; if(el.tagName==='SPAN') el.textContent=val+'%'; });
-  clearTimeout(a._pt); a._pt=setTimeout(()=>pushState(),700);
+  document.querySelectorAll(`[data-prog-id="${id}"]`).forEach(el=>{if(el.tagName==='DIV')el.style.width=val+'%';if(el.tagName==='SPAN')el.textContent=val+'%';});
+  clearTimeout(a._pt);a._pt=setTimeout(()=>pushState(),700);
 }
+
+// ── SUSPENSION ──
+function openSusModal(aid){
+  _susAid=aid;
+  const act=state.activities.find(a=>a.id===aid);
+  const isSuspended=act.suspended;
+  document.getElementById('sus-title').textContent=isSuspended?'▶ Retomar Atividade':'⏸ Paralisar Atividade';
+  document.getElementById('sus-subtitle').textContent=isSuspended
+    ?'A atividade será retomada e o cronograma recalculado.'
+    :'Informe o motivo da paralisação. A atividade ficará congelada até ser retomada.';
+  document.getElementById('sus-reason').value='';
+  document.getElementById('sus-reason').placeholder=isSuspended?'Motivo da retomada (opcional)':'Ex: Aguardando aprovação da diretoria';
+  document.getElementById('sus-action-btn').textContent=isSuspended?'Retomar':'Paralisar';
+  // history
+  const el=document.getElementById('sus-history');
+  el.innerHTML=act.suspensions?.length
+    ?act.suspensions.map(s=>`<div class="dev-item"><div><div style="font-size:12px;font-weight:600">${s.action==='suspend'?'⏸ Paralisado':'▶ Retomado'}: ${s.reason||'—'}</div><div style="font-size:10.5px;color:var(--muted)">${s.date}</div></div></div>`).join('')
+    :'<div style="color:var(--muted2);font-size:11.5px;text-align:center;padding:6px">Sem histórico</div>';
+  document.getElementById('sus-modal').classList.remove('hidden');
+}
+function closeSusModal(){document.getElementById('sus-modal').classList.add('hidden');_susAid=null;}
+function applySuspension(){
+  const act=state.activities.find(a=>a.id===_susAid);if(!act)return;
+  const reason=document.getElementById('sus-reason').value.trim();
+  const isSuspended=act.suspended;
+  if(!isSuspended&&!reason){alert('Informe o motivo da paralisação.');return;}
+  if(!act.suspensions)act.suspensions=[];
+  act.suspensions.push({action:isSuspended?'resume':'suspend',reason,date:new Date().toLocaleDateString('pt-BR')});
+  act.suspended=!isSuspended;
+  act.suspendedReason=isSuspended?'':reason;
+  pushState();closeSusModal();
+}
+
+// ── BUILD CARD HTML ──
 function buildActivityHTML(act,sched){
   const res=state.resources.find(r=>r.id===act.resourceId);
+  const proj=state.projects.find(p=>p.id===act.projectId);
   const color=res?.color||'#2f6be0';
-  const t=todayStr(), s=sched[act.id];
-  const effStart=s?.start||act.startDate, effEnd=s?.end||act.startDate;
-  const isOverdue=!act.done&&effEnd<t, isWaiting=!act.done&&effStart>t;
+  const status=getActivityStatus(act,sched);
+  const st=STATUS[status]||STATUS.active;
+  const s=sched[act.id];
+  const effStart=s?.start||act.startDate;
+  const effEnd=s?.end||act.startDate;
   const totalDev=act.deviations.reduce((ss,d)=>ss+d.hours,0);
-  const pred=act.predecessorId?state.activities.find(a=>a.id===act.predecessorId):null;
-  let sClass='',tagClass='',tagLbl='Em andamento';
-  if(act.done){sClass='done';tagClass='done';tagLbl='Concluído';}
-  else if(isOverdue){sClass='overdue';tagClass='overdue';tagLbl='Atrasada';}
-  else if(isWaiting){sClass='waiting';tagClass='waiting';tagLbl='Aguardando';}
+  const pred=(act.predecessorId>0)?state.activities.find(a=>a.id===act.predecessorId):false;
+  const isReprog=act.baselineEnd&&effEnd!==act.baselineEnd;
   const pr=PRI[act.priority||2];
-  return `<div class="activity-item ${sClass}" style="border-left-color:${color}">
+  return `<div class="activity-item ${st.itemCls}" style="border-left-color:${color}">
     <div class="activity-header">
       <div class="activity-name">${act.name}</div>
-      <span class="tag ${tagClass}">${tagLbl}</span>
+      <span class="tag ${st.tagCls}">${st.label}</span>
       <span class="priority-badge ${pr.cls}">${pr.label}</span>
-      <button class="btn btn-warning btn-xs" onclick="openDevModal(${act.id})" title="Registrar desvio">⚡</button>
-      <button class="btn btn-ghost btn-xs" onclick="toggleDone(${act.id})">${act.done?'↩':'✓'}</button>
+      ${proj?`<span class="proj-badge" style="background:${proj.color}18;color:${proj.color}">📁 ${proj.name.slice(0,15)}</span>`:''}
+      <button class="btn btn-warning btn-xs" onclick="openDevModal(${act.id})" title="Desvio">⚡</button>
+      <button class="btn btn-ghost btn-xs" onclick="openSusModal(${act.id})" title="${act.suspended?'Retomar':'Paralisar'}">${act.suspended?'▶':'⏸'}</button>
+      <button class="btn btn-ghost btn-xs" onclick="toggleDone(${act.id})" title="${act.done?'Reabrir':'Concluir'}">${act.done?'↩':'✓'}</button>
       <button class="btn btn-danger btn-xs" onclick="deleteActivity(${act.id})">✕</button>
     </div>
     <div class="activity-meta">
       <span>👤 ${res?.name||'—'}</span>
-      <span>🕒 ${act.estimatedHours}h${totalDev>0?` <span style="color:var(--warning)">+${totalDev}h desvio</span>`:''}</span>
-      ${effStart!==act.startDate?`<span>📅 Reprogramado: <b>${fmtDate(effStart)}</b></span>`:`<span>📅 Início: ${fmtDate(act.startDate)}</span>`}
-      <span>🏁 Conclusão: <b>${fmtDate(effEnd)}</b></span>
+      <span>🕒 ${act.estimatedHours}h${totalDev>0?` <span style="color:var(--warning)">+${totalDev}h</span>`:''}</span>
+      ${effStart!==act.startDate?`<span>📅 Reprog.: <b>${fmtDate(effStart)}</b></span>`:`<span>📅 ${fmtDate(act.startDate)}</span>`}
+      <span>🏁 <b>${fmtDate(effEnd)}</b></span>
+      ${isReprog?`<span style="color:${effEnd>act.baselineEnd?'var(--danger)':'var(--success)'}">Baseline: ${fmtDate(act.baselineEnd)} ${effEnd>act.baselineEnd?'⚠':'✓'}</span>`:''}
       <span>🔖 ${act.type}</span>
     </div>
-    ${pred?`<div style="margin-top:4px"><span class="dep-badge">⛓ Após: #${pred.id} ${pred.name.slice(0,28)}</span></div>`:''}
-    ${act.deviations.length?`<div style="margin-top:4px;font-size:10.5px;color:var(--warning)">⚠ ${act.deviations.length} desvio(s) · data recalculada</div>`:''}
+    ${pred?`<div style="margin-top:4px"><span class="dep-badge">⛓ Após: #${pred.id} ${pred.name.slice(0,25)}</span></div>`:''}
+    ${act.suspended?`<div style="margin-top:4px;font-size:10.5px;color:var(--suspended);font-weight:600">⏸ Paralisado: ${act.suspendedReason}</div>`:''}
+    ${act.deviations.length?`<div style="margin-top:4px;font-size:10.5px;color:var(--warning)">⚠ ${act.deviations.length} desvio(s)</div>`:''}
+    ${act.done&&act.completedDate?`<div style="margin-top:4px;font-size:10.5px;color:var(--success)">✅ Concluído em ${fmtDate(act.completedDate)}</div>`:''}
     <div style="margin-top:8px">
       <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-bottom:3px">
         <span>Progresso</span><span data-prog-id="${act.id}">${act.progress}%</span>
       </div>
-      <input type="range" min="0" max="100" value="${act.progress}" oninput="setProgress(${act.id},this.value)" style="width:100%;accent-color:${color};margin-bottom:3px">
+      <input type="range" min="0" max="100" value="${act.progress}" oninput="setProgress(${act.id},this.value)" style="width:100%;accent-color:${color};margin-bottom:3px" ${act.done||act.suspended?'disabled':''}>
       <div class="progress-bar"><div class="progress-fill" data-prog-id="${act.id}" style="width:${act.progress}%;background:${color}"></div></div>
     </div>
   </div>`;
 }
+
 function renderActivityList(containerId,allMode){
   const el=document.getElementById(containerId);
-  const t=todayStr(), sched=computeSchedule();
-  const filterRid=allMode?parseInt(document.getElementById('filter-resource').value)||null:null;
+  const t=todayStr(),sched=computeSchedule();
+  const filterRid=allMode?parseInt(document.getElementById('filter-resource').value)||0:0;
+  const filterPid=allMode?parseInt(document.getElementById('filter-project').value)||0:0;
   const filterStatus=allMode?document.getElementById('filter-status').value:'';
   let acts=[...state.activities];
-  if(filterRid) acts=acts.filter(a=>a.resourceId===filterRid);
-  if(!allMode)  acts=acts.filter(a=>{ const s=sched[a.id]; return s&&s.start<=t&&!a.done; });
-  if(filterStatus==='active')  acts=acts.filter(a=>!a.done&&sched[a.id]?.end>=t);
+  if(filterRid)acts=acts.filter(a=>a.resourceId===filterRid);
+  if(filterPid)acts=acts.filter(a=>a.projectId===filterPid);
+  if(!allMode)acts=acts.filter(a=>{const s=sched[a.id];return s&&s.start<=t&&!a.done&&!a.suspended;});
+  if(filterStatus==='active')  acts=acts.filter(a=>getActivityStatus(a,sched)==='active');
   if(filterStatus==='done')    acts=acts.filter(a=>a.done);
-  if(filterStatus==='overdue') acts=acts.filter(a=>!a.done&&sched[a.id]?.end<t);
-  if(filterStatus==='waiting') acts=acts.filter(a=>!a.done&&sched[a.id]?.start>t);
+  if(filterStatus==='overdue') acts=acts.filter(a=>getActivityStatus(a,sched)==='overdue');
+  if(filterStatus==='waiting') acts=acts.filter(a=>getActivityStatus(a,sched)==='waiting');
+  if(filterStatus==='suspended')acts=acts.filter(a=>a.suspended);
   acts.sort((a,b)=>(sched[a.id]?.start||a.startDate).localeCompare(sched[b.id]?.start||b.startDate));
-  if(!acts.length){ el.innerHTML='<div class="empty">Nenhuma atividade encontrada.</div>'; return; }
+  if(!acts.length){el.innerHTML='<div class="empty">Nenhuma atividade encontrada.</div>';return;}
   el.innerHTML=acts.map(a=>buildActivityHTML(a,sched)).join('');
 }
-function renderActivities(){ renderActivityList('activities-list',true); }
-function renderDashActivities(){ renderActivityList('dash-activities',false); }
+function renderActivities(){renderActivityList('activities-list',true);}
+function renderDashActivities(){renderActivityList('dash-activities',false);}
 
-// ════════════════════════════════════════════════
-//  OVERLAP ALERTS
-// ════════════════════════════════════════════════
+// ── OVERLAP ALERTS ──
 function renderOverlapAlerts(sched){
   const el=document.getElementById('overlap-alerts');
   const ovs=detectOverlaps(sched);
-  if(!ovs.length){ el.innerHTML=''; return; }
+  if(!ovs.length){el.innerHTML='';return;}
   el.innerHTML=ovs.map(ov=>{
     const res=state.resources.find(r=>r.id===ov.rid);
     const names=ov.aids.map(id=>state.activities.find(a=>a.id===id)?.name||'').join(' × ');
-    return `<div class="overlap-alert">⚠️ <b>Sobreposição</b> para <b>${res?.name||''}</b>: ${names}. Sequenciado por prioridade.
-      <button class="btn btn-xs btn-warning" style="margin-left:6px" onclick='openPriModal(${JSON.stringify(ov)})'>Reordenar</button>
+    const key=registerOv(ov);
+    return `<div class="overlap-alert">⚠️ <b>Sobreposição</b> para <b>${res?.name||''}</b>: ${names}.
+      <button class="btn btn-xs btn-warning" style="margin-left:6px" onclick="openPriModalByKey('${key}')">Reordenar</button>
     </div>`;
   }).join('');
 }
 
-// ════════════════════════════════════════════════
-//  DEVIATION MODAL
-// ════════════════════════════════════════════════
+// ── DEVIATION MODAL ──
 function openDevModal(aid){
-  _devAid=aid;
-  const act=state.activities.find(a=>a.id===aid);
-  document.getElementById('dev-desc').value='';
-  document.getElementById('dev-hours').value='1';
-  renderDevHistory(act);
-  document.getElementById('dev-modal').classList.remove('hidden');
+  _devAid=aid;const act=state.activities.find(a=>a.id===aid);
+  document.getElementById('dev-desc').value='';document.getElementById('dev-hours').value='1';
+  renderDevHistory(act);document.getElementById('dev-modal').classList.remove('hidden');
 }
-function closeDevModal(){ document.getElementById('dev-modal').classList.add('hidden'); }
+function closeDevModal(){document.getElementById('dev-modal').classList.add('hidden');}
 function addDeviation(){
   const desc=document.getElementById('dev-desc').value.trim();
   const hours=parseFloat(document.getElementById('dev-hours').value)||1;
-  if(!desc) return alert('Descreva o desvio.');
+  if(!desc)return alert('Descreva o desvio.');
   const act=state.activities.find(a=>a.id===_devAid);
   act.deviations.push({desc,hours,date:new Date().toLocaleDateString('pt-BR')});
   document.getElementById('dev-desc').value='';
-  renderDevHistory(act);
-  pushState();
+  renderDevHistory(act);pushState();
 }
 function renderDevHistory(act){
   const el=document.getElementById('dev-history');
-  if(!act.deviations.length){ el.innerHTML='<div style="color:var(--muted2);font-size:11.5px;text-align:center;padding:8px">Nenhum desvio ainda</div>'; return; }
+  if(!act.deviations.length){el.innerHTML='<div style="color:var(--muted2);font-size:11.5px;text-align:center;padding:8px">Nenhum desvio ainda</div>';return;}
   el.innerHTML=act.deviations.map(d=>`<div class="dev-item">
     <div><div style="font-size:12px;font-weight:600">${d.desc}</div><div style="font-size:10.5px;color:var(--muted)">${d.date}</div></div>
     <span style="color:var(--warning);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600">+${d.hours}h</span>
   </div>`).join('');
 }
 
-// ════════════════════════════════════════════════
-//  PRIORITY MODAL
-// ════════════════════════════════════════════════
+// ── PRIORITY MODAL ──
+// ── OVERLAP REGISTRY (avoids JSON.stringify in onclick) ──
+const _ovRegistry={};
+function registerOv(ov){const key=`${ov.rid}_${ov.aids.join('_')}`;_ovRegistry[key]=ov;return key;}
+function openPriModalByKey(key){const ov=_ovRegistry[key];if(ov)openPriModal(ov);}
+
 function openPriModal(ov){
   _priContext=ov;
   const res=state.resources.find(r=>r.id===ov.rid);
   document.getElementById('pri-desc').textContent=`${res?.name||'Este recurso'} tem atividades sobrepostas. Alta prioridade executa primeiro.`;
   document.getElementById('pri-list').innerHTML=ov.aids.map(id=>{
-    const a=state.activities.find(x=>x.id===id); if(!a) return '';
+    const a=state.activities.find(x=>x.id===id);if(!a)return'';
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--bg);border-radius:8px;margin-bottom:7px;border:1px solid var(--border)">
       <div style="flex:1"><div style="font-weight:600;font-size:13px">${a.name}</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">${a.estimatedHours}h · ${fmtDate(a.startDate)}</div></div>
       <select id="pri-sel-${id}" style="width:115px">
@@ -906,81 +1114,246 @@ function openPriModal(ov){
   }).join('');
   document.getElementById('pri-modal').classList.remove('hidden');
 }
-function closePriModal(){ document.getElementById('pri-modal').classList.add('hidden'); _priContext=null; }
+function closePriModal(){document.getElementById('pri-modal').classList.add('hidden');_priContext=null;}
 function applyPriority(){
-  if(!_priContext) return;
-  _priContext.aids.forEach(id=>{ const sel=document.getElementById('pri-sel-'+id); if(sel){ const a=state.activities.find(x=>x.id===id); if(a) a.priority=parseInt(sel.value); } });
-  pushState(); closePriModal();
+  if(!_priContext)return;
+  _priContext.aids.forEach(id=>{const sel=document.getElementById('pri-sel-'+id);if(sel){const a=state.activities.find(x=>x.id===id);if(a)a.priority=parseInt(sel.value);}});
+  pushState();closePriModal();
 }
 
-// ════════════════════════════════════════════════
-//  GANTT
-// ════════════════════════════════════════════════
-function renderGantt(){
-  const el=document.getElementById('gantt-container');
-  if(!state.activities.length){ el.innerHTML='<div class="empty">Nenhuma atividade cadastrada.</div>'; return; }
-  const sched=computeSchedule(), t=todayStr();
-  const filterRid=parseInt(document.getElementById('gantt-filter-res').value)||null;
-  let acts=[...state.activities];
-  if(filterRid) acts=acts.filter(a=>a.resourceId===filterRid);
-  if(!acts.length){ el.innerHTML='<div class="empty">Nenhuma atividade para este recurso.</div>'; return; }
-  let minD=t, maxD=t;
-  acts.forEach(a=>{ const s=sched[a.id]; if(!s) return; if(s.start<minD) minD=s.start; if(s.end>maxD) maxD=s.end; });
-  const startDt=new Date(minD+'T00:00:00'); startDt.setDate(startDt.getDate()-1);
-  const endDt=new Date(maxD+'T00:00:00'); endDt.setDate(endDt.getDate()+2);
+// ══════════════════════════════════════════════
+//  GANTT BUILDER (shared)
+// ══════════════════════════════════════════════
+function buildGanttGrid(acts,sched,container,showBaseline=false,groupFn=null){
+  if(!acts.length){container.innerHTML='<div class="empty">Nenhuma atividade para exibir.</div>';return;}
+  const t=todayStr();
+  let minD=t,maxD=t;
+  acts.forEach(a=>{
+    const s=sched[a.id];if(!s)return;
+    if(s.start<minD)minD=s.start;if(s.end>maxD)maxD=s.end;
+    if(showBaseline&&a.baselineEnd&&a.baselineEnd>maxD)maxD=a.baselineEnd;
+  });
+  const startDt=new Date(minD+'T00:00:00');startDt.setDate(startDt.getDate()-1);
+  const endDt=new Date(maxD+'T00:00:00');endDt.setDate(endDt.getDate()+3);
   const totalMs=endDt-startDt;
-  const pl=ds=>((new Date(ds+'T00:00:00')-startDt)/totalMs*100).toFixed(3)+'%';
-  const pw=(ds,de)=>{ const a=new Date(ds+'T00:00:00'),b=new Date(de+'T00:00:00'); b.setDate(b.getDate()+1); return(Math.max(0,(b-a)/totalMs*100)).toFixed(3)+'%'; };
-  const days=[]; const cur=new Date(startDt);
-  while(cur<=endDt){ days.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+
+  const pl=ds=>Math.max(0,(new Date(ds+'T00:00:00')-startDt)/totalMs*100).toFixed(3)+'%';
+  const pw=(ds,de)=>{const a=new Date(ds+'T00:00:00'),b=new Date(de+'T00:00:00');b.setDate(b.getDate()+1);return(Math.max(0.3,(b-a)/totalMs*100)).toFixed(3)+'%';};
+
+  const days=[];const cur=new Date(startDt);while(cur<=endDt){days.push(new Date(cur));cur.setDate(cur.getDate()+1);}
   const step=Math.max(1,Math.floor(days.length/14));
   const hdr=days.filter((_,i)=>i%step===0).map(d=>{
     const wk=d.getDay()===0||d.getDay()===6;
-    return `<span style="flex:${step};text-align:center;font-size:9.5px;color:${wk?'var(--muted2)':'var(--muted)'}">${d.getDate()}/${d.getMonth()+1}</span>`;
+    return `<span style="flex:${step};text-align:center;font-size:9px;color:${wk?'var(--muted2)':'var(--muted)'}">${d.getDate()}/${d.getMonth()+1}</span>`;
   }).join('');
-  const wkShades=days.filter(d=>d.getDay()===0||d.getDay()===6).map(d=>{ const ds=d.toISOString().split('T')[0]; return `<div class="gantt-weekend" style="left:${pl(ds)};width:${pw(ds,ds)}"></div>`; }).join('');
+  const wkShades=days.filter(d=>d.getDay()===0||d.getDay()===6).map(d=>{const ds=d.toISOString().split('T')[0];return`<div class="gantt-weekend" style="left:${pl(ds)};width:${pw(ds,ds)}"></div>`;}).join('');
   const todayPl=pl(t);
-  const groups={};
-  state.resources.forEach(r=>{ if(!filterRid||r.id===filterRid) groups[r.id]={res:r,acts:[]}; });
-  acts.forEach(a=>{ if(groups[a.resourceId]) groups[a.resourceId].acts.push(a); });
-  const rows=Object.values(groups).filter(g=>g.acts.length).map(g=>{
-    const grp=`<div class="gantt-group-row"><div class="gantt-group-label" style="color:${g.res.color}">${initials(g.res.name)} ${g.res.name.split(' ')[0]}</div><div class="gantt-group-line"></div></div>`;
-    const actRows=g.acts.map(act=>{
-      const s=sched[act.id]; if(!s) return '';
-      const color=g.res.color, isPushed=s.start!==act.startDate, pr=PRI[act.priority||2];
-      return `<div class="gantt-row">
+
+  // status → gantt bar classes
+  function statusStyle(status){
+    const map={
+      waiting:  'background:#dbeafe;border-color:#3b82f6;color:#1d4ed8',
+      active:   'background:#fef3c7;border-color:#f59e0b;color:#92400e',
+      done:     'background:#d1fae5;border-color:#10b981;color:#065f46',
+      overdue:  'background:#fee2e2;border-color:#ef4444;color:#991b1b',
+      suspended:'background:#f1f5f9;border-color:#94a3b8;color:#475569',
+    };
+    return map[status]||map.active;
+  }
+
+  const groups=groupFn?groupFn(acts):{'':acts};
+  let rows='';
+
+  Object.entries(groups).forEach(([groupLabel,groupActs])=>{
+    if(groupLabel){
+      rows+=`<div class="gantt-group-row">
+        <div class="gantt-group-label" style="color:${groupActs[0]?._groupColor||'var(--accent)'}">${groupLabel}</div>
+        <div class="gantt-group-line"></div>
+      </div>`;
+    }
+    groupActs.forEach(act=>{
+      const s=sched[act.id];if(!s)return;
+      const status=getActivityStatus(act,sched);
+      const style=statusStyle(status);
+      const isPushed=s.start!==act.startDate;
+      const isEarly=act.done&&act.completedDate&&act.completedDate<(act.baselineEnd||act.completedDate);
+      const nameShort=act.name.length>24?act.name.slice(0,22)+'…':act.name;
+      const res=state.resources.find(r=>r.id===act.resourceId);
+      rows+=`<div class="gantt-row">
         <div class="gantt-label-col">
-          <div class="gantt-label" title="${act.name}">${act.name.length>26?act.name.slice(0,24)+'…':act.name}</div>
-          <div class="gantt-sub">${fmtDate(s.start)} → ${fmtDate(s.end)}${isPushed?' <span style="color:var(--warning)">↷</span>':''}</div>
+          <div class="gantt-label" title="${act.name}">${nameShort}</div>
+          <div class="gantt-sub">${fmtShort(s.start)} → ${fmtShort(s.end)}${isPushed?' ↷':''}${isEarly?' ⚡':''}</div>
         </div>
-        <div class="gantt-track">
+        <div class="gantt-track" style="overflow:visible">
           ${wkShades}
           <div class="gantt-today" style="left:${todayPl}"></div>
-          <div class="gantt-bar" style="left:${pl(s.start)};width:${pw(s.start,s.end)};background:${color}1a;border-color:${color};color:${color}" title="${act.name} · ${pr.label}">${pr.label.split(' ')[0]}</div>
-          ${act.deviations.map((_,i)=>`<div class="gantt-bar" style="left:calc(${pl(s.start)} + ${i*1.5}%);width:1.2%;min-width:4px;background:rgba(201,109,0,.35);border-color:var(--warning);z-index:3"></div>`).join('')}
-          ${act.progress>0?`<div style="position:absolute;bottom:2px;left:${pl(s.start)};width:calc(${pw(s.start,s.end)} * ${act.progress/100});height:3px;background:${color};opacity:.5;border-radius:2px"></div>`:''}
+          <div class="gantt-bar" style="left:${pl(s.start)};width:${pw(s.start,s.end)};${style}"
+            onclick="openActivityDetail(${act.id})"
+            title="${act.name} | ${STATUS[status]?.label||status} | ${fmtDate(s.start)} → ${fmtDate(s.end)}${act.baselineEnd?' | Baseline: '+fmtDate(act.baselineEnd):''}">
+            ${act.suspended?'⏸ ':act.done?'✓ ':''}${nameShort}
+          </div>
+          ${showBaseline&&act.baselineEnd&&act.baselineEnd!==s.end
+            ?`<div class="gantt-baseline" style="left:${pl(act.baselineEnd)};width:12px" title="Baseline: ${fmtDate(act.baselineEnd)}"></div>`:''}
+          ${act.deviations.length?`<div class="gantt-bar" style="left:${pl(s.start)};width:1%;min-width:4px;background:rgba(201,109,0,.35);border:1px solid var(--warning);height:6px;top:10px;z-index:4;border-radius:2px" title="${act.deviations.length} desvio(s)"></div>`:''}
         </div>
       </div>`;
-    }).join('');
-    return grp+actRows;
-  }).join('');
-  el.innerHTML=`<div class="gantt-header"><div class="gantt-label-col"></div><div style="flex:1;display:flex">${hdr}</div></div>${rows}`;
+    });
+  });
+
+  container.innerHTML=`<div class="gantt-header-row"><div class="gantt-label-col"></div><div style="flex:1;display:flex">${hdr}</div></div>${rows}`;
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  RESOURCE GANTT
+// ══════════════════════════════════════════════
+function renderResourceGantt(){
+  const el=document.getElementById('gantt-res-container');
+  const sched=computeSchedule();
+  const filterRid=parseInt(document.getElementById('gantt-filter-res').value)||0;
+  let acts=[...state.activities];
+  if(filterRid)acts=acts.filter(a=>a.resourceId===filterRid);
+
+  const groupFn=acts=>{
+    const g={};
+    state.resources.forEach(r=>{
+      const ra=acts.filter(a=>a.resourceId===r.id);
+      if(ra.length){
+        ra.forEach(a=>a._groupColor=r.color);
+        g[`${initials(r.name)} ${r.name.split(' ')[0]}`]=ra;
+      }
+    });
+    return g;
+  };
+  buildGanttGrid(acts,sched,el,false,groupFn);
+}
+
+// ══════════════════════════════════════════════
+//  PROJECT GANTT
+// ══════════════════════════════════════════════
+function renderProjectGantt(){
+  const el=document.getElementById('gantt-proj-container');
+  const healthArea=document.getElementById('proj-health-area');
+  const sched=computeSchedule();
+  const filterPid=parseInt(document.getElementById('gantt-filter-proj').value)||0;
+
+  const projs=filterPid?state.projects.filter(p=>p.id===filterPid):state.projects;
+
+  if(!projs.length&&!state.activities.filter(a=>!(a.projectId>0)).length){
+    el.innerHTML='<div class="empty">Nenhum projeto cadastrado.</div>';
+    healthArea.innerHTML='';return;
+  }
+
+  // Health cards
+  let healthHTML='';
+  projs.forEach(p=>{
+    const acts=state.activities.filter(a=>a.projectId===p.id);
+    const sched2=sched;
+    const lastEnd=acts.reduce((max,a)=>{const e=sched2[a.id]?.end||a.startDate;return e>max?e:max;},p.startDate);
+    const diffD=daysDiff(lastEnd,p.endDate);
+    const diffText=diffD===0?'No prazo':diffD>0?`${diffD}d adiantado`:`${Math.abs(diffD)}d atrasado`;
+    const pillCls=diffD>0?'pill-early':diffD===0?'pill-ok':'pill-danger';
+    const done=acts.filter(a=>a.done).length;
+    const suspended=acts.filter(a=>a.suspended).length;
+    healthHTML+=`<div class="health-card" style="border-left:3px solid ${p.color}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px;color:${p.color};margin-bottom:2px">${p.name}</div>
+        ${p.desc?`<div style="font-size:11px;color:var(--muted)">${p.desc}</div>`:''}
+      </div>
+      <div class="health-stat"><div class="health-val" style="color:var(--muted)">${fmtDate(p.endDate)}</div><div class="health-lbl">Fim previsto (baseline)</div></div>
+      <div class="health-stat"><div class="health-val" style="color:${diffD>=0?'var(--success)':'var(--danger)'}">${fmtDate(lastEnd)}</div><div class="health-lbl">Fim reprogramado</div></div>
+      <div class="health-stat"><div style="margin-bottom:4px"><span class="health-pill ${pillCls}">${diffText}</span></div><div class="health-lbl">${done}/${acts.length} concluídas${suspended>0?` · ${suspended} paralisada(s)`:''}</div></div>
+    </div>`;
+  });
+
+  // Also show general activities
+  const generalActs=state.activities.filter(a=>!(a.projectId>0));
+  if(generalActs.length&&!filterPid){
+    healthHTML+=`<div class="health-card">
+      <div style="flex:1"><div style="font-weight:700;font-size:13px;color:var(--muted)">Demandas Gerais</div><div style="font-size:11px;color:var(--muted2)">${generalActs.length} atividade(s) sem projeto</div></div>
+    </div>`;
+  }
+  healthArea.innerHTML=healthHTML;
+
+  // Build gantt data
+  let allActs=[];
+  const groupFn=acts=>{
+    const g={};
+    projs.forEach(p=>{
+      const pa=acts.filter(a=>a.projectId===p.id);
+      if(pa.length){pa.forEach(a=>a._groupColor=p.color);g[p.name]=pa;}
+    });
+    if(!filterPid){
+      const ga=acts.filter(a=>!(a.projectId>0));
+      if(ga.length){ga.forEach(a=>a._groupColor='var(--muted)');g['Demandas Gerais']=ga;}
+    }
+    return g;
+  };
+
+  if(filterPid){
+    allActs=state.activities.filter(a=>a.projectId===filterPid);
+  } else {
+    allActs=[...state.activities];
+  }
+
+  buildGanttGrid(allActs,sched,el,true,groupFn);
+}
+
+// ══════════════════════════════════════════════
+//  ACTIVITY DETAIL MODAL (from Gantt bar click)
+// ══════════════════════════════════════════════
+function openActivityDetail(id){
+  const act=state.activities.find(a=>a.id===id);if(!act)return;
+  const sched=computeSchedule();
+  const res=state.resources.find(r=>r.id===act.resourceId);
+  const proj=state.projects.find(p=>p.id===act.projectId);
+  const s=sched[act.id];
+  const status=getActivityStatus(act,sched);
+  const st=STATUS[status]||STATUS.active;
+  const totalDev=act.deviations.reduce((ss,d)=>ss+d.hours,0);
+  const isReprog=act.baselineEnd&&s?.end!==act.baselineEnd;
+  const diffD=isReprog?daysDiff(s.end,act.baselineEnd):0;
+
+  document.getElementById('detail-title').textContent=act.name;
+  document.getElementById('detail-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">STATUS</div><span class="tag ${st.tagCls}">${st.label}</span></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">PRIORIDADE</div><span class="priority-badge ${PRI[act.priority||2].cls}">${PRI[act.priority||2].label}</span></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">RECURSO</div><div style="font-size:12.5px;font-weight:600">${res?.name||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">PROJETO</div><div style="font-size:12.5px;font-weight:600">${proj?.name||'Demanda geral'}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">INÍCIO EFETIVO</div><div style="font-size:12.5px">${fmtDate(s?.start||act.startDate)}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">FIM REPROGRAMADO</div><div style="font-size:12.5px;font-weight:600;color:${isReprog&&diffD<0?'var(--danger)':'var(--success)'}">${fmtDate(s?.end)}</div></div>
+      ${act.baselineEnd?`<div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">BASELINE</div><div style="font-size:12.5px">${fmtDate(act.baselineEnd)}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">VARIAÇÃO</div><div style="font-size:12.5px;font-weight:600;color:${diffD>=0?'var(--success)':'var(--danger)'}">${diffD>=0?`+${diffD}d adiantado`:`${Math.abs(diffD)}d atrasado`}</div></div>`:''}
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">HORAS EST.</div><div style="font-size:12.5px">${act.estimatedHours}h${totalDev>0?` +${totalDev}h desvio`:''}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:2px">PROGRESSO</div><div style="font-size:12.5px;font-weight:600">${act.progress}%</div></div>
+    </div>
+    ${act.suspended?`<div style="background:rgba(100,116,139,.08);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:8px">⏸ <b>Paralisado:</b> ${act.suspendedReason}</div>`:''}
+    ${act.deviations.length?`<div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:6px">DESVIOS (${act.deviations.length})</div>${act.deviations.map(d=>`<div class="dev-item"><div><div style="font-size:12px;font-weight:600">${d.desc}</div><div style="font-size:10.5px;color:var(--muted)">${d.date}</div></div><span style="color:var(--warning);font-family:'JetBrains Mono',monospace;font-weight:600">+${d.hours}h</span></div>`).join('')}`:''}`;
+
+  document.getElementById('detail-actions').innerHTML=`
+    <button class="btn btn-ghost" onclick="document.getElementById('detail-modal').classList.add('hidden')">Fechar</button>
+    <button class="btn btn-warning btn-sm" onclick="document.getElementById('detail-modal').classList.add('hidden');openDevModal(${id})">⚡ Desvio</button>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('detail-modal').classList.add('hidden');openSusModal(${id})">${act.suspended?'▶ Retomar':'⏸ Paralisar'}</button>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('detail-modal').classList.add('hidden');toggleDone(${id})">${act.done?'↩ Reabrir':'✓ Concluir'}</button>`;
+
+  document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+// ══════════════════════════════════════════════
 //  OVERVIEW
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function renderOverview(){
   const el=document.getElementById('overview-grid');
-  if(!state.resources.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso cadastrado.</div>'; return; }
-  const sched=computeSchedule(), t=todayStr();
+  if(!state.resources.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso cadastrado.</div>';return;}
+  const sched=computeSchedule(),t=todayStr();
   el.innerHTML=state.resources.map(r=>{
-    const acts=state.activities.filter(a=>a.resourceId===r.id&&!a.done);
+    const acts=state.activities.filter(a=>a.resourceId===r.id&&!a.done&&!a.suspended);
     const totalH=acts.reduce((s,a)=>s+a.estimatedHours+a.deviations.reduce((ss,d)=>ss+d.hours,0),0);
     const pct=Math.min((totalH/(r.hours*5))*100,100);
     const fc=pct>85?'var(--danger)':pct>60?'var(--warning)':'var(--success)';
     const lbl=pct>85?'Alta demanda':pct>60?'Moderada':'Disponível';
     const overdue=acts.filter(a=>sched[a.id]?.end<t).length;
+    const suspended=state.activities.filter(a=>a.resourceId===r.id&&a.suspended).length;
     return `<div class="ov-card">
       <div style="display:flex;align-items:center;gap:9px">
         <div class="avatar" style="width:36px;height:36px;font-size:13px;background:${r.color}18;color:${r.color}">${initials(r.name)}</div>
@@ -991,26 +1364,27 @@ function renderOverview(){
       <div class="load-bar" style="height:5px"><div class="load-fill" style="width:${pct}%;background:${fc}"></div></div>
       <div class="ov-stat">${acts.length} pendente(s) · ~${Math.ceil(totalH/r.hours)} dia(s)</div>
       ${overdue>0?`<div style="font-size:11px;color:var(--danger);font-weight:700">🔴 ${overdue} atrasada(s)</div>`:''}
+      ${suspended>0?`<div style="font-size:11px;color:var(--suspended);font-weight:700">⏸ ${suspended} paralisada(s)</div>`:''}
     </div>`;
   }).join('');
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  STATS
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 function renderStats(sched){
-  const el=document.getElementById('stats-row'), t=todayStr();
-  const total=state.activities.length, done=state.activities.filter(a=>a.done).length;
-  const overdue=state.activities.filter(a=>!a.done&&sched[a.id]?.end<t).length;
-  const ovs=detectOverlaps(sched).length;
+  const el=document.getElementById('stats-row'),t=todayStr();
+  const total=state.activities.length,done=state.activities.filter(a=>a.done).length;
+  const overdue=state.activities.filter(a=>!a.done&&!a.suspended&&sched[a.id]?.end<t).length;
+  const suspended=state.activities.filter(a=>a.suspended).length;
   const stats=[
+    {lbl:'Projetos',val:state.projects.length,color:'var(--accent2)',icon:'📁'},
     {lbl:'Recursos',val:state.resources.length,color:'var(--accent)',icon:'👥'},
-    {lbl:'Atividades',val:total,color:'var(--accent2)',icon:'📋'},
-    {lbl:'Concluídas',val:done,color:'var(--success)',icon:'✅'},
+    {lbl:'Atividades',val:total,color:'var(--text)',icon:'📋'},
     {lbl:'Atrasadas',val:overdue,color:overdue>0?'var(--danger)':'var(--muted2)',icon:'🔴'},
-    {lbl:'Sobreposições',val:ovs,color:ovs>0?'var(--warning)':'var(--muted2)',icon:'⚠️'},
+    {lbl:'Paralisadas',val:suspended,color:suspended>0?'var(--suspended)':'var(--muted2)',icon:'⏸'},
   ];
-  el.innerHTML=stats.map(s=>`<div class="card" style="text-align:center;padding:14px 10px">
+  el.innerHTML=stats.map(s=>`<div class="card" style="text-align:center;padding:13px 10px">
     <div style="font-size:18px;margin-bottom:4px">${s.icon}</div>
     <div style="font-size:22px;font-family:'JetBrains Mono',monospace;font-weight:600;color:${s.color}">${s.val}</div>
     <div style="font-size:10.5px;color:var(--muted);margin-top:3px">${s.lbl}</div>
@@ -1018,24 +1392,36 @@ function renderStats(sched){
   document.getElementById('today-label').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
 }
 
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
 //  NAV
-// ════════════════════════════════════════════════
+// ══════════════════════════════════════════════
+function selectProject(pid){
+  showView('projects-gantt');
+  document.getElementById('gantt-filter-proj').value=pid;
+  renderProjectGantt();
+}
 function showView(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
-  const map={dashboard:'Dashboard',activities:'Atividades',gantt:'Gantt',overview:'Visão'};
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.textContent.includes(map[name]||name)));
+  const map={dashboard:'Dashboard',activities:'Atividades','resources-gantt':'Gantt Rec','projects-gantt':'Gantt Pro',overview:'Visão'};
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.textContent.includes(map[name]||'')));
+  if(name==='resources-gantt') renderResourceGantt();
+  if(name==='projects-gantt')  renderProjectGantt();
 }
-function toggleForm(id){ document.getElementById(id).classList.toggle('hidden'); }
+function toggleForm(id){document.getElementById(id).classList.toggle('hidden');}
 
+// ══════════════════════════════════════════════
+//  RENDER ALL
+// ══════════════════════════════════════════════
 function renderAll(){
   const sched=computeSchedule();
+  renderProjectList();
   renderResourceList();
   renderStats(sched);
   renderDashActivities();
   renderActivities();
-  renderGantt();
+  renderResourceGantt();
+  renderProjectGantt();
   renderOverview();
   renderNotifications(sched);
   renderOverlapAlerts(sched);
