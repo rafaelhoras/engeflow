@@ -215,6 +215,7 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
     <button onclick="gv('pgantt')">Gantt Projetos</button>
     <button onclick="gv('overview')">Visão Geral</button>
   </nav>
+  <button class="btn bgh bsm" onclick="exportCSV()" title="Exportar dados como CSV" style="white-space:nowrap;font-size:11px">⬇ CSV</button>
   <button class="nbell" onclick="toggleN()" id="nbtn">🔔<span class="nbadge hidden" id="nbdg">0</span></button>
   <div class="uchip">
     <div class="uav" id="uav">?</div>
@@ -638,58 +639,102 @@ function nextWD(s){ const d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+1); s
 function ini(n){ return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCase()||'').join(''); }
 
 // ═══════════════════════════════════════════
-//  SCHEDULING
+//  SCHEDULING ENGINE
+//  Logic: each activity tries to start on its declared start date.
+//  It is only pushed forward if ANOTHER activity for the same resource
+//  actually OVERLAPS its time window (real conflict), or if a
+//  predecessor hasn't finished yet.
+//  It is NOT pushed simply because another activity was registered later.
 // ═══════════════════════════════════════════
 function schedule(){
-  const sc={}, byR={};
-  S.activities.forEach(a=>{ const k=+a.rid; if(!byR[k]) byR[k]=[]; byR[k].push(a); });
-  Object.values(byR).forEach(arr=>arr.sort((a,b)=>a.pri!==b.pri?a.pri-b.pri:a.id-b.id));
+  const sc={};
 
-  for(let p=0;p<30;p++){
+  // First pass: compute naive end dates (start + hours) ignoring conflicts
+  function naiveEnd(act){
+    const res=S.resources.find(r=>+r.id===+act.rid);
+    if(!res||!act.start) return act.start||'';
+    if(act.done&&act.doneDate) return act.doneDate;
+    const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
+    return addWH(act.start,th,res.hours);
+  }
+
+  // Iterative resolution — converges when no more conflicts exist
+  for(let pass=0;pass<40;pass++){
     let changed=false;
-    S.activities.forEach(act=>{
-      const res=S.resources.find(r=>+r.id===+act.rid);
-      if(!res || !act.start) return;
+    // Sort by start date so earlier activities are resolved first
+    const sorted=[...S.activities].filter(a=>a.start).sort((a,b)=>a.start.localeCompare(b.start));
 
-      // completed early: use actual completion date
-      if(act.done && act.doneDate){
+    sorted.forEach(act=>{
+      const res=S.resources.find(r=>+r.id===+act.rid);
+      if(!res||!act.start) return;
+
+      // Done with real completion date — freeze it
+      if(act.done&&act.doneDate){
         const prev=sc[act.id];
-        if(!prev||prev.end!==act.doneDate){
-          sc[act.id]={start:act.start, end:act.doneDate};
+        if(!prev||prev.start!==act.start||prev.end!==act.doneDate){
+          sc[act.id]={start:act.start,end:act.doneDate,pushed:false};
           changed=true;
         }
         return;
       }
 
-      let earliest = act.start;
+      let earliest=act.start;
 
-      // predecessor constraint
+      // 1) Predecessor constraint — must start after predecessor ends
       if(+act.pred>0){
         const ps=sc[+act.pred];
-        if(ps){ const nw=nextWD(ps.end); if(nw>earliest) earliest=nw; }
+        if(ps&&ps.end>=earliest){
+          const nw=nextWD(ps.end);
+          if(nw>earliest) earliest=nw;
+        }
       }
 
-      // priority queue within same resource (skip done/suspended)
-      const q=(byR[+act.rid]||[]).filter(x=>!x.done&&!x.susp);
-      const mi=q.indexOf(act);
-      for(let i=0;i<mi;i++){
-        const ps=sc[q[i].id];
-        if(ps&&ps.end>=earliest){ const nw=nextWD(ps.end); if(nw>earliest) earliest=nw; }
+      // 2) Real overlap check — only push if another activity for this
+      //    resource actually occupies the [earliest, projectedEnd] window
+      const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
+      let projEnd=addWH(earliest,th,res.hours);
+
+      // Keep pushing until no overlap remains with other scheduled acts
+      let maxIter=50, iter=0;
+      while(iter++<maxIter){
+        let conflict=false;
+        for(const other of S.activities){
+          if(other.id===act.id) continue;
+          if(+other.rid!==+act.rid) continue;
+          if(other.susp) continue;
+          const os=sc[other.id];
+          if(!os) continue;
+          // Check if [earliest, projEnd] overlaps [os.start, os.end]
+          const overlaps = earliest<=os.end && projEnd>=os.start;
+          if(overlaps){
+            // Push our start to after the conflicting activity ends
+            const nw=nextWD(os.end);
+            if(nw>earliest){
+              earliest=nw;
+              projEnd=addWH(earliest,th,res.hours);
+              conflict=true;
+              break; // restart overlap check with new earliest
+            }
+          }
+        }
+        if(!conflict) break;
       }
 
-      const th = act.hours + (act.devs||[]).reduce((s,d)=>s+d.h,0);
-      const end = act.susp ? addWH(earliest,th,res.hours) : addWH(earliest,th,res.hours);
+      const pushed=earliest!==act.start;
       const prev=sc[act.id];
-      if(!prev||prev.start!==earliest||prev.end!==end){ sc[act.id]={start:earliest,end}; changed=true; }
+      if(!prev||prev.start!==earliest||prev.end!==projEnd){
+        sc[act.id]={start:earliest,end:projEnd,pushed};
+        changed=true;
+      }
     });
     if(!changed) break;
   }
 
-  // done without doneDate
-  S.activities.filter(a=>a.done&&!a.doneDate).forEach(act=>{
-    const res=S.resources.find(r=>r.id===act.rid);
+  // Done without doneDate — compute from original start
+  S.activities.filter(a=>a.done&&!a.doneDate&&a.start).forEach(act=>{
+    const res=S.resources.find(r=>+r.id===+act.rid);
     const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
-    if(!sc[act.id]) sc[act.id]={start:act.start, end:res?addWH(act.start,th,res.hours):act.start};
+    if(!sc[act.id]) sc[act.id]={start:act.start,end:res?addWH(act.start,th,res.hours):act.start,pushed:false};
   });
 
   return sc;
@@ -1200,29 +1245,80 @@ function openDet(id){
 // ═══════════════════════════════════════════
 //  OVERVIEW
 // ═══════════════════════════════════════════
+function weekEnd(){
+  // get Friday of current week (or next Monday if weekend)
+  const d=new Date(); const day=d.getDay();
+  const diff=day===0?5:day===6?6:5-day;
+  d.setDate(d.getDate()+diff);
+  return d.toISOString().split('T')[0];
+}
+
 function renderOV(){
   const el=document.getElementById('ovgrid');
   if(!S.resources.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso.</div>'; return; }
-  const sc=schedule(), t=today();
+  const sc=schedule(), t=today(), wend=weekEnd();
+
   el.innerHTML=S.resources.map(r=>{
-    const acts=S.activities.filter(a=>+a.rid===+r.id&&!a.done&&!a.susp);
-    const th=acts.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
+    const allActs=S.activities.filter(a=>+a.rid===+r.id);
+    const pending=allActs.filter(a=>!a.done&&!a.susp);
+    const th=pending.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
     const pct=Math.min((th/(r.hours*5))*100,100);
     const fc=pct>85?'var(--err)':pct>60?'var(--warn)':'var(--ok)';
     const lbl=pct>85?'Alta demanda':pct>60?'Moderada':'Disponível';
-    const late=acts.filter(a=>sc[a.id]?.end<t).length;
-    const susp=S.activities.filter(a=>+a.rid===+r.id&&a.susp).length;
-    return `<div class="ovcard">
+    const late=pending.filter(a=>sc[a.id]?.end<t).length;
+    const susp=allActs.filter(a=>a.susp).length;
+
+    // Current activity: in progress right now (start<=today<=end, not done/susp)
+    const current=pending.filter(a=>{
+      const s=sc[a.id]; return s&&s.start<=t&&s.end>=t;
+    });
+
+    // This week: starts or ends within this week window
+    const weekActs=pending.filter(a=>{
+      const s=sc[a.id]; return s&&s.start<=wend&&s.end>=t&&!current.includes(a);
+    }).slice(0,4);
+
+    const currentHTML=current.length
+      ? current.map(a=>{
+          const prj=S.projects.find(p=>+p.id===+a.pjid);
+          return `<div style="background:rgba(47,107,224,.06);border:1px solid rgba(47,107,224,.2);border-radius:6px;padding:5px 8px;margin-bottom:3px">
+            <div style="font-size:11px;font-weight:600;color:var(--acc)">${a.name}</div>
+            <div style="font-size:9.5px;color:var(--mu)">até ${fmt(sc[a.id]?.end)} ${prj?'· '+prj.name:''}</div>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:10.5px;color:var(--mu2);font-style:italic">Nenhuma atividade em andamento hoje</div>`;
+
+    const weekHTML=weekActs.length
+      ? weekActs.map(a=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--brd)">
+          <div style="font-size:10.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</div>
+          <div style="font-size:9.5px;color:var(--mu);white-space:nowrap;margin-left:6px">${fmt(sc[a.id]?.start)}</div>
+        </div>`).join('')
+      : `<div style="font-size:10.5px;color:var(--mu2);font-style:italic">Sem atividades esta semana</div>`;
+
+    return `<div class="ovcard" style="min-width:0">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="av" style="width:34px;height:34px;font-size:12px;background:${r.color}18;color:${r.color}">${ini(r.name)}</div>
-        <div><div style="font-weight:700;font-size:13px">${r.name}</div><div style="font-size:10.5px;color:var(--mu)">${r.hours}h/dia</div></div>
+        <div style="min-width:0"><div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div><div style="font-size:10px;color:var(--mu)">${r.hours}h/dia</div></div>
       </div>
-      <div class="mono" style="font-size:22px;color:${fc}">${th.toFixed(1)}<span style="font-size:11px;color:var(--mu)">h</span></div>
-      <div style="font-size:10.5px;color:${fc};font-weight:700">● ${lbl}</div>
-      <div class="lbar" style="height:5px"><div class="lfill" style="width:${pct}%;background:${fc}"></div></div>
-      <div style="font-size:10.5px;color:var(--mu)">${acts.length} pendente(s) · ~${Math.ceil(th/r.hours)}d</div>
-      ${late>0?`<div style="font-size:10.5px;color:var(--err);font-weight:700">🔴 ${late} atrasada(s)</div>`:''}
-      ${susp>0?`<div style="font-size:10.5px;color:var(--sus);font-weight:700">⏸ ${susp} paralisada(s)</div>`:''}
+
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <div class="mono" style="font-size:22px;color:${fc}">${th.toFixed(1)}<span style="font-size:11px;color:var(--mu)">h</span></div>
+        <div style="font-size:10px;color:${fc};font-weight:700;margin-bottom:4px">● ${lbl}</div>
+      </div>
+      <div class="lbar" style="height:4px"><div class="lfill" style="width:${pct}%;background:${fc}"></div></div>
+      <div style="font-size:10px;color:var(--mu)">${pending.length} pendente(s) · ~${th>0?Math.ceil(th/r.hours):0}d</div>
+      ${late>0?`<div style="font-size:10px;color:var(--err);font-weight:700">🔴 ${late} atrasada(s)</div>`:''}
+      ${susp>0?`<div style="font-size:10px;color:var(--sus);font-weight:700">⏸ ${susp} paralisada(s)</div>`:''}
+
+      <div style="border-top:1px solid var(--brd);margin-top:6px;padding-top:6px">
+        <div style="font-size:9.5px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">▶ Executando agora</div>
+        ${currentHTML}
+      </div>
+
+      <div style="border-top:1px solid var(--brd);margin-top:6px;padding-top:6px">
+        <div style="font-size:9.5px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">📅 Esta semana</div>
+        ${weekHTML}
+      </div>
     </div>`;
   }).join('');
 }
@@ -1349,6 +1445,74 @@ function gv(name){
   if(name==='pgantt') renderPG();
 }
 function tog(id){ document.getElementById(id).classList.toggle('hidden'); }
+
+// ═══════════════════════════════════════════
+//  CSV EXPORT
+// ═══════════════════════════════════════════
+function exportCSV(){
+  const sc=schedule();
+  const esc=v=>{ const s=String(v||''); return s.includes(',')||s.includes('"')||s.includes('\n')?`"${s.replace(/"/g,'""')}"`:s; };
+
+  // ACTIVITIES sheet
+  const actsHeader=['ID','Nome','Tipo','Projeto','Recurso','Prioridade','Horas Estimadas','Desvios (h)','Total Horas','Início Original','Início Efetivo','Fim Efetivo','Baseline','Status','Progresso (%)','Paralisado','Motivo Paralisação','Predecessora','Concluído em'];
+  const actsRows=S.activities.map(a=>{
+    const res=S.resources.find(r=>+r.id===+a.rid);
+    const prj=S.projects.find(p=>+p.id===+a.pjid);
+    const s=sc[a.id];
+    const tdv=(a.devs||[]).reduce((x,d)=>x+d.h,0);
+    const st=getStatus(a,sc);
+    const stLbl={wait:'Aguardando',active:'Em andamento',done:'Concluído',late:'Atrasada',susp:'Paralisada'}[st]||st;
+    const priLbl={1:'Alta',2:'Média',3:'Baixa'}[a.pri||2];
+    const pred=a.pred>0?S.activities.find(x=>+x.id===+a.pred)?.name||a.pred:'';
+    return [a.id,a.name,a.type,prj?.name||'Demanda geral',res?.name||'',priLbl,a.hours,tdv,a.hours+tdv,
+      a.start,s?.start||a.start,s?.end||'',a.baseline||'',stLbl,a.prog,a.susp?'Sim':'Não',
+      a.suspReason||'',pred,a.doneDate||''].map(esc).join(',');
+  });
+  const actsCSV=[actsHeader.map(esc).join(','),...actsRows].join('\n');
+
+  // RESOURCES sheet
+  const resHeader=['ID','Nome','Horas/Dia','Horas Pendentes','Atividades Pendentes','Carga (%)'];
+  const resRows=S.resources.map(r=>{
+    const acts=S.activities.filter(a=>+a.rid===+r.id&&!a.done&&!a.susp);
+    const th=acts.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
+    const pct=Math.min((th/(r.hours*5))*100,100);
+    return [r.id,r.name,r.hours,th.toFixed(1),acts.length,pct.toFixed(0)+'%'].map(esc).join(',');
+  });
+  const resCSV=[resHeader.map(esc).join(','),...resRows].join('\n');
+
+  // PROJECTS sheet
+  const projHeader=['ID','Nome','Descrição','Início Previsto','Fim Previsto','Fim Reprogramado','Variação (dias)','Atividades','Concluídas'];
+  const projRows=S.projects.map(p=>{
+    const pas=S.activities.filter(a=>+a.pjid===+p.id);
+    const lastEnd=pas.reduce((mx,a)=>{ const e=sc[a.id]?.end||a.start||''; return e>mx?e:mx; },p.start||'');
+    const diff=lastEnd&&p.end?diffD(p.end,lastEnd):0;
+    const diffStr=diff===0?'No prazo':diff>0?`+${diff}d adiantado`:`${diff}d atrasado`;
+    return [p.id,p.name,p.desc||'',p.start,p.end,lastEnd,diffStr,pas.length,pas.filter(a=>a.done).length].map(esc).join(',');
+  });
+  const projCSV=[projHeader.map(esc).join(','),...projRows].join('\n');
+
+  // Combine into one file with section separators
+  const ts=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const full=[
+    'ENGEFLOW - Exportação de Dados - '+ts,
+    '',
+    '=== PROJETOS ===',
+    projCSV,
+    '',
+    '=== RECURSOS ===',
+    resCSV,
+    '',
+    '=== ATIVIDADES ===',
+    actsCSV,
+  ].join('\n');
+
+  // Download
+  const blob=new Blob([full],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`EngeFlow_${ts}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
 
 // ═══════════════════════════════════════════
 //  RENDER ALL
