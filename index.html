@@ -418,6 +418,46 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
   </div>
 </div>
 
+<!-- MODAL: EDITAR ATIVIDADE -->
+<div class="mover hidden" id="medit">
+  <div class="modal" style="width:480px">
+    <h3>✏ Editar Atividade</h3>
+    <div class="fr"><label class="flbl">Descrição</label><input class="fi" id="ed-name" placeholder="Nome da atividade"></div>
+    <div class="fr"><label class="flbl">Tipo</label>
+      <select class="fi" id="ed-type">
+        <option>Verificação de desenho</option><option>Modelagem estrutural</option>
+        <option>Memória de cálculo</option><option>Reunião</option>
+        <option>Revisão de projeto</option><option>Demanda extraordinária</option><option>Outro</option>
+      </select>
+    </div>
+    <div class="fr"><label class="flbl">Projeto</label>
+      <select class="fi" id="ed-project"><option value="0">Demanda geral</option></select>
+    </div>
+    <div class="fr2">
+      <div><label class="flbl">Horas estimadas</label><input class="fi" id="ed-hours" type="number" min="0.5" step="0.5"></div>
+      <div><label class="flbl">Data início</label><input class="fi" id="ed-start" type="date"></div>
+    </div>
+    <div class="fr"><label class="flbl">Recurso</label>
+      <select class="fi" id="ed-resource"><option value="0">Selecionar...</option></select>
+    </div>
+    <div class="fr"><label class="flbl">Prioridade</label>
+      <select class="fi" id="ed-priority">
+        <option value="1">🔴 Alta</option><option value="2">🟡 Média</option><option value="3">🔵 Baixa</option>
+      </select>
+    </div>
+    <div class="fr"><label class="flbl">Predecessora</label>
+      <select class="fi" id="ed-pred"><option value="0">Nenhuma</option></select>
+    </div>
+    <div style="background:rgba(201,109,0,.07);border:1px solid rgba(201,109,0,.2);border-radius:7px;padding:8px 11px;font-size:11px;color:var(--warn);margin-bottom:4px">
+      ⚠ Alterar horas ou data recalcula o baseline desta atividade.
+    </div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px">
+      <button class="btn bgh" onclick="closeEdit()">Cancelar</button>
+      <button class="btn bpri" onclick="saveEdit()">Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -1012,6 +1052,7 @@ function actHTML(a, sc){
       <span class="pbadge ${pr.cls}">${pr.lbl}</span>
       ${prj?`<span class="prjbadge" style="background:${prj.color}18;color:${prj.color}">📁 ${prj.name.slice(0,14)}</span>`:''}
       <button class="btn bxs bwn" onclick="openDev(${a.id})" title="Desvio">⚡</button>
+      <button class="btn bxs bgh" onclick="openEdit(${a.id})" title="Editar">✏</button>
       <button class="btn bxs bgh" onclick="openSus(${a.id})">${a.susp?'▶':'⏸'}</button>
       <button class="btn bxs bgh" onclick="toggleDone(${a.id})">${a.done?'↩':'✓'}</button>
       <button class="btn bxs bdn" onclick="delActivity(${a.id})">✕</button>
@@ -1237,6 +1278,7 @@ function openDet(id){
   document.getElementById('detbtns').innerHTML=`
     <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden')">Fechar</button>
     <button class="btn bwn bsm" onclick="document.getElementById('mdet').classList.add('hidden');openDev(${id})">⚡ Desvio</button>
+    <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openEdit(${id})">✏ Editar</button>
     <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openSus(${id})">${a.susp?'▶ Retomar':'⏸ Paralisar'}</button>
     <button class="btn bpri bsm" onclick="document.getElementById('mdet').classList.add('hidden');toggleDone(${id})">${a.done?'↩ Reabrir':'✓ Concluir'}</button>`;
   document.getElementById('mdet').classList.remove('hidden');
@@ -1445,6 +1487,96 @@ function gv(name){
   if(name==='pgantt') renderPG();
 }
 function tog(id){ document.getElementById(id).classList.toggle('hidden'); }
+
+// ═══════════════════════════════════════════
+//  EDIT ACTIVITY
+// ═══════════════════════════════════════════
+let _editId = 0;
+
+function openEdit(id){
+  _editId = id;
+  const a = S.activities.find(x => +x.id === id);
+  if(!a) return;
+
+  // Populate project select
+  const epj = document.getElementById('ed-project');
+  epj.innerHTML = '<option value="0">Demanda geral</option>';
+  S.projects.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    epj.appendChild(o);
+  });
+  epj.value = a.pjid || 0;
+
+  // Populate resource select
+  const ers = document.getElementById('ed-resource');
+  ers.innerHTML = '<option value="0">Selecionar...</option>';
+  S.resources.forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.id; o.textContent = r.name;
+    ers.appendChild(o);
+  });
+  ers.value = a.rid || 0;
+
+  // Populate predecessor select
+  const epd = document.getElementById('ed-pred');
+  epd.innerHTML = '<option value="0">Nenhuma</option>';
+  S.activities.filter(x => +x.id !== id).forEach(x => {
+    const o = document.createElement('option');
+    o.value = x.id; o.textContent = `#${x.id} ${x.name.slice(0,30)}`;
+    epd.appendChild(o);
+  });
+  epd.value = a.pred || 0;
+
+  // Fill fields
+  document.getElementById('ed-name').value     = a.name || '';
+  document.getElementById('ed-type').value     = a.type || 'Outro';
+  document.getElementById('ed-hours').value    = a.hours || 8;
+  document.getElementById('ed-start').value    = a.start || '';
+  document.getElementById('ed-priority').value = a.pri || 2;
+
+  document.getElementById('medit').classList.remove('hidden');
+}
+
+function closeEdit(){
+  document.getElementById('medit').classList.add('hidden');
+  _editId = 0;
+}
+
+function saveEdit(){
+  const a = S.activities.find(x => +x.id === _editId);
+  if(!a){ closeEdit(); return; }
+
+  const newName  = document.getElementById('ed-name').value.trim();
+  const newHours = parseFloat(document.getElementById('ed-hours').value) || a.hours;
+  const newStart = document.getElementById('ed-start').value;
+  const newRid   = +document.getElementById('ed-resource').value || a.rid;
+  const newPri   = +document.getElementById('ed-priority').value || a.pri;
+  const newPred  = +document.getElementById('ed-pred').value || 0;
+  const newPjid  = +document.getElementById('ed-project').value || 0;
+  const newType  = document.getElementById('ed-type').value;
+
+  if(!newName){ alert('Informe a descrição.'); return; }
+  if(!newStart){ alert('Informe a data de início.'); return; }
+  if(!newRid){ alert('Selecione um recurso.'); return; }
+
+  // Apply changes
+  a.name   = newName;
+  a.hours  = newHours;
+  a.start  = newStart;
+  a.rid    = newRid;
+  a.pri    = newPri;
+  a.pred   = newPred;
+  a.pjid   = newPjid;
+  a.type   = newType;
+
+  // Recalculate baseline with new values
+  const sc = schedule();
+  a.baseline = sc[a.id]?.end || newStart;
+
+  closeEdit();
+  save();
+}
 
 // ═══════════════════════════════════════════
 //  CSV EXPORT
