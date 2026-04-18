@@ -1343,12 +1343,11 @@ function renderOV(){
         <div style="min-width:0"><div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div><div style="font-size:10px;color:var(--mu)">${r.hours}h/dia</div></div>
       </div>
 
-      <div style="display:flex;align-items:flex-end;gap:8px">
-        <div class="mono" style="font-size:22px;color:${fc}">${th.toFixed(1)}<span style="font-size:11px;color:var(--mu)">h</span></div>
-        <div style="font-size:10px;color:${fc};font-weight:700;margin-bottom:4px">● ${lbl}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:11px;color:${fc};font-weight:700">● ${lbl}</div>
       </div>
       <div class="lbar" style="height:4px"><div class="lfill" style="width:${pct}%;background:${fc}"></div></div>
-      <div style="font-size:10px;color:var(--mu)">${pending.length} pendente(s) · ~${th>0?Math.ceil(th/r.hours):0}d</div>
+      <div style="font-size:10px;color:var(--mu)">${pending.length} atividade(s) pendente(s)</div>
       ${late>0?`<div style="font-size:10px;color:var(--err);font-weight:700">🔴 ${late} atrasada(s)</div>`:''}
       ${susp>0?`<div style="font-size:10px;color:var(--sus);font-weight:700">⏸ ${susp} paralisada(s)</div>`:''}
 
@@ -1466,7 +1465,7 @@ function renderRList(){
       <div class="av" style="width:27px;height:27px;font-size:10px;background:${r.color}18;color:${r.color}">${ini(r.name)}</div>
       <div class="rinfo">
         <div class="rname">${r.name}</div>
-        <div class="rhrs">${r.hours}h/dia · ${th.toFixed(1)}h pendentes</div>
+        <div class="rhrs">${r.hours}h/dia</div>
         <div class="lbar"><div class="lfill" style="width:${pct}%;background:${fc}"></div></div>
       </div>
       <button class="btn bxs bdn" onclick="delResource(${r.id})">✕</button>
