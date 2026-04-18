@@ -215,11 +215,15 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
     <button onclick="gv('pgantt')">Gantt Projetos</button>
     <button onclick="gv('overview')">Visão Geral</button>
   </nav>
+  <select class="fi admin-only" id="fteam" onchange="renderAll()" style="width:130px;font-size:11.5px;display:none" title="Filtrar por equipe">
+    <option value="">Todas as equipes</option>
+  </select>
   <button class="btn bgh bsm" onclick="exportCSV()" title="Exportar dados como CSV" style="white-space:nowrap;font-size:11px">⬇ CSV</button>
   <button class="nbell" onclick="toggleN()" id="nbtn">🔔<span class="nbadge hidden" id="nbdg">0</span></button>
   <div class="uchip">
     <div class="uav" id="uav">?</div>
-    <span id="uemail" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px"></span>
+    <span id="uemail" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px"></span>
+    <span id="team-badge" style="font-size:9.5px;color:var(--mu);border-left:1px solid var(--brd);padding-left:6px;white-space:nowrap"></span>
     <button class="outbtn" onclick="doLogout()">⎋ Sair</button>
   </div>
 </header>
@@ -251,10 +255,20 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
 
     <!-- RESOURCES -->
     <div>
-      <div class="stitle">Recursos <button class="btn bxs bpri" onclick="tog('frs')">+ Novo</button></div>
-      <div class="card hidden" id="frs" style="margin-bottom:8px">
-        <div class="fr"><label class="flbl">Nome</label><input class="fi" id="rn" placeholder="Ex: João Silva"></div>
-        <div class="fr"><label class="flbl">Horas/dia</label><input class="fi" id="rh" type="number" value="8" min="1" max="24"></div>
+      <div class="stitle">Recursos <button class="btn bxs bpri admin-only" onclick="tog('frs')" style="display:none">+ Novo</button></div>
+      <div class="card hidden admin-only" id="frs" style="margin-bottom:8px">
+        <div class="fr"><label class="flbl">Nome completo</label><input class="fi" id="rn" placeholder="Ex: João Silva"></div>
+        <div class="fr"><label class="flbl">E-mail (mesmo do login)</label><input class="fi" id="re" type="email" placeholder="nome@empresa.com"></div>
+        <div class="fr2">
+          <div><label class="flbl">Equipe</label><input class="fi" id="rt" placeholder="Ex: Estruturas"></div>
+          <div><label class="flbl">Horas/dia</label><input class="fi" id="rh" type="number" value="8" min="1" max="24"></div>
+        </div>
+        <div class="fr"><label class="flbl">Perfil</label>
+          <select class="fi" id="rr">
+            <option value="user">Usuário</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
         <button class="btn bpri bsm" style="width:100%" onclick="addResource()">Adicionar</button>
       </div>
       <div id="rlist"></div>
@@ -316,6 +330,7 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px">
         <span class="ptitle">Todas as Atividades</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <select class="fi admin-only" id="fteam-acts" onchange="renderActs()" style="width:120px;display:none"><option value="">Todas as equipes</option></select>
           <select class="fi" id="fprj" onchange="renderActs()" style="width:140px"><option value="0">Todos os projetos</option></select>
           <select class="fi" id="fres" onchange="renderActs()" style="width:130px"><option value="0">Todos os recursos</option></select>
           <select class="fi" id="fst" onchange="renderActs()" style="width:125px">
@@ -418,6 +433,32 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
   </div>
 </div>
 
+<!-- MODAL: EDITAR RECURSO -->
+<div class="mover hidden" id="meditres">
+  <div class="modal" style="width:440px">
+    <h3>✏ Editar Recurso</h3>
+    <div class="fr"><label class="flbl">Nome completo</label><input class="fi" id="ern" placeholder="Ex: João Silva"></div>
+    <div class="fr"><label class="flbl">E-mail (mesmo do login Firebase)</label><input class="fi" id="ere" type="email" placeholder="nome@empresa.com"></div>
+    <div class="fr2">
+      <div><label class="flbl">Equipe</label><input class="fi" id="ert" placeholder="Ex: Estruturas"></div>
+      <div><label class="flbl">Horas/dia</label><input class="fi" id="erh" type="number" min="1" max="24"></div>
+    </div>
+    <div class="fr"><label class="flbl">Perfil</label>
+      <select class="fi" id="err">
+        <option value="user">Usuário</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div id="editres-warning" style="display:none;background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.2);border-radius:7px;padding:7px 10px;font-size:11px;color:var(--err);margin-bottom:4px">
+      ⚠ Você não pode alterar o seu próprio perfil.
+    </div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px">
+      <button class="btn bgh" onclick="closeEditRes()">Cancelar</button>
+      <button class="btn bpri" onclick="saveEditRes()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: EDITAR ATIVIDADE -->
 <div class="mover hidden" id="medit">
   <div class="modal" style="width:480px">
@@ -498,8 +539,9 @@ const STS   = {
 //  STATE — all IDs are numbers, no nulls
 // ═══════════════════════════════════════════
 let S = { projects:[], resources:[], activities:[], pid:1, rid:1, aid:1 };
-let _devId=0, _susId=0, _priCtx=null, _ovReg={};
+let _devId=0, _susId=0, _priCtx=null, _ovReg={}, _editId=0;
 let _ready=false, _listener=null;
+let ME = { email:'', name:'', role:'user', team:'', rid:0 }; // logged-in user profile
 
 // ═══════════════════════════════════════════
 //  FIREBASE HELPERS
@@ -517,7 +559,7 @@ function toArr(v){
     // numeric fields
     ['id','rid','pjid','pred','pri','prog','hours'].forEach(k=>{ if(out[k]!==undefined) out[k]=+out[k]||0; });
     // string fields — guarantee they exist and are strings
-    ['name','start','baseline','doneDate','type','suspReason'].forEach(k=>{ if(out[k]==null||out[k]===undefined) out[k]=''; else out[k]=String(out[k]); });
+    ['name','start','baseline','doneDate','type','suspReason','email','team','role','color'].forEach(k=>{ if(out[k]==null||out[k]===undefined) out[k]=''; else out[k]=String(out[k]); });
     // boolean fields
     ['done','susp'].forEach(k=>{ out[k]=!!out[k]; });
     // array fields
@@ -576,6 +618,7 @@ function startSync(){
         return;
       }
       if(!_ready){ _ready=true; }
+      resolveMe();
       renderAll();
     } catch(err){
       console.error('RENDER ERROR:', err);
@@ -602,6 +645,7 @@ AUTH.onAuthStateChanged(u=>{
 });
 
 function doShowApp(u){
+  ME.email = u.email.toLowerCase().trim();
   document.getElementById('uemail').textContent = u.email;
   document.getElementById('uav').textContent    = u.email.slice(0,2).toUpperCase();
   hideLogin();
@@ -611,6 +655,49 @@ function doShowApp(u){
   document.getElementById('ad').value = today();
   document.getElementById('ps').value = today();
   startSync();
+}
+
+// Resolve logged-in user's resource profile
+function resolveMe(){
+  const res = S.resources.find(r => r.email && r.email.toLowerCase().trim() === ME.email);
+  if(res){
+    ME.name  = res.name;
+    ME.role  = res.role || 'user';
+    ME.team  = res.team || '';
+    ME.rid   = +res.id;
+  } else {
+    // No resource yet — check if bootstrap needed (no admins exist at all)
+    const hasAdmin = S.resources.some(r => r.role === 'admin');
+    ME.role  = hasAdmin ? 'user' : 'admin'; // first user becomes admin if no admins exist
+    ME.team  = '';
+    ME.rid   = 0;
+  }
+  // Update header chip
+  document.getElementById('uemail').textContent = ME.name || ME.email;
+  document.getElementById('uav').textContent    = (ME.name||ME.email).slice(0,2).toUpperCase();
+  // Show/hide admin controls
+  const adminEls = document.querySelectorAll('.admin-only');
+  adminEls.forEach(el => el.style.display = ME.role==='admin' ? '' : 'none');
+  // Update team badge in header
+  const tbadge = document.getElementById('team-badge');
+  if(tbadge) tbadge.textContent = ME.team || (ME.role==='admin'?'Administrador':'');
+}
+
+function isAdmin(){ return ME.role === 'admin'; }
+
+// Filter projects/resources/activities visible to current user
+function visibleResources(){
+  if(isAdmin()) return S.resources;
+  return S.resources.filter(r => (r.team||'') === ME.team);
+}
+function visibleActivities(sc){
+  if(isAdmin()) return S.activities;
+  const vRids = visibleResources().map(r=>+r.id);
+  return S.activities.filter(a => vRids.includes(+a.rid));
+}
+function visibleProjects(){
+  if(isAdmin()) return S.projects;
+  return S.projects.filter(p => (p.team||'') === ME.team);
 }
 
 function showLogin(){ document.getElementById('scr-login').style.display='flex'; }
@@ -855,7 +942,7 @@ function addProject(){
   const end=document.getElementById('pe').value;
   if(!name){ alert('Informe o nome do projeto.'); return; }
   if(!start||!end){ alert('Informe as datas.'); return; }
-  S.projects.push({ id:S.pid++, name, desc, start, end, color:PCOLS[S.projects.length%PCOLS.length] });
+  S.projects.push({ id:S.pid++, name, desc, start, end, team:ME.team, color:PCOLS[S.projects.length%PCOLS.length] });
   document.getElementById('pn').value='';
   document.getElementById('pd').value='';
   save();
@@ -871,11 +958,22 @@ function delProject(id){
 //  RESOURCES
 // ═══════════════════════════════════════════
 function addResource(){
-  const name=document.getElementById('rn').value.trim();
+  const name =document.getElementById('rn').value.trim();
+  const email=document.getElementById('re').value.trim().toLowerCase();
   const hours=parseFloat(document.getElementById('rh').value)||8;
-  if(!name){ alert('Insira o nome do recurso.'); return; }
-  S.resources.push({ id:S.rid++, name, hours, color:RCOLS[S.resources.length%RCOLS.length] });
+  const team =document.getElementById('rt').value.trim();
+  const role =document.getElementById('rr').value||'user';
+  if(!name){  alert('Insira o nome do recurso.'); return; }
+  if(!email){ alert('Insira o e-mail do recurso.'); return; }
+  if(!team){  alert('Insira a equipe.'); return; }
+  // prevent duplicate email
+  if(S.resources.some(r=>r.email&&r.email.toLowerCase()===email)){
+    alert('Já existe um recurso com este e-mail.'); return;
+  }
+  S.resources.push({ id:S.rid++, name, email, hours, team, role, color:RCOLS[S.resources.length%RCOLS.length] });
   document.getElementById('rn').value='';
+  document.getElementById('re').value='';
+  document.getElementById('rt').value='';
   save();
 }
 function delResource(id){
@@ -1083,10 +1181,13 @@ function renderActList(elId, allMode){
   const frid=allMode?+document.getElementById('fres').value||0:0;
   const fpid=allMode?+document.getElementById('fprj').value||0:0;
   const fst=allMode?document.getElementById('fst').value:'';
-  let acts=[...S.activities];
-  if(frid>0) acts=acts.filter(a=>a.rid===frid);
-  if(fpid>0) acts=acts.filter(a=>a.pjid===fpid);
+  const ftm=allMode&&isAdmin()?(document.getElementById('fteam')?.value||document.getElementById('fteam-acts')?.value||''):'';
+  let acts=visibleActivities(sc);
+  if(frid>0) acts=acts.filter(a=>+a.rid===frid);
+  if(fpid>0) acts=acts.filter(a=>+a.pjid===fpid);
+  if(ftm)    acts=acts.filter(a=>{ const r=S.resources.find(x=>+x.id===+a.rid); return (r?.team||'')===ftm; });
   if(!allMode) acts=acts.filter(a=>{ const s=sc[a.id]; return s&&s.start<=t&&!a.done&&!a.susp; });
+  // non-admin: already filtered by visibleActivities; admin with team filter already applied
   if(fst) acts=acts.filter(a=>getStatus(a,sc)===fst);
   // safety: remove any activity with no start date (corrupt data)
   acts=acts.filter(a=>a.start);
@@ -1186,11 +1287,14 @@ function drawGantt(acts, sc, contId, baseline=false, grpFn=null){
 function renderRG(){
   const sc=schedule();
   const frid=+document.getElementById('gfr').value||0;
-  let acts=frid>0?S.activities.filter(a=>a.rid===frid):[...S.activities];
+  const ftmrg=isAdmin()?document.getElementById('fteam')?.value||'':'';
+  const sc=schedule();
+  let acts=visibleActivities(sc).filter(a=>!frid||+a.rid===frid);
+  if(ftmrg) acts=acts.filter(a=>{ const r=S.resources.find(x=>+x.id===+a.rid); return (r?.team||'')===ftmrg; });
   const grpFn=list=>{
     const g={};
-    S.resources.forEach(r=>{
-      if(frid>0&&r.id!==frid) return;
+    visibleResources().forEach(r=>{
+      if(frid>0&&+r.id!==frid) return;
       const ra=list.filter(a=>+a.rid===+r.id);
       if(ra.length){ ra.forEach(a=>a._gc=r.color); g[`${ini(r.name)} ${r.name.split(' ')[0]}`]=ra; }
     });
@@ -1205,7 +1309,9 @@ function renderRG(){
 function renderPG(){
   const sc=schedule();
   const fpid=+document.getElementById('gfp').value||0;
-  const projs=fpid>0?S.projects.filter(p=>p.id===fpid):S.projects;
+  const ftmpg=isAdmin()?document.getElementById('fteam')?.value||'':'';
+  let projs=(fpid>0?S.projects.filter(p=>+p.id===fpid):visibleProjects());
+  if(ftmpg) projs=projs.filter(p=>(p.team||'')===ftmpg);
 
   // Health cards
   let hhtml='';
@@ -1231,7 +1337,10 @@ function renderPG(){
   document.getElementById('pharea').innerHTML=hhtml;
 
   // Gantt
-  let allActs=fpid>0?S.activities.filter(a=>+a.pjid===fpid):[...S.activities];
+  const sc2=schedule();
+  let allActs=visibleActivities(sc2);
+  if(fpid>0) allActs=allActs.filter(a=>+a.pjid===fpid);
+  if(ftmpg)  allActs=allActs.filter(a=>{ const r=S.resources.find(x=>+x.id===+a.rid); return (r?.team||'')===ftmpg; });
   const grpFn=list=>{
     const g={};
     projs.forEach(p=>{
@@ -1300,7 +1409,9 @@ function renderOV(){
   if(!S.resources.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso.</div>'; return; }
   const sc=schedule(), t=today(), wend=weekEnd();
 
-  el.innerHTML=S.resources.map(r=>{
+  const ftmov=isAdmin()?document.getElementById('fteam')?.value||'':'';
+  const vRov=visibleResources().filter(r=>!ftmov||(r.team||'')===ftmov);
+  el.innerHTML=vRov.map(r=>{
     const allActs=S.activities.filter(a=>+a.rid===+r.id);
     const pending=allActs.filter(a=>!a.done&&!a.susp);
     const th=pending.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
@@ -1369,21 +1480,15 @@ function renderOV(){
 // ═══════════════════════════════════════════
 function renderStats(sc){
   const el=document.getElementById('stats'), t=today();
-  const late=S.activities.filter(a=>!a.done&&!a.susp&&sc[a.id]?.end<t).length;
-  const susp=S.activities.filter(a=>a.susp).length;
-  [
-    {lbl:'Projetos',  val:S.projects.length,   col:'var(--acc2)', icon:'📁'},
-    {lbl:'Recursos',  val:S.resources.length,   col:'var(--acc)',  icon:'👥'},
-    {lbl:'Atividades',val:S.activities.length,  col:'var(--tx)',   icon:'📋'},
-    {lbl:'Atrasadas', val:late, col:late>0?'var(--err)':'var(--mu2)', icon:'🔴'},
-    {lbl:'Paralisadas',val:susp,col:susp>0?'var(--sus)':'var(--mu2)',icon:'⏸'},
-  ].forEach(s=>{
-    el.innerHTML=``;
-  });
+  const vActs=visibleActivities(sc);
+  const vRes=visibleResources();
+  const vProj=visibleProjects();
+  const late=vActs.filter(a=>!a.done&&!a.susp&&sc[a.id]?.end<t).length;
+  const susp=vActs.filter(a=>a.susp).length;
   el.innerHTML=[
-    {lbl:'Projetos',  val:S.projects.length,   col:'var(--acc2)', icon:'📁'},
-    {lbl:'Recursos',  val:S.resources.length,   col:'var(--acc)',  icon:'👥'},
-    {lbl:'Atividades',val:S.activities.length,  col:'var(--tx)',   icon:'📋'},
+    {lbl:'Projetos',  val:vProj.length,   col:'var(--acc2)', icon:'📁'},
+    {lbl:'Recursos',  val:vRes.length,    col:'var(--acc)',  icon:'👥'},
+    {lbl:'Atividades',val:vActs.length,   col:'var(--tx)',   icon:'📋'},
     {lbl:'Atrasadas', val:late, col:late>0?'var(--err)':'var(--mu2)', icon:'🔴'},
     {lbl:'Paralisadas',val:susp,col:susp>0?'var(--sus)':'var(--mu2)',icon:'⏸'},
   ].map(s=>`<div class="card" style="text-align:center;padding:12px 9px">
@@ -1398,6 +1503,9 @@ function renderStats(sc){
 //  SELECTS SYNC
 // ═══════════════════════════════════════════
 function syncSelects(){
+  const vProjs = visibleProjects();
+  const vRes   = visibleResources();
+
   // project selects
   const apj=document.getElementById('apj');
   const fprj=document.getElementById('fprj');
@@ -1406,8 +1514,8 @@ function syncSelects(){
   apj.innerHTML='<option value="0">Demanda geral</option>';
   fprj.innerHTML='<option value="0">Todos os projetos</option>';
   gfp.innerHTML='<option value="0">Todos os projetos</option>';
-  S.projects.forEach(p=>{
-    [apj,fprj,gfp].forEach(sel=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; sel.appendChild(o); });
+  vProjs.forEach(p=>{
+    [apj,fprj,gfp].forEach(sel=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name+(isAdmin()&&p.team?` (${p.team})`:''); sel.appendChild(o); });
   });
   if(pvApj) apj.value=pvApj;
   if(pvFp)  fprj.value=pvFp;
@@ -1421,12 +1529,23 @@ function syncSelects(){
   ar.innerHTML='<option value="0">Selecionar...</option>';
   fres.innerHTML='<option value="0">Todos os recursos</option>';
   gfr.innerHTML='<option value="0">Todos os recursos</option>';
-  S.resources.forEach(r=>{
-    [ar,fres,gfr].forEach(sel=>{ const o=document.createElement('option'); o.value=r.id; o.textContent=r.name; sel.appendChild(o); });
+  vRes.forEach(r=>{
+    [ar,fres,gfr].forEach(sel=>{ const o=document.createElement('option'); o.value=r.id; o.textContent=r.name+(isAdmin()&&r.team?` (${r.team})`:''); sel.appendChild(o); });
   });
   if(pvAr) ar.value=pvAr;
   if(pvFr) fres.value=pvFr;
   if(pvGr) gfr.value=pvGr;
+
+  // team filters — admin only
+  const teams=[...new Set(S.resources.map(r=>r.team||'').filter(Boolean))].sort();
+  ['fteam','fteam-acts'].forEach(tid=>{
+    const ftm=document.getElementById(tid);
+    if(!ftm) return;
+    const prevT=ftm.value;
+    ftm.innerHTML='<option value="">Todas as equipes</option>';
+    teams.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; ftm.appendChild(o); });
+    if(prevT) ftm.value=prevT;
+  });
 
   syncPred();
 }
@@ -1454,21 +1573,24 @@ window.selectProj=function(pid){ gv('pgantt'); document.getElementById('gfp').va
 
 function renderRList(){
   const el=document.getElementById('rlist');
-  if(!S.resources.length){ el.innerHTML='<div class="empty">Nenhum recurso.</div>'; return; }
+  const vr=visibleResources();
+  if(!vr.length){ el.innerHTML='<div class="empty">Nenhum recurso.</div>'; return; }
   const sc=schedule();
-  el.innerHTML=S.resources.map(r=>{
+  el.innerHTML=vr.map(r=>{
     const acts=S.activities.filter(a=>+a.rid===+r.id&&!a.done&&!a.susp);
     const th=acts.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
     const pct=Math.min((th/(r.hours*5))*100,100);
     const fc=pct>85?'var(--err)':pct>60?'var(--warn)':'var(--ok)';
-    return `<div class="ritem">
+    const roleLbl = r.role==='admin'?'<span style="font-size:9px;background:rgba(108,71,212,.12);color:var(--acc2);padding:1px 5px;border-radius:8px;font-weight:700">Admin</span>':'';
+    const isMe = r.email&&r.email.toLowerCase()===ME.email;
+    return `<div class="ritem" style="${isMe?'border-color:var(--acc);':''}">
       <div class="av" style="width:27px;height:27px;font-size:10px;background:${r.color}18;color:${r.color}">${ini(r.name)}</div>
       <div class="rinfo">
-        <div class="rname">${r.name}</div>
-        <div class="rhrs">${r.hours}h/dia</div>
+        <div class="rname" style="display:flex;align-items:center;gap:4px">${r.name} ${roleLbl}</div>
+        <div class="rhrs">${r.team||'—'} · ${r.hours}h/dia</div>
         <div class="lbar"><div class="lfill" style="width:${pct}%;background:${fc}"></div></div>
       </div>
-      <button class="btn bxs bdn" onclick="delResource(${r.id})">✕</button>
+      ${isAdmin()?`<button class="btn bxs bgh" onclick="openEditRes(${r.id})" title="Editar">✏</button><button class="btn bxs bdn" onclick="delResource(${r.id})">✕</button>`:''}
     </div>`;
   }).join('');
 }
@@ -1578,6 +1700,58 @@ function saveEdit(){
 }
 
 // ═══════════════════════════════════════════
+//  EDIT RESOURCE
+// ═══════════════════════════════════════════
+let _editResId = 0;
+
+function openEditRes(id){
+  if(!isAdmin()){ alert('Sem permissão.'); return; }
+  _editResId = id;
+  const r = S.resources.find(x => +x.id === id);
+  if(!r) return;
+  document.getElementById('ern').value = r.name  || '';
+  document.getElementById('ere').value = r.email || '';
+  document.getElementById('ert').value = r.team  || '';
+  document.getElementById('erh').value = r.hours || 8;
+  document.getElementById('err').value = r.role  || 'user';
+  // Warn if editing self's role
+  const isMe = r.email && r.email.toLowerCase() === ME.email;
+  const warn = document.getElementById('editres-warning');
+  warn.style.display = isMe ? '' : 'none';
+  document.getElementById('err').disabled = isMe; // can't change own role
+  document.getElementById('meditres').classList.remove('hidden');
+}
+function closeEditRes(){
+  document.getElementById('meditres').classList.add('hidden');
+  document.getElementById('err').disabled = false;
+  _editResId = 0;
+}
+function saveEditRes(){
+  if(!isAdmin()){ alert('Sem permissão.'); return; }
+  const r = S.resources.find(x => +x.id === _editResId);
+  if(!r){ closeEditRes(); return; }
+  const newEmail = document.getElementById('ere').value.trim().toLowerCase();
+  const newName  = document.getElementById('ern').value.trim();
+  const newTeam  = document.getElementById('ert').value.trim();
+  const newHours = parseFloat(document.getElementById('erh').value) || r.hours;
+  const isMe = r.email && r.email.toLowerCase() === ME.email;
+  if(!newName)  { alert('Informe o nome.'); return; }
+  if(!newEmail) { alert('Informe o e-mail.'); return; }
+  if(!newTeam)  { alert('Informe a equipe.'); return; }
+  // Check duplicate email (excluding self)
+  if(S.resources.some(x=>+x.id!==_editResId&&x.email&&x.email.toLowerCase()===newEmail)){
+    alert('Já existe outro recurso com este e-mail.'); return;
+  }
+  r.name  = newName;
+  r.email = newEmail;
+  r.team  = newTeam;
+  r.hours = newHours;
+  if(!isMe) r.role = document.getElementById('err').value || 'user'; // can't change own role
+  closeEditRes();
+  save();
+}
+
+// ═══════════════════════════════════════════
 //  CSV EXPORT
 // ═══════════════════════════════════════════
 function exportCSV(){
@@ -1673,8 +1847,12 @@ function renderAll(){
 function seedDemo(){
   const t=today();
   S.projects.push({ id:S.pid++, name:'Galpão Industrial A', desc:'Estrutura metálica principal', start:t, end:addWH(t,80,8), color:PCOLS[0] });
-  ['Ana Beatriz','Carlos Eduardo','Marcos Silva'].forEach((n,i)=>
-    S.resources.push({ id:S.rid++, name:n, hours:8, color:RCOLS[i] }));
+  [
+    {name:'Ana Beatriz',   email:'ana@empresa.com',    team:'Estruturas', role:'admin'},
+    {name:'Carlos Eduardo',email:'carlos@empresa.com', team:'Estruturas', role:'user'},
+    {name:'Marcos Silva',  email:'marcos@empresa.com', team:'Geotecnia',  role:'user'},
+  ].forEach((r,i)=> S.resources.push({ id:S.rid++, name:r.name, email:r.email,
+    team:r.team, role:r.role, hours:8, color:RCOLS[i] }));
   const pid=S.projects[0].id;
   [
     {name:'Levantamento topográfico',   hours:8,  rid:1, type:'Verificação de desenho', pri:1, pred:0,    pjid:pid},
