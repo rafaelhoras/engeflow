@@ -1285,7 +1285,6 @@ function drawGantt(acts, sc, contId, baseline=false, grpFn=null){
 //  RESOURCE GANTT
 // ═══════════════════════════════════════════
 function renderRG(){
-  const sc=schedule();
   const frid=+document.getElementById('gfr').value||0;
   const ftmrg=isAdmin()?document.getElementById('fteam')?.value||'':'';
   const sc=schedule();
@@ -1337,8 +1336,7 @@ function renderPG(){
   document.getElementById('pharea').innerHTML=hhtml;
 
   // Gantt
-  const sc2=schedule();
-  let allActs=visibleActivities(sc2);
+  let allActs=visibleActivities(sc);
   if(fpid>0) allActs=allActs.filter(a=>+a.pjid===fpid);
   if(ftmpg)  allActs=allActs.filter(a=>{ const r=S.resources.find(x=>+x.id===+a.rid); return (r?.team||'')===ftmpg; });
   const grpFn=list=>{
@@ -1612,8 +1610,6 @@ function tog(id){ document.getElementById(id).classList.toggle('hidden'); }
 // ═══════════════════════════════════════════
 //  EDIT ACTIVITY
 // ═══════════════════════════════════════════
-let _editId = 0;
-
 function openEdit(id){
   _editId = id;
   const a = S.activities.find(x => +x.id === id);
