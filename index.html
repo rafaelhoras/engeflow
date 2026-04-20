@@ -376,7 +376,9 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
 
     <!-- OVERVIEW -->
     <div class="view" id="view-overview">
-      <span class="ptitle">Visão Geral da Equipe</span>
+      <span class="ptitle">Visão Geral</span>
+      <div id="ovprojects"></div>
+      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:4px">Equipe</div>
       <div class="ovgrid" id="ovgrid"></div>
     </div>
   </main>
@@ -776,72 +778,74 @@ function ini(n){ return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCas
 function schedule(){
   const sc={};
 
-  // First pass: compute naive end dates (start + hours) ignoring conflicts
-  function naiveEnd(act){
-    const res=S.resources.find(r=>+r.id===+act.rid);
-    if(!res||!act.start) return act.start||'';
-    if(act.done&&act.doneDate) return act.doneDate;
-    const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
-    return addWH(act.start,th,res.hours);
-  }
-
-  // Iterative resolution — converges when no more conflicts exist
+  // Iterative resolution — converges when no more conflicts exist.
+  // KEY RULE: higher priority (lower number) wins the slot.
+  // When activity A conflicts with activity B on the same resource:
+  //   - If A has HIGHER priority than B → B must yield (move after A)
+  //   - If A has LOWER priority than B  → A must yield (move after B)
+  //   - Equal priority                  → earlier start date wins
   for(let pass=0;pass<40;pass++){
     let changed=false;
-    // Sort by start date so earlier activities are resolved first
-    const sorted=[...S.activities].filter(a=>a.start).sort((a,b)=>a.start.localeCompare(b.start));
+
+    // Process in priority order (1=high first), then by start date
+    const sorted=[...S.activities]
+      .filter(a=>a.start&&!a.done&&!a.susp)
+      .sort((a,b)=> a.pri!==b.pri ? (a.pri||2)-(b.pri||2) : a.start.localeCompare(b.start));
+
+    // Also freeze done activities first
+    S.activities.filter(a=>a.done&&a.start).forEach(act=>{
+      const res=S.resources.find(r=>+r.id===+act.rid);
+      const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
+      const end=act.doneDate||( res?addWH(act.start,th,res.hours):act.start );
+      if(!sc[act.id]) sc[act.id]={start:act.start,end,pushed:false};
+    });
 
     sorted.forEach(act=>{
       const res=S.resources.find(r=>+r.id===+act.rid);
       if(!res||!act.start) return;
 
-      // Done with real completion date — freeze it
-      if(act.done&&act.doneDate){
-        const prev=sc[act.id];
-        if(!prev||prev.start!==act.start||prev.end!==act.doneDate){
-          sc[act.id]={start:act.start,end:act.doneDate,pushed:false};
-          changed=true;
-        }
-        return;
-      }
-
       let earliest=act.start;
 
-      // 1) Predecessor constraint — must start after predecessor ends
+      // 1) Predecessor constraint
       if(+act.pred>0){
         const ps=sc[+act.pred];
         if(ps&&ps.end>=earliest){
-          const nw=nextWD(ps.end);
-          if(nw>earliest) earliest=nw;
+          const nw=nextWD(ps.end); if(nw>earliest) earliest=nw;
         }
       }
 
-      // 2) Real overlap check — only push if another activity for this
-      //    resource actually occupies the [earliest, projectedEnd] window
+      // 2) Conflict resolution with priority awareness
       const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
       let projEnd=addWH(earliest,th,res.hours);
 
-      // Keep pushing until no overlap remains with other scheduled acts
-      let maxIter=50, iter=0;
+      let maxIter=60, iter=0;
       while(iter++<maxIter){
         let conflict=false;
         for(const other of S.activities){
-          if(other.id===act.id) continue;
+          if(+other.id===+act.id) continue;
           if(+other.rid!==+act.rid) continue;
           if(other.susp) continue;
           const os=sc[other.id];
           if(!os) continue;
-          // Check if [earliest, projEnd] overlaps [os.start, os.end]
-          const overlaps = earliest<=os.end && projEnd>=os.start;
-          if(overlaps){
-            // Push our start to after the conflicting activity ends
-            const nw=nextWD(os.end);
-            if(nw>earliest){
-              earliest=nw;
-              projEnd=addWH(earliest,th,res.hours);
-              conflict=true;
-              break; // restart overlap check with new earliest
+          const overlapping = earliest<=os.end && projEnd>=os.start;
+          if(!overlapping) continue;
+
+          const myPri   = act.pri   || 2;
+          const othrPri = other.pri || 2;
+
+          if(myPri <= othrPri){
+            // I have higher or equal priority → other must yield → skip, it will be pushed later
+            // But if equal priority and other starts first → I yield
+            if(myPri === othrPri && os.start <= earliest && os.start === other.start){
+              // equal priority, other was there first by start date → I yield
+              const nw=nextWD(os.end);
+              if(nw>earliest){ earliest=nw; projEnd=addWH(earliest,th,res.hours); conflict=true; break; }
             }
+            // otherwise I win, skip this conflict
+          } else {
+            // other has higher priority → I must yield
+            const nw=nextWD(os.end);
+            if(nw>earliest){ earliest=nw; projEnd=addWH(earliest,th,res.hours); conflict=true; break; }
           }
         }
         if(!conflict) break;
@@ -854,15 +858,17 @@ function schedule(){
         changed=true;
       }
     });
+
+    // Suspended: keep original window (frozen)
+    S.activities.filter(a=>a.susp&&a.start).forEach(act=>{
+      const res=S.resources.find(r=>+r.id===+act.rid);
+      if(!res) return;
+      const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
+      if(!sc[act.id]) sc[act.id]={start:act.start,end:addWH(act.start,th,res.hours),pushed:false};
+    });
+
     if(!changed) break;
   }
-
-  // Done without doneDate — compute from original start
-  S.activities.filter(a=>a.done&&!a.doneDate&&a.start).forEach(act=>{
-    const res=S.resources.find(r=>+r.id===+act.rid);
-    const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
-    if(!sc[act.id]) sc[act.id]={start:act.start,end:res?addWH(act.start,th,res.hours):act.start,pushed:false};
-  });
 
   return sc;
 }
@@ -1402,6 +1408,94 @@ function weekEnd(){
   return d.toISOString().split('T')[0];
 }
 
+// ═══════════════════════════════════════════
+//  OVERVIEW — PROJECTS PANEL
+// ═══════════════════════════════════════════
+function renderOVProjects(){
+  const el=document.getElementById('ovprojects');
+  if(!el) return;
+  const sc=schedule(), t=today();
+  const ftm=isAdmin()?document.getElementById('fteam')?.value||'':'';
+  let projs=visibleProjects();
+  if(ftm) projs=projs.filter(p=>(p.team||'')===ftm);
+  if(!projs.length){ el.innerHTML=''; return; }
+
+  el.innerHTML=`
+    <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Projetos</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px;margin-bottom:16px">
+    ${projs.map(p=>{
+      const acts=S.activities.filter(a=>+a.pjid===+p.id);
+      const total=acts.length;
+      if(!total) return '';
+
+      const done=acts.filter(a=>a.done).length;
+      const susp=acts.filter(a=>a.susp).length;
+      const pending=acts.filter(a=>!a.done&&!a.susp);
+      const late=pending.filter(a=>sc[a.id]?.end<t).length;
+
+      // Progress: weighted by hours
+      const totalH=acts.reduce((s,a)=>s+a.hours,0);
+      const doneH=acts.filter(a=>a.done).reduce((s,a)=>s+a.hours,0);
+      // partial progress from in-progress activities
+      const partialH=pending.reduce((s,a)=>s+(a.hours*(a.prog||0)/100),0);
+      const pct=totalH>0?Math.round((doneH+partialH)/totalH*100):0;
+      const pctColor=pct>=100?'var(--ok)':pct>=50?'var(--acc)':'var(--mu2)';
+
+      // Dates
+      const lastEnd=acts.reduce((mx,a)=>{const e=sc[a.id]?.end||a.start||'';return e>mx?e:mx;},'');
+      const baseEnd=p.end||'';
+      const dd=lastEnd&&baseEnd?diffD(baseEnd,lastEnd):0;
+      const ddTx=dd===0?'No prazo':dd>0?`+${dd}d adiantado`:`${Math.abs(dd)}d atrasado`;
+      const ddCol=dd>0?'var(--ok)':dd===0?'var(--acc)':'var(--err)';
+      const pillCls=dd>0?'hp-early':dd===0?'hp-ok':'hp-err';
+
+      return `<div class="hcard" style="border-left:3px solid ${p.color};flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-weight:700;font-size:13px;color:${p.color}">${p.name}</div>
+            ${p.team?`<div style="font-size:10px;color:var(--mu)">${p.team}</div>`:''}
+          </div>
+          <span class="hpill ${pillCls}">${ddTx}</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+          <div>
+            <div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--tx)">${total}</div>
+            <div style="font-size:9.5px;color:var(--mu)">Atividades</div>
+          </div>
+          <div>
+            <div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--ok)">${done}</div>
+            <div style="font-size:9.5px;color:var(--mu)">Concluídas</div>
+          </div>
+          <div>
+            <div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${late>0?'var(--err)':'var(--mu2)'}">${late}</div>
+            <div style="font-size:9.5px;color:var(--mu)">Atrasadas</div>
+          </div>
+          <div>
+            <div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${susp>0?'var(--sus)':'var(--mu2)'}">${susp}</div>
+            <div style="font-size:9.5px;color:var(--mu)">Paralisadas</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-bottom:4px">
+            <span>Avanço físico</span>
+            <span style="font-weight:700;color:${pctColor}">${pct}%</span>
+          </div>
+          <div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--brd)">
+            <div style="height:100%;width:${pct}%;background:${pctColor};border-radius:3px;transition:width .4s"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;font-size:10.5px;flex-wrap:wrap">
+          <div><span style="color:var(--mu)">Fim previsto: </span><span style="font-weight:600">${fmt(baseEnd)}</span></div>
+          <div><span style="color:var(--mu)">Fim reprog.: </span><span style="font-weight:600;color:${ddCol}">${fmt(lastEnd)||'—'}</span></div>
+        </div>
+      </div>`;
+    }).filter(Boolean).join('')}
+    </div>`;
+}
+
 function renderOV(){
   const el=document.getElementById('ovgrid');
   if(!S.resources.length){ el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum recurso.</div>'; return; }
@@ -1829,6 +1923,7 @@ function renderAll(){
     renderActs();
     renderRG();
     renderPG();
+    renderOVProjects();
     renderOV();
     renderNotifs(sc);
     renderOAlerts(sc);
