@@ -435,6 +435,24 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
   </div>
 </div>
 
+<!-- MODAL: DATA DE CONCLUSÃO -->
+<div class="mover hidden" id="mdone">
+  <div class="modal" style="width:380px">
+    <h3>📅 Ajustar Data de Conclusão</h3>
+    <p style="color:var(--mu);font-size:11.5px;margin-bottom:14px">
+      Informe a data real em que esta atividade foi concluída.
+    </p>
+    <div class="fr">
+      <label class="flbl">Data de conclusão real</label>
+      <input class="fi" id="done-date" type="date">
+    </div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px">
+      <button class="btn bgh" onclick="closeDoneModal()">Cancelar</button>
+      <button class="btn bpri" onclick="saveDoneDate()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: EDITAR RECURSO -->
 <div class="mover hidden" id="meditres">
   <div class="modal" style="width:440px">
@@ -1062,6 +1080,33 @@ function setProg(id, val){
 //  DESVIO MODAL
 // ═══════════════════════════════════════════
 function openDev(id){ _devId=id; renderDevHist(); document.getElementById('dvd').value=''; document.getElementById('dvh').value='1'; document.getElementById('mdev').classList.remove('hidden'); }
+// ── COMPLETION DATE MODAL ──
+let _doneId = 0;
+function openDoneModal(id){
+  _doneId = id;
+  const a = S.activities.find(x=>+x.id===id);
+  if(!a) return;
+  // Pre-fill with existing doneDate or today
+  document.getElementById('done-date').value = a.doneDate || today();
+  document.getElementById('mdone').classList.remove('hidden');
+}
+function closeDoneModal(){
+  document.getElementById('mdone').classList.add('hidden');
+  _doneId = 0;
+}
+function saveDoneDate(){
+  const a = S.activities.find(x=>+x.id===_doneId);
+  if(!a){ closeDoneModal(); return; }
+  const newDate = document.getElementById('done-date').value;
+  if(!newDate){ alert('Selecione uma data.'); return; }
+  if(newDate > today()){ alert('A data de conclusão não pode ser no futuro.'); return; }
+  if(newDate < a.start){ alert('A data de conclusão não pode ser anterior à data de início ('+fmt(a.start)+').'); return; }
+  a.doneDate = newDate;
+  a.done = true;
+  closeDoneModal();
+  save();
+}
+
 function closeDev(){ document.getElementById('mdev').classList.add('hidden'); }
 function saveDev(){
   const desc=document.getElementById('dvd').value.trim();
@@ -1177,7 +1222,10 @@ function actHTML(a, sc){
     </div>
     ${pred?`<div style="margin-top:3px"><span class="dbadge">⛓ Após: #${pred.id} ${pred.name.slice(0,24)}</span></div>`:''}
     ${a.susp?`<div style="margin-top:3px;font-size:10px;color:var(--sus);font-weight:600">⏸ ${a.suspReason}</div>`:''}
-    ${a.done&&a.doneDate?`<div style="margin-top:3px;font-size:10px;color:var(--ok)">✅ Concluído em ${fmt(a.doneDate)}</div>`:''}
+    ${a.done?`<div style="margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:10px;color:var(--ok)">✅ Concluído em ${fmt(a.doneDate)||'data não registrada'}</span>
+      <button class="btn bxs bgh" onclick="openDoneModal(${a.id})" style="font-size:10px;padding:1px 6px" title="Ajustar data de conclusão">📅 Ajustar data</button>
+    </div>`:''}
     <div style="margin-top:7px">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-bottom:2px">
         <span>Progresso</span><span data-pg="${a.id}">${a.prog}%</span>
@@ -1400,7 +1448,8 @@ function openDet(id){
     <button class="btn bwn bsm" onclick="document.getElementById('mdet').classList.add('hidden');openDev(${id})">⚡ Desvio</button>
     <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openEdit(${id})">✏ Editar</button>
     <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openSus(${id})">${a.susp?'▶ Retomar':'⏸ Paralisar'}</button>
-    <button class="btn bpri bsm" onclick="document.getElementById('mdet').classList.add('hidden');toggleDone(${id})">${a.done?'↩ Reabrir':'✓ Concluir'}</button>`;
+    <button class="btn bpri bsm" onclick="document.getElementById('mdet').classList.add('hidden');toggleDone(${id})">${a.done?'↩ Reabrir':'✓ Concluir'}</button>
+    ${a.done?`<button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openDoneModal(${id})">📅 Ajustar data</button>`:''}`;
   document.getElementById('mdet').classList.remove('hidden');
 }
 
@@ -1489,7 +1538,7 @@ function renderOVProjects(){
             <span>Avanço físico</span>
             <span style="font-weight:700;color:${pctColor}">${pct}%</span>
           </div>
-          <div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--brd);width: 252px;">
+          <div style="height:6px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--brd);width:252px">
             <div style="height:100%;width:${pct}%;background:${pctColor};border-radius:3px;transition:width .4s"></div>
           </div>
         </div>
