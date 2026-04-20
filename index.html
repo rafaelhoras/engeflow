@@ -775,96 +775,103 @@ function ini(n){ return n.trim().split(/\s+/).slice(0,2).map(w=>w[0]?.toUpperCas
 //  predecessor hasn't finished yet.
 //  It is NOT pushed simply because another activity was registered later.
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  SCHEDULING ENGINE — CASCADE PROPAGATION
+//  Rules:
+//  1. Higher priority (lower number) wins a time slot on a resource.
+//  2. Lower-priority activities that lose the slot are pushed AFTER
+//     the winner ends — and this push cascades to everything downstream.
+//  3. Predecessor links cascade across resources.
+//  4. Done activities are frozen at their completion date.
+//  5. Suspended activities keep their declared window (frozen).
+// ═══════════════════════════════════════════
 function schedule(){
-  const sc={};
+  const sc = {};   // aid → { start, end, pushed }
 
-  // Iterative resolution — converges when no more conflicts exist.
-  // KEY RULE: higher priority (lower number) wins the slot.
-  // When activity A conflicts with activity B on the same resource:
-  //   - If A has HIGHER priority than B → B must yield (move after A)
-  //   - If A has LOWER priority than B  → A must yield (move after B)
-  //   - Equal priority                  → earlier start date wins
-  for(let pass=0;pass<40;pass++){
+  // ── helpers ──────────────────────────────
+  function resOf(act){ return S.resources.find(r=>+r.id===+act.rid); }
+  function totalH(act){ return act.hours + (act.devs||[]).reduce((s,d)=>s+d.h,0); }
+
+  // Freeze done and suspended activities first
+  S.activities.forEach(act=>{
+    const res=resOf(act);
+    if(!act.start||!res) return;
+    if(act.done){
+      const end=act.doneDate||addWH(act.start,totalH(act),res.hours);
+      sc[act.id]={start:act.start,end,pushed:false,frozen:true};
+    } else if(act.susp){
+      sc[act.id]={start:act.start,end:addWH(act.start,totalH(act),res.hours),pushed:false,frozen:true};
+    }
+  });
+
+  // ── main iterative loop ───────────────────
+  // Each pass: compute earliest start for every non-frozen activity,
+  // considering (a) predecessor end dates and (b) same-resource conflicts
+  // resolved by priority. Repeat until nothing changes (convergence).
+  const active = S.activities.filter(a=>!a.done&&!a.susp&&a.start);
+
+  for(let pass=0; pass<60; pass++){
     let changed=false;
 
-    // Process in priority order (1=high first), then by start date
-    const sorted=[...S.activities]
-      .filter(a=>a.start&&!a.done&&!a.susp)
-      .sort((a,b)=> a.pri!==b.pri ? (a.pri||2)-(b.pri||2) : a.start.localeCompare(b.start));
-
-    // Also freeze done activities first
-    S.activities.filter(a=>a.done&&a.start).forEach(act=>{
-      const res=S.resources.find(r=>+r.id===+act.rid);
-      const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
-      const end=act.doneDate||( res?addWH(act.start,th,res.hours):act.start );
-      if(!sc[act.id]) sc[act.id]={start:act.start,end,pushed:false};
+    // Sort active activities: higher priority first, then earlier declared start
+    const sorted=[...active].sort((a,b)=>{
+      const pa=a.pri||2, pb=b.pri||2;
+      if(pa!==pb) return pa-pb;
+      return (a.start||'').localeCompare(b.start||'');
     });
 
     sorted.forEach(act=>{
-      const res=S.resources.find(r=>+r.id===+act.rid);
-      if(!res||!act.start) return;
-
+      const res=resOf(act); if(!res) return;
+      const th=totalH(act);
       let earliest=act.start;
 
-      // 1) Predecessor constraint
+      // (a) Predecessor constraint — must start after ALL predecessors end
       if(+act.pred>0){
         const ps=sc[+act.pred];
-        if(ps&&ps.end>=earliest){
-          const nw=nextWD(ps.end); if(nw>earliest) earliest=nw;
-        }
+        if(ps){ const nw=nextWD(ps.end); if(nw>earliest) earliest=nw; }
       }
 
-      // 2) Conflict resolution with priority awareness
-      const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
-      let projEnd=addWH(earliest,th,res.hours);
+      // (b) Same-resource conflict resolution with priority cascade
+      //     Build list of OTHER scheduled activities on same resource
+      const sameRes=S.activities.filter(o=>
+        +o.id!==+act.id && +o.rid===+act.rid && sc[o.id]
+      );
 
-      let maxIter=60, iter=0;
+      // Keep pushing earliest until no overlap with any higher-or-equal priority activity
+      let maxIter=80, iter=0;
       while(iter++<maxIter){
-        let conflict=false;
-        for(const other of S.activities){
-          if(+other.id===+act.id) continue;
-          if(+other.rid!==+act.rid) continue;
-          if(other.susp) continue;
+        let pushed=false;
+        for(const other of sameRes){
           const os=sc[other.id];
           if(!os) continue;
-          const overlapping = earliest<=os.end && projEnd>=os.start;
-          if(!overlapping) continue;
+          const projEnd=addWH(earliest,th,res.hours);
+          const overlaps=earliest<=os.end && projEnd>=os.start;
+          if(!overlaps) continue;
 
-          const myPri   = act.pri   || 2;
-          const othrPri = other.pri || 2;
+          const myPri   = act.pri  ||2;
+          const othPri  = other.pri||2;
 
-          if(myPri <= othrPri){
-            // I have higher or equal priority → other must yield → skip, it will be pushed later
-            // But if equal priority and other starts first → I yield
-            if(myPri === othrPri && os.start <= earliest && os.start === other.start){
-              // equal priority, other was there first by start date → I yield
-              const nw=nextWD(os.end);
-              if(nw>earliest){ earliest=nw; projEnd=addWH(earliest,th,res.hours); conflict=true; break; }
-            }
-            // otherwise I win, skip this conflict
-          } else {
-            // other has higher priority → I must yield
+          // I yield if: other has strictly higher priority (lower number),
+          //             OR same priority but other's declared start is earlier
+          const iYield = othPri < myPri ||
+            (othPri===myPri && (other.start||'') <= (act.start||''));
+
+          if(iYield){
             const nw=nextWD(os.end);
-            if(nw>earliest){ earliest=nw; projEnd=addWH(earliest,th,res.hours); conflict=true; break; }
+            if(nw>earliest){ earliest=nw; pushed=true; break; }
           }
+          // else: I win, other will be pushed in a later iteration
         }
-        if(!conflict) break;
+        if(!pushed) break;
       }
 
-      const pushed=earliest!==act.start;
+      const projEnd=addWH(earliest,th,res.hours);
+      const wasPushed=earliest!==act.start;
       const prev=sc[act.id];
-      if(!prev||prev.start!==earliest||prev.end!==projEnd){
-        sc[act.id]={start:earliest,end:projEnd,pushed};
+      if(!prev || prev.start!==earliest || prev.end!==projEnd){
+        sc[act.id]={start:earliest, end:projEnd, pushed:wasPushed};
         changed=true;
       }
-    });
-
-    // Suspended: keep original window (frozen)
-    S.activities.filter(a=>a.susp&&a.start).forEach(act=>{
-      const res=S.resources.find(r=>+r.id===+act.rid);
-      if(!res) return;
-      const th=act.hours+(act.devs||[]).reduce((s,d)=>s+d.h,0);
-      if(!sc[act.id]) sc[act.id]={start:act.start,end:addWH(act.start,th,res.hours),pushed:false};
     });
 
     if(!changed) break;
