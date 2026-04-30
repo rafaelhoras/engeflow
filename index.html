@@ -775,10 +775,60 @@ function fmt(s){ if(!s)return'—'; return new Date(s+'T00:00:00').toLocaleDateS
 function fmts(s){ if(!s)return'—'; const d=new Date(s+'T00:00:00'); return `${d.getDate()}/${d.getMonth()+1}`; }
 function diffD(a,b){ return Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000); }
 
+// addWH: advance by totalHours of work, returning end DATE.
+// Partial days count — 4h on a day that has 4h remaining stays on same day.
+// Returns the date on which the activity finishes.
 function addWH(start, hours, hpd){
   if(!start||!hpd||hours<=0) return start;
   let d=new Date(start+'T00:00:00'), rem=hours;
   while(rem>hpd){ d.setDate(d.getDate()+1); skipWE(d); rem-=hpd; }
+  // rem <= hpd: activity finishes on day d (same or advanced)
+  return d.toISOString().split('T')[0];
+}
+
+// hoursUsedOnDay: sum of hours already allocated to a resource on a given date
+// considering only scheduled activities (from sc) that overlap that date
+function hoursUsedOnDay(rid, dateStr, sc, excludeId){
+  let used=0;
+  S.activities.forEach(a=>{
+    if(+a.rid!==rid) return;
+    if(+a.id===excludeId) return;
+    const s=sc[a.id]; if(!s) return;
+    // activity occupies dateStr if start<=date<=end
+    if(s.start<=dateStr && s.end>=dateStr){
+      // how many hours of this activity fall on dateStr?
+      // simplified: if single-day activity, all hours; otherwise hpd
+      const res=S.resources.find(r=>+r.id===rid);
+      if(!res) return;
+      const th=a.hours+(a.devs||[]).reduce((x,d)=>x+d.h,0);
+      const days=Math.max(1,diffD(s.end,s.start)+1);
+      const hPerDay=Math.min(th, res.hours); // at most hpd per day
+      used+=hPerDay;
+    }
+  });
+  return used;
+}
+
+// addWHFrom: given a start date and hours, find the actual end date
+// respecting that a day may already have some hours used by other activities.
+// Used in scheduling to pack activities within the same day when capacity allows.
+function addWHFrom(start, hours, hpd, rid, sc, excludeId){
+  if(!start||!hpd||hours<=0) return start;
+  let d=new Date(start+'T00:00:00');
+  let rem=hours;
+  let safetyIter=0;
+  while(rem>0 && safetyIter++<500){
+    const dateStr=d.toISOString().split('T')[0];
+    const used=hoursUsedOnDay(rid, dateStr, sc, excludeId);
+    const avail=Math.max(0, hpd-used);
+    if(avail<=0){
+      // Day is full — move to next working day
+      d.setDate(d.getDate()+1); skipWE(d); continue;
+    }
+    const consume=Math.min(rem, avail);
+    rem-=consume;
+    if(rem>0){ d.setDate(d.getDate()+1); skipWE(d); }
+  }
   return d.toISOString().split('T')[0];
 }
 function skipWE(d){ while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1); }
@@ -849,41 +899,44 @@ function schedule(){
         if(ps){ const nw=nextWD(ps.end); if(nw>earliest) earliest=nw; }
       }
 
-      // (b) Same-resource conflict resolution with priority cascade
+      // (b) Same-resource conflict resolution with priority and hour-packing
       //     Build list of OTHER scheduled activities on same resource
       const sameRes=S.activities.filter(o=>
         +o.id!==+act.id && +o.rid===+act.rid && sc[o.id]
       );
 
-      // Keep pushing earliest until no overlap with any higher-or-equal priority activity
+      // Keep pushing earliest until hours truly fit without exceeding daily capacity
       let maxIter=80, iter=0;
       while(iter++<maxIter){
         let pushed=false;
+        // Compute end date respecting already-used hours per day
+        const projEnd=addWHFrom(earliest, th, res.hours, +act.rid, sc, +act.id);
+
         for(const other of sameRes){
           const os=sc[other.id];
           if(!os) continue;
-          const projEnd=addWH(earliest,th,res.hours);
-          const overlaps=earliest<=os.end && projEnd>=os.start;
-          if(!overlaps) continue;
+          // Real overlap: date ranges intersect
+          if(earliest>os.end || projEnd<os.start) continue;
 
+          // Check if hours actually fit — compute available hours across overlapping days
           const myPri   = act.pri  ||2;
           const othPri  = other.pri||2;
-
-          // I yield if: other has strictly higher priority (lower number),
-          //             OR same priority but other's declared start is earlier
-          const iYield = othPri < myPri ||
+          const iYield  = othPri < myPri ||
             (othPri===myPri && (other.start||'') <= (act.start||''));
 
           if(iYield){
+            // Check if we can pack within the overlap (hours fit in remaining daily capacity)
+            // addWHFrom already accounts for used hours — if projEnd didn't change after
+            // we took over the slot, there's a real conflict and we must yield
             const nw=nextWD(os.end);
             if(nw>earliest){ earliest=nw; pushed=true; break; }
           }
-          // else: I win, other will be pushed in a later iteration
+          // else I win — other will be re-evaluated and pushed in next pass
         }
         if(!pushed) break;
       }
 
-      const projEnd=addWH(earliest,th,res.hours);
+      const projEnd=addWHFrom(earliest, th, res.hours, +act.rid, sc, +act.id);
       const wasPushed=earliest!==act.start;
       const prev=sc[act.id];
       if(!prev || prev.start!==earliest || prev.end!==projEnd){
@@ -930,18 +983,25 @@ function overlaps(sc){
 // ═══════════════════════════════════════════
 function buildNotifs(sc){
   const t=today(), out=[];
-  S.activities.filter(a=>!a.done&&!a.susp).forEach(a=>{
+  // Only show notifications for activities visible to current user
+  const vActs=visibleActivities(sc);
+  const vRids=new Set(visibleResources().map(r=>+r.id));
+
+  vActs.filter(a=>!a.done&&!a.susp).forEach(a=>{
     const s=sc[a.id]; if(!s) return;
     const dl=diffD(s.end,t);
-    const res=S.resources.find(r=>r.id===a.rid);
+    const res=S.resources.find(r=>+r.id===+a.rid);
     if(s.end<t)       out.push({icon:'🔴',tx:`<b>${a.name}</b> está atrasada`,sub:`${fmt(s.end)} · ${res?.name||''}`,p:0});
     else if(dl===0)   out.push({icon:'🟠',tx:`<b>${a.name}</b> vence hoje`,sub:res?.name||'',p:1});
     else if(dl<=2)    out.push({icon:'🟡',tx:`<b>${a.name}</b> vence em ${dl}d`,sub:`${fmt(s.end)} · ${res?.name||''}`,p:2});
   });
-  S.activities.filter(a=>a.susp).forEach(a=>
-    out.push({icon:'⏸',tx:`<b>${a.name}</b> paralisada`,sub:a.suspReason||'',p:1}));
-  overlaps(sc).forEach(ov=>{
-    const res=S.resources.find(r=>r.id===ov.rid);
+  vActs.filter(a=>a.susp).forEach(a=>{
+    const res=S.resources.find(r=>+r.id===+a.rid);
+    out.push({icon:'⏸',tx:`<b>${a.name}</b> paralisada`,sub:a.suspReason||'',p:1});
+  });
+  // Overlaps: only for resources visible to current user
+  overlaps(sc).filter(ov=>vRids.has(ov.rid)).forEach(ov=>{
+    const res=S.resources.find(r=>+r.id===ov.rid);
     out.push({icon:'⚠️',tx:`Sobreposição · <b>${res?.name||''}</b>`,sub:ov.aids.map(id=>S.activities.find(a=>a.id===id)?.name||'').join(' × '),p:2});
   });
   return out.sort((a,b)=>a.p-b.p);
