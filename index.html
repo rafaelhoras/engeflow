@@ -267,6 +267,7 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
           <select class="fi" id="rr">
             <option value="user">Usuário</option>
             <option value="admin">Administrador</option>
+            <option value="viewer">Visualizador</option>
           </select>
         </div>
         <button class="btn bpri bsm" style="width:100%" onclick="addResource()">Adicionar</button>
@@ -467,6 +468,7 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
       <select class="fi" id="err">
         <option value="user">Usuário</option>
         <option value="admin">Administrador</option>
+        <option value="viewer">Visualizador</option>
       </select>
     </div>
     <div id="editres-warning" style="display:none;background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.2);border-radius:7px;padding:7px 10px;font-size:11px;color:var(--err);margin-bottom:4px">
@@ -695,28 +697,34 @@ function resolveMe(){
   // Update header chip
   document.getElementById('uemail').textContent = ME.name || ME.email;
   document.getElementById('uav').textContent    = (ME.name||ME.email).slice(0,2).toUpperCase();
-  // Show/hide admin controls
+  // Show/hide admin controls (viewer also gets the team filter to navigate across teams)
   const adminEls = document.querySelectorAll('.admin-only');
-  adminEls.forEach(el => el.style.display = ME.role==='admin' ? '' : 'none');
+  adminEls.forEach(el => el.style.display = (isAdmin()||isViewer()) ? '' : 'none');
+  // Show/hide write controls (hidden for viewers)
+  const writeEls = document.querySelectorAll('.write-only');
+  writeEls.forEach(el => el.style.display = canWrite() ? '' : 'none');
   // Update team badge in header
   const tbadge = document.getElementById('team-badge');
-  if(tbadge) tbadge.textContent = ME.team || (ME.role==='admin'?'Administrador':'');
+  const roleLabel = isAdmin()?'Administrador':isViewer()?'Visualizador':'';
+  if(tbadge) tbadge.textContent = roleLabel;
 }
 
-function isAdmin(){ return ME.role === 'admin'; }
+function isAdmin(){  return ME.role === 'admin'; }
+function isViewer(){ return ME.role === 'viewer'; }
+function canWrite(){ return ME.role === 'admin' || ME.role === 'user'; }
 
 // Filter projects/resources/activities visible to current user
 function visibleResources(){
-  if(isAdmin()) return S.resources;
+  if(isAdmin()||isViewer()) return S.resources;
   return S.resources.filter(r => (r.team||'') === ME.team);
 }
 function visibleActivities(sc){
-  if(isAdmin()) return S.activities;
+  if(isAdmin()||isViewer()) return S.activities;
   const vRids = visibleResources().map(r=>+r.id);
   return S.activities.filter(a => vRids.includes(+a.rid));
 }
 function visibleProjects(){
-  if(isAdmin()) return S.projects;
+  if(isAdmin()||isViewer()) return S.projects;
   return S.projects.filter(p => (p.team||'') === ME.team);
 }
 
@@ -1027,6 +1035,7 @@ document.addEventListener('click',e=>{
 //  PROJECTS
 // ═══════════════════════════════════════════
 function addProject(){
+  if(!canWrite()){ alert("Sem permissão de escrita."); return; }
   const name=document.getElementById('pn').value.trim();
   const desc=document.getElementById('pd').value.trim();
   const start=document.getElementById('ps').value;
@@ -1039,6 +1048,7 @@ function addProject(){
   save();
 }
 function delProject(id){
+  if(!canWrite()){ return; }
   if(!confirm('Excluir projeto?')) return;
   S.projects = S.projects.filter(p=>p.id!==id);
   S.activities.forEach(a=>{ if(+a.pjid===id) a.pjid=0; });
@@ -1049,6 +1059,7 @@ function delProject(id){
 //  RESOURCES
 // ═══════════════════════════════════════════
 function addResource(){
+  if(!canWrite()){ alert("Sem permissão de escrita."); return; }
   const name =document.getElementById('rn').value.trim();
   const email=document.getElementById('re').value.trim().toLowerCase();
   const hours=parseFloat(document.getElementById('rh').value)||8;
@@ -1068,6 +1079,7 @@ function addResource(){
   save();
 }
 function delResource(id){
+  if(!isAdmin()){ return; }
   if(!confirm('Excluir recurso?')) return;
   S.resources=S.resources.filter(r=>r.id!==id);
   S.activities=S.activities.filter(a=>a.rid!==id);
@@ -1088,6 +1100,7 @@ function syncPred(){
 }
 
 function addActivity(){
+  if(!canWrite()){ alert("Sem permissão de escrita."); return; }
   const name=document.getElementById('an').value.trim();
   const hours=parseFloat(document.getElementById('ah').value)||8;
   const start=document.getElementById('ad').value;
@@ -1113,6 +1126,7 @@ function addActivity(){
 }
 
 function toggleDone(id){
+  if(!canWrite()){ return; }
   const a=S.activities.find(x=>x.id===id); if(!a) return;
   if(!a.done){ a.done=true; a.susp=false; a.doneDate=today(); a.prog=100; }
   else        { a.done=false; a.doneDate=''; a.prog=a.prog===100?90:a.prog; }
@@ -1120,12 +1134,14 @@ function toggleDone(id){
 }
 
 function delActivity(id){
+  if(!canWrite()){ return; }
   S.activities.forEach(a=>{ if(a.pred===id) a.pred=0; });
   S.activities=S.activities.filter(a=>a.id!==id);
   save();
 }
 
 function setProg(id, val){
+  if(!canWrite()){ return; }
   const a=S.activities.find(x=>x.id===id); if(!a) return;
   a.prog=+val;
   // update UI immediately
@@ -1155,6 +1171,7 @@ function closeDoneModal(){
   _doneId = 0;
 }
 function saveDoneDate(){
+  if(!canWrite()){ return; }
   const a = S.activities.find(x=>+x.id===_doneId);
   if(!a){ closeDoneModal(); return; }
   const newDate = document.getElementById('done-date').value;
@@ -1169,6 +1186,7 @@ function saveDoneDate(){
 
 function closeDev(){ document.getElementById('mdev').classList.add('hidden'); }
 function saveDev(){
+  if(!canWrite()){ return; }
   const desc=document.getElementById('dvd').value.trim();
   const h=parseFloat(document.getElementById('dvh').value)||1;
   if(!desc){ alert('Descreva o desvio.'); return; }
@@ -1207,6 +1225,7 @@ function openSus(id){
 }
 function closeSus(){ document.getElementById('msus').classList.add('hidden'); }
 function applySus(){
+  if(!canWrite()){ return; }
   const a=S.activities.find(x=>x.id===_susId); if(!a) return;
   const reason=document.getElementById('susreason').value.trim();
   const resuming=a.susp;
@@ -1242,6 +1261,7 @@ function openPri(ov){
 }
 function closePri(){ document.getElementById('mpri').classList.add('hidden'); _priCtx=null; }
 function applyPri(){
+  if(!canWrite()){ return; }
   if(!_priCtx) return;
   _priCtx.aids.forEach(id=>{ const s=document.getElementById('psel_'+id); if(s){ const a=S.activities.find(x=>x.id===id); if(a) a.pri=+s.value; } });
   save(); closePri();
@@ -1282,10 +1302,7 @@ function actHTML(a, sc){
     </div>
     ${pred?`<div style="margin-top:3px"><span class="dbadge">⛓ Após: #${pred.id} ${pred.name.slice(0,24)}</span></div>`:''}
     ${a.susp?`<div style="margin-top:3px;font-size:10px;color:var(--sus);font-weight:600">⏸ ${a.suspReason}</div>`:''}
-    ${a.done?`<div style="margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span style="font-size:10px;color:var(--ok)">✅ Concluído em ${fmt(a.doneDate)||'data não registrada'}</span>
-      <button class="btn bxs bgh" onclick="openDoneModal(${a.id})" style="font-size:10px;padding:1px 6px" title="Ajustar data de conclusão">📅 Ajustar data</button>
-    </div>`:''}
+    ${a.done?`<div style="margin-top:3px;font-size:10px;color:var(--ok)">✅ Concluído em ${fmt(a.doneDate)||'data não registrada'}</div>`:''}
     <div style="margin-top:7px">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-bottom:2px">
         <span>Progresso</span><span data-pg="${a.id}">${a.prog}%</span>
@@ -1505,11 +1522,11 @@ function openDet(id){
     ${(a.devs||[]).length?`<div style="font-size:9.5px;color:var(--mu);font-weight:600;margin-bottom:5px">DESVIOS</div>${a.devs.map(d=>`<div class="devi"><div><div style="font-size:11px;font-weight:600">${d.desc}</div><div style="font-size:9.5px;color:var(--mu)">${d.date}</div></div><span class="mono" style="color:var(--warn);font-weight:600">+${d.h}h</span></div>`).join('')}`:''}`;
   document.getElementById('detbtns').innerHTML=`
     <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden')">Fechar</button>
-    <button class="btn bwn bsm" onclick="document.getElementById('mdet').classList.add('hidden');openDev(${id})">⚡ Desvio</button>
+    ${canWrite()?`<button class="btn bwn bsm" onclick="document.getElementById('mdet').classList.add('hidden');openDev(${id})">⚡ Desvio</button>
     <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openEdit(${id})">✏ Editar</button>
     <button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openSus(${id})">${a.susp?'▶ Retomar':'⏸ Paralisar'}</button>
     <button class="btn bpri bsm" onclick="document.getElementById('mdet').classList.add('hidden');toggleDone(${id})">${a.done?'↩ Reabrir':'✓ Concluir'}</button>
-    ${a.done?`<button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openDoneModal(${id})">📅 Ajustar data</button>`:''}`;
+    ${a.done?`<button class="btn bgh bsm" onclick="document.getElementById('mdet').classList.add('hidden');openDoneModal(${id})">📅 Ajustar data</button>`:''}`:''}`;
   document.getElementById('mdet').classList.remove('hidden');
 }
 
@@ -1789,7 +1806,11 @@ function renderRList(){
     const th=acts.reduce((x,a)=>x+a.hours+(a.devs||[]).reduce((s,d)=>s+d.h,0),0);
     const pct=Math.min((th/(r.hours*5))*100,100);
     const fc=pct>85?'var(--err)':pct>60?'var(--warn)':'var(--ok)';
-    const roleLbl = r.role==='admin'?'<span style="font-size:9px;background:rgba(108,71,212,.12);color:var(--acc2);padding:1px 5px;border-radius:8px;font-weight:700">Admin</span>':'';
+    const roleLbl = r.role==='admin'
+      ?'<span style="font-size:9px;background:rgba(108,71,212,.12);color:var(--acc2);padding:1px 5px;border-radius:8px;font-weight:700">Admin</span>'
+      :r.role==='viewer'
+      ?'<span style="font-size:9px;background:rgba(100,116,139,.12);color:var(--sus);padding:1px 5px;border-radius:8px;font-weight:700">Viewer</span>'
+      :'';
     const isMe = r.email&&r.email.toLowerCase()===ME.email;
     return `<div class="ritem" style="${isMe?'border-color:var(--acc);':''}">
       <div class="av" style="width:27px;height:27px;font-size:10px;background:${r.color}18;color:${r.color}">${ini(r.name)}</div>
@@ -1871,6 +1892,7 @@ function closeEdit(){
 }
 
 function saveEdit(){
+  if(!canWrite()){ return; }
   const a = S.activities.find(x => +x.id === _editId);
   if(!a){ closeEdit(); return; }
 
