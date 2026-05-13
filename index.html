@@ -268,6 +268,7 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
             <option value="user">Usuário</option>
             <option value="admin">Administrador</option>
             <option value="viewer">Visualizador</option>
+            <option value="gerencial">Gerencial</option>
           </select>
         </div>
         <button class="btn bpri bsm" style="width:100%" onclick="addResource()">Adicionar</button>
@@ -469,6 +470,7 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
         <option value="user">Usuário</option>
         <option value="admin">Administrador</option>
         <option value="viewer">Visualizador</option>
+        <option value="gerencial">Gerencial</option>
       </select>
     </div>
     <div id="editres-warning" style="display:none;background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.2);border-radius:7px;padding:7px 10px;font-size:11px;color:var(--err);margin-bottom:4px">
@@ -705,12 +707,12 @@ function resolveMe(){
   writeEls.forEach(el => el.style.display = canWrite() ? '' : 'none');
   // Update team badge in header
   const tbadge = document.getElementById('team-badge');
-  const roleLabel = isAdmin()?'Administrador':isViewer()?'Visualizador':'';
+  const roleLabel = isAdmin()?'Administrador':ME.role==='gerencial'?'Gerencial':isViewer()?'Visualizador':'';
   if(tbadge) tbadge.textContent = roleLabel;
 }
 
 function isAdmin(){  return ME.role === 'admin'; }
-function isViewer(){ return ME.role === 'viewer'; }
+function isViewer(){ return ME.role === 'viewer' || ME.role === 'gerencial'; }
 function canWrite(){ return ME.role === 'admin' || ME.role === 'user'; }
 
 // Filter projects/resources/activities visible to current user
@@ -1808,8 +1810,8 @@ function renderRList(){
     const fc=pct>85?'var(--err)':pct>60?'var(--warn)':'var(--ok)';
     const roleLbl = r.role==='admin'
       ?'<span style="font-size:9px;background:rgba(108,71,212,.12);color:var(--acc2);padding:1px 5px;border-radius:8px;font-weight:700">Admin</span>'
-      :r.role==='viewer'
-      ?'<span style="font-size:9px;background:rgba(100,116,139,.12);color:var(--sus);padding:1px 5px;border-radius:8px;font-weight:700">Viewer</span>'
+      :r.role==='viewer'||r.role==='gerencial'
+      ?`<span style="font-size:9px;background:rgba(100,116,139,.12);color:var(--sus);padding:1px 5px;border-radius:8px;font-weight:700">${r.role==='gerencial'?'Gerencial':'Viewer'}</span>`
       :'';
     const isMe = r.email&&r.email.toLowerCase()===ME.email;
     return `<div class="ritem" style="${isMe?'border-color:var(--acc);':''}">
