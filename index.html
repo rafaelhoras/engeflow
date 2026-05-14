@@ -788,58 +788,100 @@ function diffD(a,b){ return Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:
 // addWH: advance by totalHours of work, returning end DATE.
 // Partial days count — 4h on a day that has 4h remaining stays on same day.
 // Returns the date on which the activity finishes.
+// addWH: advance by totalHours of work from startDate, skipping weekends.
+// Each day absorbs up to hpd hours. Returns the date the activity ends.
 function addWH(start, hours, hpd){
   if(!start||!hpd||hours<=0) return start;
   let d=new Date(start+'T00:00:00'), rem=hours;
   while(rem>hpd){ d.setDate(d.getDate()+1); skipWE(d); rem-=hpd; }
-  // rem <= hpd: activity finishes on day d (same or advanced)
   return d.toISOString().split('T')[0];
 }
 
-// hoursUsedOnDay: sum of hours already allocated to a resource on a given date
-// considering only scheduled activities (from sc) that overlap that date
+// hoursUsedOnDay: returns how many hours are already consumed by OTHER
+// scheduled activities for resource `rid` on the exact date `dateStr`.
+// Only counts the portion that falls on that specific day.
 function hoursUsedOnDay(rid, dateStr, sc, excludeId){
-  let used=0;
+  let used = 0;
   S.activities.forEach(a=>{
-    if(+a.rid!==rid) return;
-    if(+a.id===excludeId) return;
-    const s=sc[a.id]; if(!s) return;
-    // activity occupies dateStr if start<=date<=end
-    if(s.start<=dateStr && s.end>=dateStr){
-      // how many hours of this activity fall on dateStr?
-      // simplified: if single-day activity, all hours; otherwise hpd
-      const res=S.resources.find(r=>+r.id===rid);
-      if(!res) return;
-      const th=a.hours+(a.devs||[]).reduce((x,d)=>x+d.h,0);
-      const days=Math.max(1,diffD(s.end,s.start)+1);
-      const hPerDay=Math.min(th, res.hours); // at most hpd per day
-      used+=hPerDay;
-    }
+    if(+a.rid !== rid)      return;
+    if(+a.id  === excludeId) return;
+    const s = sc[a.id]; if(!s) return;
+    if(s.start > dateStr || s.end < dateStr) return; // doesn't touch this day
+
+    const res = S.resources.find(r=>+r.id===rid); if(!res) return;
+    const th  = a.hours + (a.devs||[]).reduce((x,d)=>x+d.h, 0);
+
+    // How many working days does this activity span?
+    // Count working days between s.start and s.end inclusive
+    let wDays = 0;
+    const cur = new Date(s.start+'T00:00:00');
+    const end = new Date(s.end  +'T00:00:00');
+    while(cur <= end){ if(cur.getDay()!==0&&cur.getDay()!==6) wDays++; cur.setDate(cur.getDate()+1); }
+    wDays = Math.max(1, wDays);
+
+    // Hours on this specific day
+    const hOnDay = Math.min(th - res.hours*(wDays-1), res.hours);
+    // Last day may have fewer hours; other days have exactly res.hours
+    const dayIndex = (() => {
+      let i=0; const c=new Date(s.start+'T00:00:00');
+      while(c.toISOString().split('T')[0] < dateStr){ if(c.getDay()!==0&&c.getDay()!==6) i++; c.setDate(c.getDate()+1); }
+      return i;
+    })();
+    const hoursThisDay = dayIndex < wDays-1 ? res.hours : Math.max(0, th - res.hours*(wDays-1));
+    used += Math.min(hoursThisDay, res.hours);
   });
   return used;
 }
 
-// addWHFrom: given a start date and hours, find the actual end date
-// respecting that a day may already have some hours used by other activities.
-// Used in scheduling to pack activities within the same day when capacity allows.
+// addWHFrom: starting at `start`, consume `hours` of work across days,
+// respecting remaining capacity per day (other activities may already use some).
+// Returns the date the last hour is consumed (= end date of the activity).
 function addWHFrom(start, hours, hpd, rid, sc, excludeId){
   if(!start||!hpd||hours<=0) return start;
-  let d=new Date(start+'T00:00:00');
-  let rem=hours;
-  let safetyIter=0;
-  while(rem>0 && safetyIter++<500){
-    const dateStr=d.toISOString().split('T')[0];
-    const used=hoursUsedOnDay(rid, dateStr, sc, excludeId);
-    const avail=Math.max(0, hpd-used);
-    if(avail<=0){
-      // Day is full — move to next working day
-      d.setDate(d.getDate()+1); skipWE(d); continue;
+  let d   = new Date(start+'T00:00:00');
+  let rem = hours;
+  let safety = 0;
+  while(rem > 0 && safety++ < 500){
+    // Skip weekends
+    while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
+    const dateStr = d.toISOString().split('T')[0];
+    const used    = hoursUsedOnDay(rid, dateStr, sc, excludeId);
+    const avail   = Math.max(0, hpd - used);
+    if(avail <= 0){
+      // This day is full — try next
+      d.setDate(d.getDate()+1); continue;
     }
-    const consume=Math.min(rem, avail);
-    rem-=consume;
-    if(rem>0){ d.setDate(d.getDate()+1); skipWE(d); }
+    const consume = Math.min(rem, avail);
+    rem -= consume;
+    if(rem > 0) d.setDate(d.getDate()+1);
   }
+  // Make sure we didn't land on a weekend
+  while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
   return d.toISOString().split('T')[0];
+}
+
+// realConflict: returns true only if activity `act` truly cannot fit
+// alongside `other` on resource with hpd hours/day.
+// Two activities conflict only when their combined hours EXCEED daily capacity
+// on any single day they share.
+function realConflict(act, other, earliest, sc, hpd, excludeId){
+  const os = sc[other.id]; if(!os) return false;
+  const projEnd = addWHFrom(earliest, act.hours+(act.devs||[]).reduce((x,d)=>x+d.h,0), hpd, +act.rid, sc, excludeId);
+  // Check every working day in the overlap window
+  if(earliest > os.end || projEnd < os.start) return false; // no date overlap
+  const winStart = earliest < os.start ? os.start : earliest;
+  const winEnd   = projEnd  > os.end   ? os.end   : projEnd;
+  const cur = new Date(winStart+'T00:00:00');
+  const fin = new Date(winEnd  +'T00:00:00');
+  while(cur <= fin){
+    if(cur.getDay()!==0&&cur.getDay()!==6){
+      const ds = cur.toISOString().split('T')[0];
+      const used = hoursUsedOnDay(+act.rid, ds, sc, +act.id);
+      if(used >= hpd) return true; // this day is already full
+    }
+    cur.setDate(cur.getDate()+1);
+  }
+  return false; // hours fit within available capacity — no real conflict
 }
 function skipWE(d){ while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1); }
 function nextWD(s){ const d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+1); skipWE(d); return d.toISOString().split('T')[0]; }
@@ -915,33 +957,33 @@ function schedule(){
         +o.id!==+act.id && +o.rid===+act.rid && sc[o.id]
       );
 
-      // Keep pushing earliest until hours truly fit without exceeding daily capacity
+      // Keep pushing earliest only when there is a REAL conflict
+      // (hours don't fit in the available daily capacity — not just date overlap)
       let maxIter=80, iter=0;
       while(iter++<maxIter){
         let pushed=false;
-        // Compute end date respecting already-used hours per day
-        const projEnd=addWHFrom(earliest, th, res.hours, +act.rid, sc, +act.id);
 
         for(const other of sameRes){
-          const os=sc[other.id];
-          if(!os) continue;
-          // Real overlap: date ranges intersect
+          const os=sc[other.id]; if(!os) continue;
+
+          // Quick date range check first
+          const projEnd=addWHFrom(earliest, th, res.hours, +act.rid, sc, +act.id);
           if(earliest>os.end || projEnd<os.start) continue;
 
-          // Check if hours actually fit — compute available hours across overlapping days
-          const myPri   = act.pri  ||2;
-          const othPri  = other.pri||2;
-          const iYield  = othPri < myPri ||
+          // Check priority
+          const myPri  = act.pri  ||2;
+          const othPri = other.pri||2;
+          const iYield = othPri < myPri ||
             (othPri===myPri && (other.start||'') <= (act.start||''));
 
           if(iYield){
-            // Check if we can pack within the overlap (hours fit in remaining daily capacity)
-            // addWHFrom already accounts for used hours — if projEnd didn't change after
-            // we took over the slot, there's a real conflict and we must yield
-            const nw=nextWD(os.end);
-            if(nw>earliest){ earliest=nw; pushed=true; break; }
+            // Only push if hours TRULY don't fit alongside other (day is full)
+            if(realConflict(act, other, earliest, sc, res.hours, +act.id)){
+              const nw=nextWD(os.end);
+              if(nw>earliest){ earliest=nw; pushed=true; break; }
+            }
+            // else hours fit in remaining capacity — no push needed
           }
-          // else I win — other will be re-evaluated and pushed in next pass
         }
         if(!pushed) break;
       }
