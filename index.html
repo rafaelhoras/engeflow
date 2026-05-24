@@ -305,8 +305,8 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
             <option value="1">🔴 Alta</option><option value="2" selected>🟡 Média</option><option value="3">🔵 Baixa</option>
           </select>
         </div>
-        <div class="fr"><label class="flbl">Predecessora (opcional)</label>
-          <select class="fi" id="apd"><option value="0">Nenhuma</option></select>
+        <div class="fr"><label class="flbl">Predecessoras (opcional — segure Ctrl para múltiplas)</label>
+          <select class="fi" id="apd" multiple size="4" style="height:80px"><option value="0">Nenhuma</option></select>
         </div>
         <button class="btn bpri bsm" style="width:100%;margin-top:2px" onclick="addActivity()">Cadastrar</button>
       </div>
@@ -510,8 +510,8 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
         <option value="1">🔴 Alta</option><option value="2">🟡 Média</option><option value="3">🔵 Baixa</option>
       </select>
     </div>
-    <div class="fr"><label class="flbl">Predecessora</label>
-      <select class="fi" id="ed-pred"><option value="0">Nenhuma</option></select>
+    <div class="fr"><label class="flbl">Predecessoras (Ctrl para múltiplas)</label>
+      <select class="fi" id="ed-pred" multiple size="4" style="height:80px"><option value="0">Nenhuma</option></select>
     </div>
     <div style="background:rgba(201,109,0,.07);border:1px solid rgba(201,109,0,.2);border-radius:7px;padding:8px 11px;font-size:11px;color:var(--warn);margin-bottom:4px">
       ⚠ Alterar horas ou data recalcula o baseline desta atividade.
@@ -581,11 +581,23 @@ function toArr(v){
     if(typeof item !== 'object') return item;
     const out = Object.assign({}, item);
     // numeric fields
-    ['id','rid','pjid','pred','pri','prog','hours'].forEach(k=>{ if(out[k]!==undefined) out[k]=+out[k]||0; });
+    ['id','rid','pjid','pri','prog','hours'].forEach(k=>{ if(out[k]!==undefined) out[k]=+out[k]||0; });
+    // preds: normalize to array of ints (backward compat: pred single int → preds array)
+    if(out.pred!==undefined && !out.preds){
+      out.preds = out.pred>0 ? [+out.pred] : [];
+      delete out.pred;
+    }
+    if(!Array.isArray(out.preds)) out.preds = out.preds ? [+out.preds].filter(Boolean) : [];
+    else out.preds = out.preds.map(x=>+x).filter(Boolean);
     // string fields — guarantee they exist and are strings
     ['name','start','baseline','doneDate','type','suspReason','email','team','role','color'].forEach(k=>{ if(out[k]==null||out[k]===undefined) out[k]=''; else out[k]=String(out[k]); });
     // boolean fields
-    ['done','susp'].forEach(k=>{ out[k]=!!out[k]; });
+    ['done','susp','isContinuation'].forEach(k=>{ out[k]=!!out[k]; });
+    // split fields
+    if(out.splitFrom===undefined) out.splitFrom=0;
+    if(out.splitPair===undefined) out.splitPair=0;
+    if(out.splitFrom!==0) out.splitFrom=+out.splitFrom||0;
+    if(out.splitPair!==0) out.splitPair=+out.splitPair||0;
     // array fields
     if(!Array.isArray(out.devs))  out.devs  = toArr(out.devs);
     if(!Array.isArray(out.susps)) out.susps = toArr(out.susps);
@@ -803,8 +815,9 @@ function addWH(start, hours, hpd){
 function hoursUsedOnDay(rid, dateStr, sc, excludeId){
   let used = 0;
   S.activities.forEach(a=>{
-    if(+a.rid !== rid)      return;
+    if(+a.rid !== rid)       return;
     if(+a.id  === excludeId) return;
+    if(a.done)               return;  // done activities are finished — don't block future days
     const s = sc[a.id]; if(!s) return;
     if(s.start > dateStr || s.end < dateStr) return; // doesn't touch this day
 
@@ -837,27 +850,8 @@ function hoursUsedOnDay(rid, dateStr, sc, excludeId){
 // respecting remaining capacity per day (other activities may already use some).
 // Returns the date the last hour is consumed (= end date of the activity).
 function addWHFrom(start, hours, hpd, rid, sc, excludeId){
-  if(!start||!hpd||hours<=0) return start;
-  let d   = new Date(start+'T00:00:00');
-  let rem = hours;
-  let safety = 0;
-  while(rem > 0 && safety++ < 500){
-    // Skip weekends
-    while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
-    const dateStr = d.toISOString().split('T')[0];
-    const used    = hoursUsedOnDay(rid, dateStr, sc, excludeId);
-    const avail   = Math.max(0, hpd - used);
-    if(avail <= 0){
-      // This day is full — try next
-      d.setDate(d.getDate()+1); continue;
-    }
-    const consume = Math.min(rem, avail);
-    rem -= consume;
-    if(rem > 0) d.setDate(d.getDate()+1);
-  }
-  // Make sure we didn't land on a weekend
-  while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1);
-  return d.toISOString().split('T')[0];
+  // Simple version: just use addWH (same-day packing handled by realConflict check)
+  return addWH(start, hours, hpd);
 }
 
 // realConflict: returns true only if activity `act` truly cannot fit
@@ -866,22 +860,23 @@ function addWHFrom(start, hours, hpd, rid, sc, excludeId){
 // on any single day they share.
 function realConflict(act, other, earliest, sc, hpd, excludeId){
   const os = sc[other.id]; if(!os) return false;
-  const projEnd = addWHFrom(earliest, act.hours+(act.devs||[]).reduce((x,d)=>x+d.h,0), hpd, +act.rid, sc, excludeId);
-  // Check every working day in the overlap window
-  if(earliest > os.end || projEnd < os.start) return false; // no date overlap
-  const winStart = earliest < os.start ? os.start : earliest;
-  const winEnd   = projEnd  > os.end   ? os.end   : projEnd;
+  const th = act.hours+(act.devs||[]).reduce((x,d)=>x+d.h,0);
+  const projEnd = addWH(earliest, th, hpd);
+  if(earliest > os.end || projEnd < os.start) return false;
+  // Check if combined hours exceed daily capacity on any shared day
+  const winStart = earliest > os.start ? earliest : os.start;
+  const winEnd   = projEnd  < os.end   ? projEnd  : os.end;
   const cur = new Date(winStart+'T00:00:00');
   const fin = new Date(winEnd  +'T00:00:00');
   while(cur <= fin){
     if(cur.getDay()!==0&&cur.getDay()!==6){
       const ds = cur.toISOString().split('T')[0];
       const used = hoursUsedOnDay(+act.rid, ds, sc, +act.id);
-      if(used >= hpd) return true; // this day is already full
+      if(used >= hpd) return true;
     }
     cur.setDate(cur.getDate()+1);
   }
-  return false; // hours fit within available capacity — no real conflict
+  return false;
 }
 function skipWE(d){ while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1); }
 function nextWD(s){ const d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+1); skipWE(d); return d.toISOString().split('T')[0]; }
@@ -946,15 +941,16 @@ function schedule(){
       let earliest=act.start;
 
       // (a) Predecessor constraint — must start after ALL predecessors end
-      if(+act.pred>0){
-        const ps=sc[+act.pred];
+      const predArr = Array.isArray(act.preds)?act.preds:(act.pred>0?[+act.pred]:[]);
+      predArr.forEach(pid=>{
+        const ps=sc[+pid];
         if(ps){ const nw=nextWD(ps.end); if(nw>earliest) earliest=nw; }
-      }
+      });
 
-      // (b) Same-resource conflict resolution with priority and hour-packing
-      //     Build list of OTHER scheduled activities on same resource
+      // (b) Same-resource conflict resolution
+      // Only consider active (non-done, non-suspended) activities
       const sameRes=S.activities.filter(o=>
-        +o.id!==+act.id && +o.rid===+act.rid && sc[o.id]
+        +o.id!==+act.id && +o.rid===+act.rid && sc[o.id] && !o.done && !o.susp
       );
 
       // Keep pushing earliest only when there is a REAL conflict
@@ -966,29 +962,27 @@ function schedule(){
         for(const other of sameRes){
           const os=sc[other.id]; if(!os) continue;
 
-          // Quick date range check first
-          const projEnd=addWHFrom(earliest, th, res.hours, +act.rid, sc, +act.id);
+          // Use simple addWH for date calculation — fast and reliable
+          const projEnd=addWH(earliest, th, res.hours);
           if(earliest>os.end || projEnd<os.start) continue;
 
-          // Check priority
           const myPri  = act.pri  ||2;
           const othPri = other.pri||2;
           const iYield = othPri < myPri ||
             (othPri===myPri && (other.start||'') <= (act.start||''));
 
           if(iYield){
-            // Only push if hours TRULY don't fit alongside other (day is full)
+            // Push if date ranges overlap AND combined hours exceed daily capacity
             if(realConflict(act, other, earliest, sc, res.hours, +act.id)){
               const nw=nextWD(os.end);
               if(nw>earliest){ earliest=nw; pushed=true; break; }
             }
-            // else hours fit in remaining capacity — no push needed
           }
         }
         if(!pushed) break;
       }
 
-      const projEnd=addWHFrom(earliest, th, res.hours, +act.rid, sc, +act.id);
+      const projEnd=addWH(earliest, th, res.hours);
       const wasPushed=earliest!==act.start;
       const prev=sc[act.id];
       if(!prev || prev.start!==earliest || prev.end!==projEnd){
@@ -1021,7 +1015,9 @@ function overlaps(sc){
       const a=acts[i], b=acts[j], res=S.resources.find(r=>r.id==+rid);
       if(!res) continue;
       const ae=addWH(a.start,a.hours,res.hours);
-      if(a.start<=b.start&&b.start<=ae&&!(a.pred>0)&&!(b.pred>0)&&a.pred!==b.id&&b.pred!==a.id){
+      const aPreds=Array.isArray(a.preds)?a.preds:[];
+        const bPreds=Array.isArray(b.preds)?b.preds:[];
+        if(a.start<=b.start&&b.start<=ae&&!aPreds.length&&!bPreds.length&&!aPreds.includes(b.id)&&!bPreds.includes(a.id)){
         const key=[a.id,b.id].sort().join('-');
         if(!seen.has(key)){ seen.add(key); out.push({rid:+rid, aids:[a.id,b.id]}); }
       }
@@ -1151,22 +1147,191 @@ function addActivity(){
   const rid=+document.getElementById('ar').value||0;
   const type=document.getElementById('at').value;
   const pri=+document.getElementById('apri').value||2;
-  const pred=+document.getElementById('apd').value||0;
+  const predSel=document.getElementById('apd');
+  const preds=[...predSel.selectedOptions].map(o=>+o.value).filter(v=>v>0);
   const pjid=+document.getElementById('apj').value||0;
   if(!name){ alert('Insira a descrição.'); return; }
   if(!start){ alert('Selecione a data de início.'); return; }
   if(!rid){ alert('Selecione um recurso.'); return; }
-  const act={ id:S.aid++, name, hours, start, baseline:'', rid, pjid, type, pri, pred,
-    done:false, susp:false, suspReason:'', susps:[], devs:[], prog:0, doneDate:'' };
+  const act={ id:S.aid++, name, hours, start, baseline:'', rid, pjid, type, pri, preds,
+    done:false, susp:false, suspReason:'', susps:[], devs:[], prog:0, doneDate:'',
+    splitFrom:0, isContinuation:false };
   S.activities.push(act);
   document.getElementById('an').value='';
-  // compute baseline
+  // compute baseline and check for smart split
   const sc=schedule();
   act.baseline=sc[act.id]?.end||start;
-  save();
-  // check overlap
+
+  // ALWAYS check smart split first — regardless of overlaps() result,
+  // because overlaps() may not catch in-progress vs new-activity conflicts
+  const didSplit=trySplitForNewActivity(act);
+  if(didSplit) return; // split already called save()
+
+  // No split triggered — check regular overlap for priority reordering
   const ov=overlaps(sc).find(o=>o.aids.includes(act.id));
   if(ov) openPri(ov);
+  else save();
+}
+
+// ═══════════════════════════════════════════
+//  SMART ACTIVITY SPLIT
+// ═══════════════════════════════════════════
+// Flow: A1(done) → B(new,high-pri) → A2(continuation) → C(original successor)
+function trySplitForNewActivity(newAct){
+  if(!canWrite()) return false;
+  const t   = today();
+  const res = S.resources.find(r=>+r.id===+newAct.rid);
+  console.log('[SPLIT] called. newAct:', newAct.name, 'pri:', newAct.pri, 'rid:', newAct.rid, 'today:', t);
+  if(!res){ console.log('[SPLIT] no resource'); return false; }
+
+  // ── CRITICAL: compute schedule WITHOUT the new activity ──
+  // The new activity B may push existing activities out of the "today" window,
+  // making them look like they're not in progress. Remove B temporarily.
+  const savedActivities = S.activities;
+  S.activities = S.activities.filter(a => +a.id !== +newAct.id);
+  const scWithout = schedule();
+  S.activities = savedActivities; // restore immediately
+
+  const newPri = +(newAct.pri) || 2;
+
+  // Find candidates: same resource, not done, not suspended, not a split piece
+  const candidates = S.activities.filter(a=>
+    +a.id !== +newAct.id &&
+    +a.rid === +newAct.rid &&
+    !a.done && !a.susp && !a.isContinuation
+  );
+
+  console.log('[SPLIT] candidates on resource:', candidates.map(a=>({
+    name:a.name, declaredStart:a.start,
+    effStart:scWithout[a.id]?.start, effEnd:scWithout[a.id]?.end, pri:a.pri
+  })));
+
+  // In-progress = effective start <= today AND effective end >= today
+  const inProgress = candidates.filter(a=>{
+    const s = scWithout[a.id];
+    if(!s) return false;
+    return s.start <= t && s.end >= t;
+  });
+
+  console.log('[SPLIT] truly in-progress:', inProgress.map(a=>({
+    name:a.name, effStart:scWithout[a.id]?.start, effEnd:scWithout[a.id]?.end, pri:a.pri
+  })));
+
+  if(!inProgress.length){ console.log('[SPLIT] none in progress'); return false; }
+
+  // Target: in-progress with LOWER priority (higher number) than B
+  const target = inProgress.find(a=> (+(a.pri)||2) > newPri);
+  console.log('[SPLIT] newPri:', newPri, 'target:', target ? {name:target.name, pri:target.pri} : 'none');
+  if(!target){ console.log('[SPLIT] new activity not higher priority'); return false; }
+
+  const effStart = scWithout[target.id]?.start || target.start;
+  const yesterday = prevWD(t);
+  console.log('[SPLIT] effStart:', effStart, 'yesterday:', yesterday);
+  if(yesterday < effStart){ console.log('[SPLIT] started today, nothing to split'); return false; }
+
+  // Count working days from effStart up to and including yesterday
+  let elapsed = 0;
+  const d   = new Date(effStart+'T00:00:00');
+  const yst = new Date(yesterday+'T00:00:00');
+  while(d <= yst){
+    if(d.getDay()!==0 && d.getDay()!==6) elapsed++;
+    d.setDate(d.getDate()+1);
+  }
+  // Total hours of original activity including deviations
+  const totalHours = target.hours + (target.devs||[]).reduce((s,d)=>s+d.h, 0);
+
+  // Hours consumed = elapsed working days × hpd, capped at total
+  const hoursConsumed  = Math.min(elapsed * res.hours, totalHours);
+  // Remaining = total - consumed. Since devs migrate to A2, A2.hours = remaining
+  // and A2.devs carries the deviations (already set below)
+  // We split: A1 gets min(hoursConsumed, target.hours) as base hours
+  //           A2 gets remaining base hours (target.hours - A1.hours) + all devs
+  const a1BaseHours = Math.min(hoursConsumed, target.hours);
+  const a2BaseHours = Math.max(1, target.hours - a1BaseHours);
+
+  console.log('[SPLIT] elapsed:', elapsed, 'totalH:', totalHours, 'consumed:', hoursConsumed,
+    'a1Base:', a1BaseHours, 'a2Base:', a2BaseHours, 'devs:', (target.devs||[]).reduce((s,d)=>s+d.h,0));
+  if(hoursConsumed <= 0){ console.log('[SPLIT] no hours consumed yet'); return false; }
+  console.log('[SPLIT] ✅ SPLITTING', target.name, '→ A1('+a1BaseHours+'h) + B + A2('+a2BaseHours+'h + devs)');
+
+  // A2 start: next working day after today.
+  // Using nextWD(t) so A2 doesn't compete with B for today's slot.
+  // The predecessor preds:[B.id] will push it further if B ends later.
+  const a2Start = nextWD(t);
+
+  const a1Id = S.aid++;
+  const a2Id = S.aid++;
+
+  // A1: completed slice — base hours consumed, no devs (they move to A2)
+  const a1 = {
+    id: a1Id, name: target.name, hours: a1BaseHours,
+    start: effStart, baseline: target.baseline || effStart,
+    rid: target.rid, pjid: target.pjid, type: target.type, pri: target.pri,
+    preds: [...(target.preds||[])],
+    done: true, doneDate: yesterday,
+    susp: false, suspReason: '', susps: [],
+    devs: [],   // desvios migram para A2
+    prog: 100,
+    splitFrom: target.id, isContinuation: false, splitPair: a2Id
+  };
+
+  // A2: remaining slice — remaining base hours + all devs from original
+  const a2 = {
+    id: a2Id, name: target.name + ' (continuação)',
+    hours: a2BaseHours,   // remaining base hours
+    start: a2Start,       // working day >= today
+    baseline: '',
+    rid: target.rid, pjid: target.pjid, type: target.type, pri: target.pri,
+    preds: [newAct.id],   // starts after B
+    done: false, doneDate: '',
+    susp: false, suspReason: '', susps: [],
+    devs: [...(target.devs||[])],   // all deviations migrate here
+    prog: 0,
+    splitFrom: target.id, isContinuation: true, splitPair: a1Id
+  };
+
+  // Replace A with A1+A2
+  S.activities = S.activities.filter(a=>+a.id !== +target.id);
+
+  // Redirect explicit predecessors: any activity that had A as predecessor → now waits for A2
+  S.activities.forEach(a=>{
+    if(Array.isArray(a.preds))
+      a.preds = a.preds.map(p=> +p === +target.id ? a2Id : p);
+  });
+
+  // Also handle IMPLICIT successors: activities on the same resource that had no explicit
+  // predecessor but were queued after A (they depended on A implicitly via resource queue).
+  // Identify them: same resource, not done, not split pieces, not B itself,
+  // whose effective start (without B) was >= A's effective end.
+  const aEffEnd = scWithout[target.id]?.end || '';
+  if(aEffEnd){
+    S.activities.forEach(a=>{
+      if(+a.id === +newAct.id) return;         // skip B
+      if(+a.rid !== +target.rid) return;        // same resource only
+      if(a.done || a.susp || a.isContinuation) return;
+      if(!Array.isArray(a.preds) || a.preds.length > 0) return; // only implicit (no explicit preds)
+      const aEffStart = scWithout[a.id]?.start || '';
+      // If this activity's effective start was on or after A's effective end → it was queued after A
+      if(aEffStart >= aEffEnd){
+        a.preds = [a2Id];  // now explicitly waits for A2
+      }
+    });
+  }
+
+  S.activities.push(a1, a2);
+
+  // Compute A2 baseline
+  const sc2 = schedule();
+  a2.baseline = sc2[a2Id]?.end || a2.start;
+
+  save();
+  return true;
+}
+function prevWD(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()-1);
+  while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()-1);
+  return d.toISOString().split('T')[0];
 }
 
 function toggleDone(id){
@@ -1179,8 +1344,53 @@ function toggleDone(id){
 
 function delActivity(id){
   if(!canWrite()){ return; }
-  S.activities.forEach(a=>{ if(a.pred===id) a.pred=0; });
-  S.activities=S.activities.filter(a=>a.id!==id);
+
+  // Find activities that were split because of this one
+  // A2 (continuation) has preds=[id] and isContinuation=true
+  const cont=S.activities.find(a=>a.isContinuation&&Array.isArray(a.preds)&&a.preds.includes(id));
+  if(cont){
+    // Find A1 (done part) via splitPair
+    const a1=S.activities.find(a=>+a.id===+cont.splitPair&&!a.isContinuation&&a.splitFrom>0);
+    if(a1&&cont.splitFrom===a1.splitFrom){
+      // Merge A1 + A2 back into original
+      const merged={
+        id:S.aid++,
+        name:a1.name,
+        hours:a1.hours+cont.hours,   // base hours: A1.hours + A2.hours
+        start:a1.start,
+        baseline:a1.baseline||a1.start,
+        rid:a1.rid, pjid:a1.pjid, type:a1.type, pri:a1.pri,
+        preds:[...a1.preds].filter(p=>+p!==+id),
+        done:false, doneDate:'', susp:false, suspReason:'',
+        susps:[...a1.susps||[],...cont.susps||[]],
+        devs:[...cont.devs||[]],   // devs were all in A2
+        prog:Math.round((a1.prog*a1.hours+cont.prog*cont.hours)/(a1.hours+cont.hours)),
+        splitFrom:0, isContinuation:false, splitPair:0
+      };
+      // Transfer any activities pointing to cont (A2) → point to merged (restored A)
+      // Also remove any implicit preds=[a2Id] that were added during split
+      S.activities.forEach(a=>{
+        if(!Array.isArray(a.preds)) return;
+        a.preds = a.preds
+          .map(p=> +p===+cont.id ? merged.id : p)   // cont → merged
+          .filter(p=> +p!==+a1.id);                  // remove A1 refs
+      });
+      // Remove A1, A2, and deleted activity B
+      S.activities=S.activities.filter(a=>+a.id!==+a1.id&&+a.id!==+cont.id&&+a.id!==+id);
+      // Compute baseline
+      S.activities.push(merged);
+      const sc=schedule();
+      merged.baseline=sc[merged.id]?.end||merged.start;
+      save();
+      return;
+    }
+  }
+
+  // Normal delete
+  S.activities.forEach(a=>{
+    if(Array.isArray(a.preds)) a.preds=a.preds.filter(p=>p!==id);
+  });
+  S.activities=S.activities.filter(a=>+a.id!==id);
   save();
 }
 
@@ -1322,7 +1532,7 @@ function actHTML(a, sc){
   const s=sc[a.id];
   const es=s?.start||a.start, ee=s?.end||a.start;
   const tdv=(a.devs||[]).reduce((x,d)=>x+d.h,0);
-  const pred=+a.pred>0?S.activities.find(x=>+x.id===+a.pred):null;
+  const predArr2=(Array.isArray(a.preds)?a.preds:[]).map(pid=>S.activities.find(x=>+x.id===pid)).filter(Boolean);
   const rep=a.baseline&&ee!==a.baseline;
   const pr=PRI[a.pri||2];
   return `<div class="aitem ${sv.icls}" style="border-left-color:${col}">
@@ -1344,8 +1554,10 @@ function actHTML(a, sc){
       <span>🏁 <b>${fmt(ee)}</b></span>
       ${rep?`<span style="color:${ee>a.baseline?'var(--err)':'var(--ok)'}">Baseline: ${fmt(a.baseline)} ${ee>a.baseline?'⚠':'✓'}</span>`:''}
     </div>
-    ${pred?`<div style="margin-top:3px"><span class="dbadge">⛓ Após: #${pred.id} ${pred.name.slice(0,24)}</span></div>`:''}
+    ${predArr2.length?`<div style="margin-top:3px">${predArr2.map(p=>`<span class="dbadge" style="margin-right:3px">⛓ Após: #${p.id} ${p.name.slice(0,20)}</span>`).join('')}</div>`:''}
     ${a.susp?`<div style="margin-top:3px;font-size:10px;color:var(--sus);font-weight:600">⏸ ${a.suspReason}</div>`:''}
+    ${a.isContinuation?`<div style="margin-top:3px;font-size:10px;color:var(--acc2);font-weight:600">🔀 Continuação de atividade interrompida</div>`:''}
+    ${a.splitFrom>0&&!a.isContinuation&&a.done?`<div style="margin-top:3px;font-size:10px;color:var(--mu)">✂ Parte concluída (atividade dividida)</div>`:''}
     ${a.done?`<div style="margin-top:3px;font-size:10px;color:var(--ok)">✅ Concluído em ${fmt(a.doneDate)||'data não registrada'}</div>`:''}
     <div style="margin-top:7px">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-bottom:2px">
@@ -1918,7 +2130,9 @@ function openEdit(id){
     o.value = x.id; o.textContent = `#${x.id} ${x.name.slice(0,30)}`;
     epd.appendChild(o);
   });
-  epd.value = a.pred || 0;
+  // set multi-select
+  const prd2=Array.isArray(a.preds)?a.preds:[];
+  [...epd.options].forEach(o=>{ o.selected=prd2.includes(+o.value); });
 
   // Fill fields
   document.getElementById('ed-name').value     = a.name || '';
@@ -1945,7 +2159,7 @@ function saveEdit(){
   const newStart = document.getElementById('ed-start').value;
   const newRid   = +document.getElementById('ed-resource').value || a.rid;
   const newPri   = +document.getElementById('ed-priority').value || a.pri;
-  const newPred  = +document.getElementById('ed-pred').value || 0;
+  const newPreds = [...document.getElementById('ed-pred').selectedOptions].map(o=>+o.value).filter(v=>v>0);
   const newPjid  = +document.getElementById('ed-project').value || 0;
   const newType  = document.getElementById('ed-type').value;
 
@@ -1959,7 +2173,7 @@ function saveEdit(){
   a.start  = newStart;
   a.rid    = newRid;
   a.pri    = newPri;
-  a.pred   = newPred;
+  a.preds  = newPreds;
   a.pjid   = newPjid;
   a.type   = newType;
 
@@ -2040,10 +2254,10 @@ function exportCSV(){
     const st=getStatus(a,sc);
     const stLbl={wait:'Aguardando',active:'Em andamento',done:'Concluído',late:'Atrasada',susp:'Paralisada'}[st]||st;
     const priLbl={1:'Alta',2:'Média',3:'Baixa'}[a.pri||2];
-    const pred=a.pred>0?S.activities.find(x=>+x.id===+a.pred)?.name||a.pred:'';
+    const predList=(Array.isArray(a.preds)?a.preds:[]).map(pid=>S.activities.find(x=>+x.id===pid)?.name||pid).join('; ');
     return [a.id,a.name,a.type,prj?.name||'Demanda geral',res?.name||'',priLbl,a.hours,tdv,a.hours+tdv,
       a.start,s?.start||a.start,s?.end||'',a.baseline||'',stLbl,a.prog,a.susp?'Sim':'Não',
-      a.suspReason||'',pred,a.doneDate||''].map(esc).join(',');
+      a.suspReason||'',predList,a.doneDate||''].map(esc).join(',');
   });
   const actsCSV=[actsHeader.map(esc).join(','),...actsRows].join('\n');
 
@@ -2128,12 +2342,12 @@ function seedDemo(){
     team:r.team, role:r.role, hours:8, color:RCOLS[i] }));
   const pid=S.projects[0].id;
   [
-    {name:'Levantamento topográfico',   hours:8,  rid:1, type:'Verificação de desenho', pri:1, pred:0,    pjid:pid},
-    {name:'Projeto de fundações',       hours:16, rid:2, type:'Memória de cálculo',     pri:1, pred:1,    pjid:pid},
-    {name:'Modelagem estrutural',       hours:24, rid:3, type:'Modelagem estrutural',   pri:1, pred:2,    pjid:pid},
-    {name:'Verificação de desenhos',    hours:8,  rid:1, type:'Verificação de desenho', pri:2, pred:3,    pjid:pid},
-    {name:'Reunião de alinhamento',     hours:2,  rid:1, type:'Reunião',                pri:2, pred:0,    pjid:0},
-    {name:'Memória de cálculo – Lajes', hours:12, rid:2, type:'Memória de cálculo',     pri:3, pred:0,    pjid:0},
+    {name:'Levantamento topográfico',   hours:8,  rid:1, type:'Verificação de desenho', pri:1, preds:[],    pjid:pid},
+    {name:'Projeto de fundações',       hours:16, rid:2, type:'Memória de cálculo',     pri:1, preds:[1],    pjid:pid},
+    {name:'Modelagem estrutural',       hours:24, rid:3, type:'Modelagem estrutural',   pri:1, preds:[2],    pjid:pid},
+    {name:'Verificação de desenhos',    hours:8,  rid:1, type:'Verificação de desenho', pri:2, preds:[3],    pjid:pid},
+    {name:'Reunião de alinhamento',     hours:2,  rid:1, type:'Reunião',                pri:2, preds:[],    pjid:0},
+    {name:'Memória de cálculo – Lajes', hours:12, rid:2, type:'Memória de cálculo',     pri:3, preds:[],    pjid:0},
   ].forEach(a=>{
     const act={ id:S.aid++, name:a.name, hours:a.hours, start:t, baseline:'', rid:a.rid, pjid:a.pjid,
       type:a.type, pri:a.pri, pred:a.pred, done:false, susp:false, suspReason:'', susps:[], devs:[], prog:0, doneDate:'' };
