@@ -144,6 +144,13 @@ nav button:not(.on):hover{background:var(--bg);color:var(--tx);}
 .ggrp{display:flex;align-items:center;margin:8px 0 3px;}
 .ggrplbl{width:170px;min-width:170px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding-right:8px;flex-shrink:0;}
 .ggrpln{flex:1;height:1px;background:var(--brd);}
+.gtool{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10.5px;color:var(--mu);}
+.gscroll{overflow-x:auto;overflow-y:hidden;padding-bottom:10px;scroll-behavior:auto;}
+.gscroll::-webkit-scrollbar{height:9px;}
+.gscroll::-webkit-scrollbar-thumb{background:var(--brd);border-radius:5px;}
+.gstick{position:sticky;left:0;z-index:12;background:var(--sur2);}
+.gmon{position:absolute;top:0;bottom:0;width:1px;background:rgba(90,110,140,.18);pointer-events:none;}
+.ghlbl{position:absolute;white-space:nowrap;}
 
 /* HEALTH */
 .hcard{background:var(--sur2);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:8px;}
@@ -351,7 +358,7 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
         <span class="ptitle">Gantt por Recursos</span>
         <select class="fi" id="gfr" onchange="renderRG()" style="width:150px"><option value="0">Todos os recursos</option></select>
       </div>
-      <div class="card" style="overflow-x:auto"><div id="rgcont" style="min-width:480px"></div></div>
+      <div class="card" style="overflow:hidden"><div id="rgcont"></div></div>
       <div style="display:flex;gap:12px;font-size:10.5px;color:var(--mu);flex-wrap:wrap">
         <span><span style="display:inline-block;width:2px;height:12px;background:var(--err);vertical-align:middle;margin-right:3px;border-radius:1px"></span>Hoje</span>
         <span><span style="display:inline-block;width:12px;height:8px;background:rgba(201,109,0,.3);vertical-align:middle;margin-right:3px;border-radius:2px;border:1px solid var(--warn)"></span>Desvio</span>
@@ -365,7 +372,7 @@ hr{border:none;border-top:1px solid var(--brd);margin:9px 0;}
         <select class="fi" id="gfp" onchange="renderPG()" style="width:170px"><option value="0">Todos os projetos</option></select>
       </div>
       <div id="pharea"></div>
-      <div class="card" style="overflow-x:auto"><div id="pgcont" style="min-width:480px;padding-bottom:12px"></div></div>
+      <div class="card" style="overflow:hidden"><div id="pgcont"></div></div>
       <div style="display:flex;gap:12px;font-size:10.5px;color:var(--mu);flex-wrap:wrap">
         <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#dbeafe;border:1.5px solid #3b82f6;border-radius:2px;display:inline-block"></span>Aguardando</span>
         <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:8px;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:2px;display:inline-block"></span>Em andamento</span>
@@ -1627,53 +1634,128 @@ function ganttCSS(status){
   }[status]||'background:#fef3c7;border-color:#f59e0b;color:#92400e';
 }
 
+// Gantt with fixed 3-month scale and independent horizontal scroll.
+// Scroll position is preserved across re-renders (Firebase updates) by
+// remembering the leftmost visible DATE, not pixels.
+const G_VIEW_DAYS=91;          // ~3 months visible at once
+const G_LBL=170;               // label column width (px)
+const _gLeftDate={};           // contId -> ms of leftmost visible date
+
 function drawGantt(acts, sc, contId, baseline=false, grpFn=null){
   const el=document.getElementById(contId);
+  if(!el) return;
+  const visible=el.offsetParent!==null;
+
+  // Remember current scroll position (as a date) before re-rendering
+  const prev=el.querySelector('.gscroll');
+  if(prev && visible && prev.dataset.ready){
+    const pSdt=+prev.dataset.sdt, pPpd=+prev.dataset.ppd;
+    if(pPpd>0) _gLeftDate[contId]=pSdt+(prev.scrollLeft/pPpd)*86400000;
+  }
+
   if(!acts.length){ el.innerHTML='<div class="empty">Nenhuma atividade.</div>'; return; }
-  const t=today();
+  const t=today(), DAY=86400000;
+
+  // Date range: all activities + today, with margins; at least 3 months wide
   let mn=t, mx=t;
-  acts.forEach(a=>{ const s=sc[a.id]; if(!s)return; if(s.start<mn)mn=s.start; if(s.end>mx)mx=s.end; if(baseline&&a.baseline&&a.baseline>mx)mx=a.baseline; });
-  const sdt=new Date(mn+'T00:00:00'); sdt.setDate(sdt.getDate()-1);
-  const edt=new Date(mx+'T00:00:00'); edt.setDate(edt.getDate()+3);
-  const tms=edt-sdt;
-  const pl=ds=>Math.max(0,(new Date(ds+'T00:00:00')-sdt)/tms*100).toFixed(2)+'%';
-  const pw=(ds,de)=>{ const a=new Date(ds+'T00:00:00'),b=new Date(de+'T00:00:00'); b.setDate(b.getDate()+1); return Math.max(.3,(b-a)/tms*100).toFixed(2)+'%'; };
-  const days=[]; const c=new Date(sdt); while(c<=edt){ days.push(new Date(c)); c.setDate(c.getDate()+1); }
-  const step=Math.max(1,Math.floor(days.length/14));
-  const hdr=days.filter((_,i)=>i%step===0).map(d=>{
-    const wk=d.getDay()===0||d.getDay()===6;
-    return `<span style="flex:${step};text-align:center;font-size:8.5px;color:${wk?'var(--mu2)':'var(--mu)'}">${d.getDate()}/${d.getMonth()+1}</span>`;
-  }).join('');
-  const wks=days.filter(d=>d.getDay()===0||d.getDay()===6).map(d=>{ const ds=d.toISOString().split('T')[0]; return `<div class="gwk" style="left:${pl(ds)};width:${pw(ds,ds)}"></div>`; }).join('');
-  const tp=pl(t);
+  acts.forEach(a=>{ const s=sc[a.id]; if(!s) return;
+    if(s.start<mn) mn=s.start; if(s.end>mx) mx=s.end;
+    if(baseline&&a.baseline&&a.baseline>mx) mx=a.baseline; });
+  const sdt=new Date(mn+'T00:00:00'); sdt.setDate(1);             // start at 1st of month
+  const edt=new Date(mx+'T00:00:00'); edt.setDate(edt.getDate()+21);
+  let nDays=Math.round((edt-sdt)/DAY)+1;
+  if(nDays<G_VIEW_DAYS){ edt.setDate(edt.getDate()+(G_VIEW_DAYS-nDays)); nDays=G_VIEW_DAYS; }
+
+  // Pixel scale: available width shows exactly ~3 months
+  const cw=el.clientWidth||(el.parentElement&&el.parentElement.clientWidth)||900;
+  const avail=Math.max(320, cw-G_LBL-8);
+  const ppd=avail/G_VIEW_DAYS;
+  const W=Math.ceil(nDays*ppd);
+  const dx=ds=>Math.round((new Date(ds+'T00:00:00')-sdt)/DAY*ppd);
+  const dw=(ds,de)=>Math.max(4,Math.round(((new Date(de+'T00:00:00')-new Date(ds+'T00:00:00'))/DAY+1)*ppd));
+  const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  // Header (months + weekly ticks), weekend shading, month lines
+  let hMon='', hDay='', wks='', mons='';
+  const cur=new Date(sdt);
+  for(let i=0;i<nDays;i++){
+    const x=Math.round(i*ppd), dow=cur.getDay(), dd=cur.getDate();
+    if(dd===1||i===0){
+      hMon+=`<span class="ghlbl" style="left:${x+3}px;top:0;font-size:10px;font-weight:700;color:var(--tx2)">${MESES[cur.getMonth()]}/${String(cur.getFullYear()).slice(2)}</span>`;
+      if(i>0) mons+=`<div class="gmon" style="left:${x}px"></div>`;
+    }
+    if(dow===1) hDay+=`<span class="ghlbl" style="left:${x}px;top:15px;font-size:8.5px;color:var(--mu)">${dd}/${cur.getMonth()+1}</span>`;
+    if(dow===0||dow===6) wks+=`<div class="gwk" style="left:${x}px;width:${Math.ceil(ppd)}px"></div>`;
+    cur.setDate(cur.getDate()+1);
+  }
+  const tx=dx(t)+Math.round(ppd/2);
+  const todayLine=`<div class="gtoday" style="left:${tx}px"></div>`;
 
   const groups=grpFn?grpFn(acts):{'':acts};
   let rows='';
   Object.entries(groups).forEach(([lbl,gas])=>{
-    if(lbl) rows+=`<div class="ggrp"><div class="ggrplbl" style="color:${gas[0]?._gc||'var(--acc)'}">${lbl}</div><div class="ggrpln"></div></div>`;
+    if(lbl) rows+=`<div class="ggrp" style="width:${G_LBL+W}px"><div class="ggrplbl gstick" style="color:${gas[0]?._gc||'var(--acc)'}">${lbl}</div><div class="ggrpln"></div></div>`;
     gas.forEach(a=>{
       const s=sc[a.id]; if(!s) return;
       const st=getStatus(a,sc), css=ganttCSS(st);
       const nm=a.name.length>22?a.name.slice(0,20)+'…':a.name;
       const pushed=s.start!==a.start;
-      rows+=`<div class="grow">
-        <div class="glcol">
+      rows+=`<div class="grow" style="width:${G_LBL+W}px">
+        <div class="glcol gstick">
           <div class="glbl" title="${a.name}">${nm}</div>
           <div class="gsub">${fmts(s.start)} → ${fmts(s.end)}${pushed?' ↷':''}</div>
         </div>
-        <div class="gtrk" style="overflow:visible">
-          ${wks}<div class="gtoday" style="left:${tp}"></div>
-          <div class="gbar" style="left:${pl(s.start)};width:${pw(s.start,s.end)};${css}" onclick="openDet(${a.id})" title="${a.name} | ${STS[st]?.lbl||st} | ${fmt(s.start)} → ${fmt(s.end)}">
+        <div class="gtrk" style="flex:none;width:${W}px;overflow:visible">
+          ${wks}${mons}${todayLine}
+          <div class="gbar" style="left:${dx(s.start)}px;width:${dw(s.start,s.end)}px;${css}" onclick="openDet(${a.id})" title="${a.name} | ${STS[st]?.lbl||st} | ${fmt(s.start)} → ${fmt(s.end)}">
             ${a.susp?'⏸ ':a.done?'✓ ':''}${nm}
           </div>
-          ${baseline&&a.baseline&&a.baseline!==s.end?`<div class="gbase" style="left:${pl(a.baseline)};width:14px" title="Baseline: ${fmt(a.baseline)}"></div>`:''}
-          ${(a.devs||[]).length?`<div class="gbar" style="left:${pl(s.start)};width:.8%;min-width:3px;background:rgba(201,109,0,.35);border-color:var(--warn);height:5px;top:9px;z-index:4"></div>`:''}
+          ${baseline&&a.baseline&&a.baseline!==s.end?`<div class="gbase" style="left:${dx(a.baseline)}px;width:14px" title="Baseline: ${fmt(a.baseline)}"></div>`:''}
+          ${(a.devs||[]).length?`<div class="gbar" style="left:${dx(s.start)}px;width:${Math.max(3,Math.round(ppd))}px;background:rgba(201,109,0,.35);border-color:var(--warn);height:5px;top:9px;z-index:4"></div>`:''}
         </div>
       </div>`;
     });
   });
-  el.innerHTML=`<div class="ghdr"><div class="glcol"></div><div style="flex:1;display:flex">${hdr}</div></div>${rows}`;
+
+  el.innerHTML=`
+    <div class="gtool">
+      <button class="btn bxs bgh" onclick="ganttGoToday('${contId}')">📍 Hoje</button>
+      <span>Escala: 3 meses · role horizontalmente para navegar</span>
+    </div>
+    <div class="gscroll" data-sdt="${sdt.getTime()}" data-ppd="${ppd}" data-tx="${tx}">
+      <div class="ghdr" style="width:${G_LBL+W}px;border-bottom:1px solid var(--brd)">
+        <div class="glcol gstick" style="height:28px"></div>
+        <div style="position:relative;width:${W}px;height:28px;flex:none">${hMon}${hDay}${todayLine}</div>
+      </div>
+      ${rows}
+    </div>`;
+
+  // Restore scroll: previous leftmost date, or default to ~2 weeks before today
+  const wrap=el.querySelector('.gscroll');
+  if(visible){
+    const left=_gLeftDate[contId]!=null
+      ? Math.round((_gLeftDate[contId]-sdt.getTime())/DAY*ppd)
+      : Math.round(tx-14*ppd);
+    wrap.scrollLeft=Math.max(0,left);
+    wrap.dataset.ready='1';
+  }
 }
+
+function ganttGoToday(contId){
+  const wrap=document.querySelector('#'+contId+' .gscroll'); if(!wrap) return;
+  const ppd=+wrap.dataset.ppd, tx=+wrap.dataset.tx;
+  wrap.scrollTo({left:Math.max(0,tx-14*ppd),behavior:'smooth'});
+}
+
+// Re-render visible gantt on window resize (keeps the 3-month scale)
+let _gResizeT=0;
+window.addEventListener('resize',()=>{
+  clearTimeout(_gResizeT);
+  _gResizeT=setTimeout(()=>{
+    if(document.getElementById('rgcont')?.offsetParent) renderRG();
+    if(document.getElementById('pgcont')?.offsetParent) renderPG();
+  },200);
+});
 
 // ═══════════════════════════════════════════
 //  RESOURCE GANTT
